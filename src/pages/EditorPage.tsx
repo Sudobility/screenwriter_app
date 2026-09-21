@@ -1,11 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ElementStylePicker, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
+import { ElementStylePicker, IndexCards, Navigator, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
+
+const NAV_KEY = "screenwriter.navigator.open";
+const readNavOpen = () => {
+  try {
+    return localStorage.getItem(NAV_KEY) !== "0";
+  } catch {
+    return true;
+  }
+};
+
+type View = "edit" | "pages" | "cards";
+const VIEW_LABEL: Record<View, string> = { edit: "Edit", pages: "Pages", cards: "Cards" };
 
 /** Remount per document so a fork (route param change) starts from clean state. */
 export function EditorPage() {
@@ -30,9 +42,30 @@ function Editor({ documentId }: { documentId: string }) {
   const [title, setTitle] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
-  const [view, setView] = useState<"edit" | "pages">("edit");
+  const [view, setViewRaw] = useState<View>("edit");
+  const [navOpen, setNavOpen] = useState(readNavOpen);
   const [printPending, setPrintPending] = useState(false);
   const [caret, setCaret] = useState<PlainPos | null>(null);
+  // Switching tabs by hand drops any pending "put the caret here" so Edit does not jump back to an old jump target.
+  const setView = (v: View) => {
+    setCaret(null);
+    setViewRaw(v);
+  };
+  // Navigator click / card double-click: Edit view, caret at the scene heading, scrolled into view (ScriptEditor initialCaret).
+  // A fresh object each time so jumping to the same scene twice still re-applies the caret.
+  const jumpTo = (elementId: string) => {
+    setCaret({ elementId, offset: 0 });
+    setViewRaw("edit");
+  };
+  const toggleNav = () =>
+    setNavOpen(o => {
+      try {
+        localStorage.setItem(NAV_KEY, o ? "0" : "1");
+      } catch {
+        /* private mode: the toggle still works for this visit */
+      }
+      return !o;
+    });
   // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
   const layout = useLayout(host);
 
@@ -78,6 +111,15 @@ function Editor({ documentId }: { documentId: string }) {
   return (
     <div className="h-full flex flex-col print-flow">
       <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 print:hidden">
+        <button
+          onClick={toggleNav}
+          aria-pressed={navOpen}
+          data-testid="navigator-toggle"
+          title="Show or hide the scene navigator"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${navOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Scenes
+        </button>
         <Link to={projectId ? `/p/${projectId}` : "/"} className="text-sm text-neutral-600 hover:underline">
           &larr; {projectId ? "Project" : "Home"}
         </Link>
@@ -90,7 +132,7 @@ function Editor({ documentId }: { documentId: string }) {
           className="font-semibold text-lg border border-transparent hover:border-neutral-300 focus:border-neutral-400 rounded px-2 py-0.5 min-w-48"
         />
         <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
-          {(["edit", "pages"] as const).map(v => (
+          {(["edit", "pages", "cards"] as const).map(v => (
             <button
               key={v}
               role="tab"
@@ -99,7 +141,7 @@ function Editor({ documentId }: { documentId: string }) {
               onClick={() => setView(v)}
               className={`px-3 py-1 ${view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
             >
-              {v === "edit" ? "Edit" : "Pages"}
+              {VIEW_LABEL[v]}
             </button>
           ))}
         </div>
@@ -149,17 +191,23 @@ function Editor({ documentId }: { documentId: string }) {
       )}
 
       <div className="flex-1 min-h-0 flex print-flow">
+        {host && navOpen && (
+          <aside data-testid="navigator-sidebar" className="w-72 shrink-0 border-r border-neutral-200 bg-white min-h-0 print:hidden">
+            <Navigator host={host} onJumpTo={jumpTo} />
+          </aside>
+        )}
         <main className="flex-1 min-w-0 print-flow">
           {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
           {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
           {host && view === "edit" && <ScriptEditor host={host} initialCaret={caret} />}
+          {host && view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
           {host && view === "pages" && (
             <PageView
               host={host}
               layout={layout}
               onRequestEdit={(elementId, offset) => {
                 setCaret({ elementId, offset });
-                setView("edit");
+                setViewRaw("edit");
               }}
             />
           )}
