@@ -5,6 +5,8 @@ import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyn
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { AiPanel } from "../components/AiPanel";
+import { PageSetupPanel } from "../components/PageSetupPanel";
+import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
 
@@ -42,8 +44,8 @@ function Editor({ documentId }: { documentId: string }) {
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
   // One right-hand panel at a time.
-  const [panel, setPanel] = useState<"snapshots" | "ai" | null>(null);
-  const togglePanel = (p: "snapshots" | "ai") => setPanel(cur => (cur === p ? null : p));
+  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
   const [navOpen, setNavOpen] = useState(readNavOpen);
@@ -172,6 +174,22 @@ function Editor({ documentId }: { documentId: string }) {
           {st.label}
         </span>
         <button
+          onClick={() => togglePanel("title")}
+          aria-pressed={panel === "title"}
+          data-testid="title-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "title" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Title page
+        </button>
+        <button
+          onClick={() => togglePanel("setup")}
+          aria-pressed={panel === "setup"}
+          data-testid="setup-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "setup" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Page setup
+        </button>
+        <button
           onClick={() => togglePanel("ai")}
           aria-pressed={panel === "ai"}
           data-testid="ai-button"
@@ -227,6 +245,8 @@ function Editor({ documentId }: { documentId: string }) {
         {panel === "snapshots" && session && (
           <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/d/${id}`)} rebasedTick={rebased} />
         )}
+        {panel === "title" && host && <TitlePagePanel host={host} onClose={() => setPanel(null)} />}
+        {panel === "setup" && host && <PageSetupPanel host={host} onClose={() => setPanel(null)} />}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
       </div>
     </div>

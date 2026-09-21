@@ -61,6 +61,8 @@ e2e/formats.e2e.ts    Playwright: import Fountain/FDX (picker + drop), export Fo
 
 - Import/Export: `ImportScript` wraps the project's documents list (button, drop target, results dialog with the grouped conversion report; loss is called out). `ExportMenu` in the editor top bar lists `GET /formats` exportable entries + "PDF (print)" (switches to Pages, prints once the layout is ready). Exports read the server copy; the lib waits for the open session's edits to be acknowledged first. A report with warn/loss/error shows a dialog with "Download anyway".
 
+- Title page and page setup: **Title page** and **Page setup** buttons in the editor top bar open `components/TitlePagePanel.tsx` and `components/PageSetupPanel.tsx` (same one-panel-at-a-time `panel` state as AI/Snapshots). Fields go through `title.setField`; header/footer text, page-number position and first-page flags through `template.setHeaderFooter`; scene numbers none/left/right/both through `template.setSceneNumbering` (all `writing_core` commands, so they sync). The Pages view shows the title page as an unnumbered first sheet; the top-bar page count is the body count. `e2e/titlepage.e2e.ts` covers it (screenshots `frontend-g3-*.png`); there is no UI for omitting a scene yet (`scene.setOmitted` via the session).
+
 ## Gotchas
 
 - The API must expose `X-Epoch`/`X-State-Vector` via CORS (fixed in screenwriter_api 6818de6); without it a browser reads every state epoch as 0 and rebase never completes.

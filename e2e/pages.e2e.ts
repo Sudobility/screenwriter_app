@@ -91,7 +91,7 @@ test("page view: layout engine pages, count, click-to-edit, print", async ({ pag
     Array.from(document.querySelectorAll<HTMLElement>(".wui-sheet")).map(sh => ({
       n: Number(sh.dataset.page),
       lines: Array.from(sh.querySelectorAll<HTMLElement>(".wui-pl")).map(l => ({ id: l.dataset.elId!, text: l.textContent!, top: parseFloat(l.style.top) })),
-      number: sh.querySelector('[data-testid="page-number"]')?.textContent ?? null,
+      number: sh.querySelector('[data-deco="header"]')?.textContent ?? null,
     })),
   );
   if (process.env.E2E_DEBUG) for (const p of structure) console.log(p.n, p.lines.length, JSON.stringify(p.lines[0]!.text), JSON.stringify(p.lines.at(-1)!.text));
