@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { DOCUMENT_KINDS, type DocumentKind } from "@sudobility/screenwriter_types";
 import { useDocuments, useProjects, useTemplates } from "@sudobility/screenwriter_lib";
 import { Shell } from "../components/Shell";
+import { ImportScript } from "../components/ImportScript";
 
 const btn = "border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100 disabled:opacity-50";
 const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm disabled:opacity-50";
@@ -93,28 +94,30 @@ function ProjectView({ projectId }: { projectId: string }) {
         </button>
       </div>
       {!showingTrash && <NewDocumentForm projectId={projectId} />}
-      {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-      {loading && documents.length === 0 && <p className="text-sm text-neutral-500">Loading...</p>}
-      {!loading && documents.length === 0 && <p className="text-sm text-neutral-500">{showingTrash ? "Trash is empty." : "No documents yet."}</p>}
-      <ul className="space-y-2">
-        {documents.map(d => (
-          <li key={d.id} className="bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3" data-testid="document-row">
-            {showingTrash ? (
-              <span className="font-medium">{d.title}</span>
-            ) : (
-              <Link to={`/d/${d.id}`} className="font-medium hover:underline">
-                {d.title}
-              </Link>
-            )}
-            <span className="text-xs text-neutral-500">
-              {d.kind} - {d.wordCount} words - edited {new Date(d.lastEditedAt ?? d.updatedAt).toLocaleString()}
-            </span>
-            <button className={`${btn} ml-auto`} onClick={() => void (showingTrash ? restore(d.id) : trash(d.id))}>
-              {showingTrash ? "Restore" : "Trash"}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <ImportScript projectId={projectId}>
+        {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+        {loading && documents.length === 0 && <p className="text-sm text-neutral-500">Loading...</p>}
+        {!loading && documents.length === 0 && <p className="text-sm text-neutral-500">{showingTrash ? "Trash is empty." : "No documents yet."}</p>}
+        <ul className="space-y-2">
+          {documents.map(d => (
+            <li key={d.id} className="bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3" data-testid="document-row">
+              {showingTrash ? (
+                <span className="font-medium">{d.title}</span>
+              ) : (
+                <Link to={`/d/${d.id}`} className="font-medium hover:underline">
+                  {d.title}
+                </Link>
+              )}
+              <span className="text-xs text-neutral-500">
+                {d.kind} - {d.wordCount} words - edited {new Date(d.lastEditedAt ?? d.updatedAt).toLocaleString()}
+              </span>
+              <button className={`${btn} ml-auto`} onClick={() => void (showingTrash ? restore(d.id) : trash(d.id))}>
+                {showingTrash ? "Restore" : "Trash"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </ImportScript>
     </section>
   );
 }

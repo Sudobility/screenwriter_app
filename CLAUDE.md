@@ -18,9 +18,11 @@ src/
   offline/idb-store.ts  IndexedDbOfflineDocStore (raw IndexedDB) implementing the lib's OfflineDocStore
   adapter/session-host.ts  sessionToHost(): DocumentSession -> writing_ui ScriptEditorHost (pure forwarder)
   pages/              LoginPage, DashboardPage (projects at /, documents at /p/:id), EditorPage
-  components/         Shell, SnapshotsPanel
+  components/         Shell, SnapshotsPanel, ImportScript (button + drop zone + results dialog), ExportMenu (editor top bar), ConversionReportView, Modal
+  util/               download.ts (Blob download), import-error.ts (ApiError -> message)
 tests/                unit tests (adapter, IndexedDB store)
 e2e/app.e2e.ts        Playwright: the whole flow against the real API
+e2e/formats.e2e.ts    Playwright: import Fountain/FDX (picker + drop), export Fountain/FDX/JSON, garbage file error (fixtures in e2e/fixtures/)
 ```
 
 ## Commands
@@ -53,6 +55,8 @@ e2e/app.e2e.ts        Playwright: the whole flow against the real API
 - Editor top bar: **Edit | Pages** segmented control, page count ("N pages", from one shared `useLayout(host)`; the layout-engine chunk loads lazily after first paint), and **Print / Save as PDF** (`window.print()`, Pages view only). Print CSS: `@page { size: letter; margin: 0 }`, chrome is `print:hidden`, sheets `break-after: page` (rules in `writing_ui`'s `editor.css` and `src/index.css`). Clicking a page line switches to Edit with the caret there (`ScriptEditor initialCaret`). Pages view is read-only.
 - `vite.config.ts` `build.rollupOptions.treeshake.moduleSideEffects` marks `writing_core/src/fonts|layout` pure so the 10 MB font tables land only in the lazy `layout-engine` chunk (initial chunk ~1.2 MB instead of ~11.6 MB).
 - `window.__fadewright.session` is exposed when `VITE_DEV_AUTH=1` (e2e seam; `e2e/pages.e2e.ts` seeds ~130 elements with it, one `execute` per command because a batch of `element.insert` scrambles order).
+
+- Import/Export: `ImportScript` wraps the project's documents list (button, drop target, results dialog with the grouped conversion report; loss is called out). `ExportMenu` in the editor top bar lists `GET /formats` exportable entries + "PDF (print)" (switches to Pages, prints once the layout is ready). Exports read the server copy; the lib waits for the open session's edits to be acknowledged first. A report with warn/loss/error shows a dialog with "Download anyway".
 
 ## Gotchas
 

@@ -5,6 +5,7 @@ import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyn
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
+import { ExportMenu } from "../components/ExportMenu";
 
 /** Remount per document so a fork (route param change) starts from clean state. */
 export function EditorPage() {
@@ -30,6 +31,7 @@ function Editor({ documentId }: { documentId: string }) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setView] = useState<"edit" | "pages">("edit");
+  const [printPending, setPrintPending] = useState(false);
   const [caret, setCaret] = useState<PlainPos | null>(null);
   // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
   const layout = useLayout(host);
@@ -42,6 +44,16 @@ function Editor({ documentId }: { documentId: string }) {
       delete (window as unknown as { __fadewright?: unknown }).__fadewright;
     };
   }, [session]);
+
+  // "PDF (print)": switch to Pages, wait for the layout, then open the print dialog.
+  useEffect(() => {
+    if (!printPending || view !== "pages" || layout.status !== "ready") return;
+    const t = setTimeout(() => {
+      setPrintPending(false);
+      window.print();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [printPending, view, layout.status]);
 
   useEffect(() => {
     if (!session) return;
@@ -97,7 +109,17 @@ function Editor({ documentId }: { documentId: string }) {
             Print / Save as PDF
           </button>
         )}
-        <span className="ml-auto text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
+        <span className="ml-auto" />
+        {ready && (
+          <ExportMenu
+            documentId={documentId}
+            onPrint={() => {
+              setView("pages");
+              setPrintPending(true);
+            }}
+          />
+        )}
+        <span className="text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
           {pageLabel}
         </span>
         <span className="flex items-center gap-2 text-sm" data-testid="sync-status" data-state={st.label.toLowerCase()}>

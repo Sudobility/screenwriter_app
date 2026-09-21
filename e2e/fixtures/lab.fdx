@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="5">
+  <Content>
+    <Paragraph Type="Scene Heading"><Text>INT. LAB - DAY</Text></Paragraph>
+    <Paragraph Type="Action"><Text>Dust floats in the light. </Text><Text Style="Bold">A machine hums.</Text></Paragraph>
+    <Paragraph Type="Character"><Text>DR. VOSS</Text></Paragraph>
+    <Paragraph Type="Parenthetical"><Text>(checking a dial)</Text></Paragraph>
+    <Paragraph Type="Dialogue"><Text>It should not be running.</Text></Paragraph>
+    <Paragraph Type="Character"><Text>ASSISTANT</Text></Paragraph>
+    <Paragraph Type="Dialogue"><Text>Nobody touched it.</Text></Paragraph>
+    <Paragraph Type="Scene Heading"><Text>EXT. ROOF - NIGHT</Text></Paragraph>
+    <Paragraph Type="Action"><Text>Voss climbs out into the wind.</Text></Paragraph>
+    <Paragraph Type="Transition"><Text>SMASH CUT TO:</Text></Paragraph>
+    <Paragraph Type="Scene Heading"><Text>INT. LAB - LATER</Text></Paragraph>
+    <Paragraph Type="Action"><Text>The machine has stopped.</Text></Paragraph>
+  </Content>
+</FinalDraft>
