@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { resolveStyle } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
+import { LockingSection } from "./LockingSection";
 
 type Slot = "left" | "center" | "right";
 type Which = "header" | "footer";
@@ -153,8 +154,10 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
             <option value="both">Both margins</option>
           </select>
         </label>
-        <p className="text-xs text-neutral-600">Scenes are numbered automatically and renumber as you edit; omitted scenes keep their number.</p>
+        <p className="text-xs text-neutral-600">Scenes are numbered automatically and renumber as you edit until you lock them; omitted scenes keep their number.</p>
       </section>
+
+      <LockingSection host={host} />
 
       <section className="space-y-2">
         <h4 className="text-xs font-semibold uppercase text-neutral-500">Continueds</h4>
