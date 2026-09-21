@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["vite/client", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@sudobility/screenwriter_lib": ["../screenwriter_lib/src/index.ts"],
+      "@sudobility/screenwriter_client": ["../screenwriter_client/src/index.ts"],
+      "@sudobility/screenwriter_types": ["../screenwriter_types/src/index.ts"],
+      "@sudobility/writing_ui": ["../writing_ui/src/index.ts"],
+      "@sudobility/writing_core": ["../writing_core/src/index.ts"],
+      "yjs": ["../writing_core/node_modules/yjs/dist/yjs", "../writing_core/node_modules/yjs"],
+      "lib0": ["../writing_core/node_modules/lib0"],
+      "lib0/*": ["../writing_core/node_modules/lib0/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"],
+      "zustand": ["./node_modules/zustand"],
+      "zustand/*": ["./node_modules/zustand/*"],
+      "@tanstack/react-query": ["./node_modules/@tanstack/react-query"]
+    }
+  },
+  "include": ["src", "tests", "e2e", "vite.config.ts", "playwright.config.ts"]
+}
