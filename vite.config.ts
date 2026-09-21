@@ -21,6 +21,16 @@ export default defineConfig({
     ],
     dedupe: ["yjs", "lib0", "react", "react-dom", "@tanstack/react-query", "zustand"],
   },
+  build: {
+    rollupOptions: {
+      // writing_core's barrel re-exports the layout engine and its ~10 MB of generated font metrics. Those modules are
+      // pure (they only build tables), so tell Rollup it may drop them when unused: the initial bundle then omits them
+      // and only the lazy `layout-engine` chunk (opened with the Pages view / page counter) carries them.
+      treeshake: {
+        moduleSideEffects: (id) => !/\/writing_core\/src\/(fonts|layout)\//.test(id),
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

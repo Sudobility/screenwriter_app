@@ -50,6 +50,10 @@ e2e/app.e2e.ts        Playwright: the whole flow against the real API
 - Snapshots panel uses the session's methods directly (`listSnapshots`, `createSnapshot`, `openSnapshot`, `forkSnapshot`, `listVersions`); Open and Fork use inline confirm/title steps, not `window.confirm/prompt`.
 - Status label: `connecting`/`disconnected|error` -> Offline; `state: synced` -> Synced; anything else Syncing.
 
+- Editor top bar: **Edit | Pages** segmented control, page count ("N pages", from one shared `useLayout(host)`; the layout-engine chunk loads lazily after first paint), and **Print / Save as PDF** (`window.print()`, Pages view only). Print CSS: `@page { size: letter; margin: 0 }`, chrome is `print:hidden`, sheets `break-after: page` (rules in `writing_ui`'s `editor.css` and `src/index.css`). Clicking a page line switches to Edit with the caret there (`ScriptEditor initialCaret`). Pages view is read-only.
+- `vite.config.ts` `build.rollupOptions.treeshake.moduleSideEffects` marks `writing_core/src/fonts|layout` pure so the 10 MB font tables land only in the lazy `layout-engine` chunk (initial chunk ~1.2 MB instead of ~11.6 MB).
+- `window.__fadewright.session` is exposed when `VITE_DEV_AUTH=1` (e2e seam; `e2e/pages.e2e.ts` seeds ~130 elements with it, one `execute` per command because a batch of `element.insert` scrambles order).
+
 ## Gotchas
 
 - The API must expose `X-Epoch`/`X-State-Vector` via CORS (fixed in screenwriter_api 6818de6); without it a browser reads every state epoch as 0 and rebase never completes.

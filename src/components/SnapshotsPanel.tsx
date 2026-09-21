@@ -156,7 +156,7 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
   );
 
   return (
-    <aside className="w-96 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-4" aria-label="Snapshots" data-testid="snapshots-panel">
+    <aside className="print:hidden w-96 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-4" aria-label="Snapshots" data-testid="snapshots-panel">
       <div className="flex items-center">
         <h2 className="font-semibold">Snapshots</h2>
         <button className={`${btn} ml-auto`} onClick={onClose}>

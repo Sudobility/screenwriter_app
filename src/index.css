@@ -4,3 +4,10 @@
 
 html, body, #root { height: 100%; margin: 0; }
 body { background: #f6f6f4; color: #1a1a1a; }
+
+/* Print / Save as PDF from the Pages view: only the sheets, one per physical page (sheet rules live in writing_ui). */
+@page { size: letter; margin: 0; }
+@media print {
+  html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  .print-flow { height: auto !important; overflow: visible !important; display: block !important; }
+}

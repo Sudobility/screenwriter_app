@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ElementStylePicker, ScriptEditor } from "@sudobility/writing_ui";
+import { ElementStylePicker, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
+import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 
@@ -28,6 +29,19 @@ function Editor({ documentId }: { documentId: string }) {
   const [title, setTitle] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
+  const [view, setView] = useState<"edit" | "pages">("edit");
+  const [caret, setCaret] = useState<PlainPos | null>(null);
+  // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
+  const layout = useLayout(host);
+
+  // Dev/e2e seam (like writing_ui's `__wuiDebug`): lets a test script the session, e.g. seed a long document.
+  useEffect(() => {
+    if (!DEV_AUTH || !session) return;
+    (window as unknown as { __fadewright?: unknown }).__fadewright = { session };
+    return () => {
+      delete (window as unknown as { __fadewright?: unknown }).__fadewright;
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!session) return;
@@ -47,10 +61,11 @@ function Editor({ documentId }: { documentId: string }) {
 
   const projectId = session?.detail?.projectId;
   const st = statusLabel(syncStatus);
+  const pageLabel = layout.layout ? `${layout.pageCount} ${layout.pageCount === 1 ? "page" : "pages"}` : "";
 
   return (
-    <div className="h-full flex flex-col">
-      <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3">
+    <div className="h-full flex flex-col print-flow">
+      <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 print:hidden">
         <Link to={projectId ? `/p/${projectId}` : "/"} className="text-sm text-neutral-600 hover:underline">
           &larr; {projectId ? "Project" : "Home"}
         </Link>
@@ -62,8 +77,30 @@ function Editor({ documentId }: { documentId: string }) {
           onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           className="font-semibold text-lg border border-transparent hover:border-neutral-300 focus:border-neutral-400 rounded px-2 py-0.5 min-w-48"
         />
-        {host && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
-        <span className="ml-auto flex items-center gap-2 text-sm" data-testid="sync-status" data-state={st.label.toLowerCase()}>
+        <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
+          {(["edit", "pages"] as const).map(v => (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={view === v}
+              data-testid={`view-${v}`}
+              onClick={() => setView(v)}
+              className={`px-3 py-1 ${view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
+            >
+              {v === "edit" ? "Edit" : "Pages"}
+            </button>
+          ))}
+        </div>
+        {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
+        {view === "pages" && (
+          <button onClick={() => window.print()} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
+            Print / Save as PDF
+          </button>
+        )}
+        <span className="ml-auto text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
+          {pageLabel}
+        </span>
+        <span className="flex items-center gap-2 text-sm" data-testid="sync-status" data-state={st.label.toLowerCase()}>
           <span className={`inline-block w-2.5 h-2.5 rounded-full ${st.tone}`} />
           {st.label}
         </span>
@@ -76,7 +113,7 @@ function Editor({ documentId }: { documentId: string }) {
       </header>
 
       {rebased && (
-        <div role="status" data-testid="rebased-banner" className="bg-amber-100 border-b border-amber-300 px-4 py-2 text-sm flex items-center gap-3">
+        <div role="status" data-testid="rebased-banner" className="print:hidden bg-amber-100 border-b border-amber-300 px-4 py-2 text-sm flex items-center gap-3">
           <span>
             <strong>Document replaced by snapshot.</strong>{" "}
             {rebased.lostLocalEdits
@@ -89,11 +126,21 @@ function Editor({ documentId }: { documentId: string }) {
         </div>
       )}
 
-      <div className="flex-1 min-h-0 flex">
-        <main className="flex-1 min-w-0">
+      <div className="flex-1 min-h-0 flex print-flow">
+        <main className="flex-1 min-w-0 print-flow">
           {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
           {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
-          {host && <ScriptEditor host={host} />}
+          {host && view === "edit" && <ScriptEditor host={host} initialCaret={caret} />}
+          {host && view === "pages" && (
+            <PageView
+              host={host}
+              layout={layout}
+              onRequestEdit={(elementId, offset) => {
+                setCaret({ elementId, offset });
+                setView("edit");
+              }}
+            />
+          )}
         </main>
         {panelOpen && session && (
           <SnapshotsPanel session={session} onClose={() => setPanelOpen(false)} onForked={id => navigate(`/d/${id}`)} rebasedTick={rebased} />
