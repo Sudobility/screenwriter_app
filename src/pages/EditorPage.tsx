@@ -4,6 +4,7 @@ import { ElementStylePicker, IndexCards, Navigator, PageView, ScriptEditor, useL
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
+import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
 import { AiPanel } from "../components/AiPanel";
 import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { SceneOmitToggle } from "../components/SceneOmitToggle";
@@ -46,13 +47,15 @@ function Editor({ documentId }: { documentId: string }) {
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
   // One right-hand panel at a time.
-  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | null>(null);
-  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup") => setPanel(cur => (cur === p ? null : p));
+  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
   const [navOpen, setNavOpen] = useState(readNavOpen);
   const [printPending, setPrintPending] = useState(false);
   const [caret, setCaret] = useState<PlainPos | null>(null);
+  // Revised pages list: switch to the Pages tab and scroll to that sheet once it is on screen.
+  const [goPage, setGoPage] = useState<{ index: number } | null>(null);
   // Switching tabs by hand drops any pending "put the caret here" so Edit does not jump back to an old jump target.
   const setView = (v: View) => {
     setCaret(null);
@@ -84,6 +87,15 @@ function Editor({ documentId }: { documentId: string }) {
       delete (window as unknown as { __fadewright?: unknown }).__fadewright;
     };
   }, [session]);
+
+  useEffect(() => {
+    if (!goPage || view !== "pages" || layout.status === "loading") return;
+    const sheet = document.querySelector<HTMLElement>(`.wui-sheet[data-page="${goPage.index + 1}"]`);
+    if (!sheet) return;
+    sheet.scrollIntoView({ block: "start" });
+    sheet.setAttribute("data-jumped", "1");
+    setGoPage(null);
+  }, [goPage, view, layout.status, layout.pageCount]);
 
   // "PDF (print)": switch to Pages, wait for the layout, then open the print dialog.
   useEffect(() => {
@@ -117,7 +129,7 @@ function Editor({ documentId }: { documentId: string }) {
 
   return (
     <div className="h-full flex flex-col print-flow">
-      <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 print:hidden">
+      <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-x-3 gap-y-1 flex-wrap print:hidden">
         <button
           onClick={toggleNav}
           aria-pressed={navOpen}
@@ -161,6 +173,7 @@ function Editor({ documentId }: { documentId: string }) {
           </button>
         )}
         <span className="ml-auto" />
+        {host && <RevisionIndicator host={host} onClick={() => setPanel("revisions")} />}
         {ready && (
           <ExportMenu
             documentId={documentId}
@@ -192,6 +205,14 @@ function Editor({ documentId }: { documentId: string }) {
           className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "setup" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
         >
           Page setup
+        </button>
+        <button
+          onClick={() => togglePanel("revisions")}
+          aria-pressed={panel === "revisions"}
+          data-testid="revisions-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "revisions" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Revisions
         </button>
         <button
           onClick={() => togglePanel("ai")}
@@ -251,6 +272,18 @@ function Editor({ documentId }: { documentId: string }) {
         )}
         {panel === "title" && host && <TitlePagePanel host={host} onClose={() => setPanel(null)} />}
         {panel === "setup" && host && <PageSetupPanel host={host} onClose={() => setPanel(null)} />}
+        {panel === "revisions" && host && (
+          <RevisionsPanel
+            host={host}
+            layout={layout.layout}
+            onClose={() => setPanel(null)}
+            onGoToPage={index => {
+              setCaret(null);
+              setViewRaw("pages");
+              setGoPage({ index });
+            }}
+          />
+        )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
       </div>
     </div>

@@ -122,8 +122,9 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.getByTestId("view-pages").click();
   await expect(page.locator(".wui-sheet:not(.wui-sheet-title)").first()).toBeVisible();
+  // The layout is debounced after the last edit: poll instead of reading the first (possibly stale) frame.
+  await expect.poll(async () => (await sheetInfo(page)).flatMap(s => s.left)).toEqual(["1", "2", "3", "3A", "4", "5", "6"]);
   let info = await sheetInfo(page);
-  expect(info.flatMap(s => s.left)).toEqual(["1", "2", "3", "3A", "4", "5", "6"]);
   expect(info.flatMap(s => s.right)).toEqual(["1", "2", "3", "3A", "4", "5", "6"]);
 
   // 3. Lock pages (with a confirmation), then pile lines onto page 1: an A page appears, later pages keep their labels.
