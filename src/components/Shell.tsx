@@ -14,6 +14,9 @@ export function Shell({ children }: { children: ReactNode }) {
         <span className="ml-auto text-sm text-neutral-500" data-testid="user-email">
           {user?.email}
         </span>
+        <Link to="/settings/keys" className="text-sm text-neutral-600 hover:underline" data-testid="keys-link">
+          API keys
+        </Link>
         <button onClick={() => void signOut()} className="text-sm border border-neutral-300 rounded px-3 py-1 hover:bg-neutral-100">
           Sign out
         </button>
