@@ -4,6 +4,7 @@ import { ElementStylePicker, IndexCards, Navigator, PageView, ScriptEditor, useL
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
+import { AiPanel } from "../components/AiPanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
 
@@ -40,7 +41,9 @@ function Editor({ documentId }: { documentId: string }) {
   const { session, ready, error, syncStatus } = useDocumentSession(documentId);
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
-  const [panelOpen, setPanelOpen] = useState(false);
+  // One right-hand panel at a time.
+  const [panel, setPanel] = useState<"snapshots" | "ai" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
   const [navOpen, setNavOpen] = useState(readNavOpen);
@@ -169,8 +172,17 @@ function Editor({ documentId }: { documentId: string }) {
           {st.label}
         </span>
         <button
-          onClick={() => setPanelOpen(o => !o)}
-          className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100"
+          onClick={() => togglePanel("ai")}
+          aria-pressed={panel === "ai"}
+          data-testid="ai-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "ai" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          AI
+        </button>
+        <button
+          onClick={() => togglePanel("snapshots")}
+          aria-pressed={panel === "snapshots"}
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "snapshots" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
         >
           Snapshots
         </button>
@@ -212,9 +224,10 @@ function Editor({ documentId }: { documentId: string }) {
             />
           )}
         </main>
-        {panelOpen && session && (
-          <SnapshotsPanel session={session} onClose={() => setPanelOpen(false)} onForked={id => navigate(`/d/${id}`)} rebasedTick={rebased} />
+        {panel === "snapshots" && session && (
+          <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/d/${id}`)} rebasedTick={rebased} />
         )}
+        {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
       </div>
     </div>
   );
