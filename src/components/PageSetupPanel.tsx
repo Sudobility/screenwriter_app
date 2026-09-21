@@ -63,6 +63,9 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
     patch(which, { [slot]: text, enabled }, `hf:${which}:${slot}`);
   };
 
+  const pg = template.pagination;
+  const setContinueds = (patch: Record<string, boolean>) => host.execute([{ id: "template.setContinueds", params: patch }]);
+
   const sceneStyle = template.styles.some(s => s.id === template.sceneNumbering.styleId) ? resolveStyle(template, template.sceneNumbering.styleId) : null;
   const numbering = sceneStyle?.numbering;
   const sceneMode = !numbering?.enabled ? "none" : numbering.position === "inline" ? "both" : numbering.position;
@@ -151,6 +154,37 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
           </select>
         </label>
         <p className="text-xs text-neutral-600">Scenes are numbered automatically and renumber as you edit; omitted scenes keep their number.</p>
+      </section>
+
+      <section className="space-y-2">
+        <h4 className="text-xs font-semibold uppercase text-neutral-500">Continueds</h4>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            data-testid="continueds-more"
+            checked={pg.dialogue.moreAtBottom && pg.dialogue.contAtTop}
+            onChange={e => setContinueds({ moreAtBottom: e.target.checked, contAtTop: e.target.checked })}
+          />
+          (MORE) and (CONT'D) when dialogue breaks across pages
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" data-testid="continueds-scene-bottom" checked={pg.sceneContinueds.bottom} onChange={e => setContinueds({ sceneBottom: e.target.checked })} />
+          (CONTINUED) at the bottom of a page that ends mid-scene
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" data-testid="continueds-scene-top" checked={pg.sceneContinueds.top} onChange={e => setContinueds({ sceneTop: e.target.checked })} />
+          CONTINUED: at the top of the next page
+        </label>
+        <label className="flex items-center gap-2 text-sm pl-6">
+          <input
+            type="checkbox"
+            data-testid="continueds-scene-numbered"
+            disabled={!pg.sceneContinueds.top}
+            checked={pg.sceneContinueds.numbered}
+            onChange={e => setContinueds({ sceneNumbered: e.target.checked })}
+          />
+          Number them from the second page (CONTINUED: (2))
+        </label>
       </section>
     </aside>
   );

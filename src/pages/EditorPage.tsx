@@ -5,6 +5,7 @@ import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyn
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { AiPanel } from "../components/AiPanel";
+import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { PageSetupPanel } from "../components/PageSetupPanel";
 import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
@@ -151,6 +152,7 @@ function Editor({ documentId }: { documentId: string }) {
           ))}
         </div>
         {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
+        {host && view === "edit" && <DualDialogueToggle host={host} />}
         {view === "pages" && (
           <button onClick={() => window.print()} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
             Print / Save as PDF
