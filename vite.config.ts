@@ -32,7 +32,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5143,
     strictPort: true,
     fs: { allow: [p("."), p(".."), p("../writing_core")] },
   },

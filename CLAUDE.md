@@ -12,7 +12,7 @@ Bun, Vite 7, React 19, TypeScript, Tailwind 3 (plain, no `@sudobility/building_b
 src/
   main.tsx            providers: QueryClient > ScreenwriterClientProvider > ScreenwriterProvider > BrowserRouter
   App.tsx             signed out -> LoginPage; signed in -> routes / , /p/:projectId , /d/:documentId
-  config.ts           VITE_API_URL (default http://localhost:8042), VITE_DEV_AUTH ("1" enables the dev login)
+  config.ts           VITE_API_URL (default http://localhost:8036), VITE_DEV_AUTH ("1" enables the dev login)
   services.ts         createScreenwriter({ fetch NetworkClient, baseUrl, auth port, IndexedDB offline store })
   auth/index.ts       createAuthPort(): DevAuthPort when VITE_DEV_AUTH=1, else a stub that refuses to sign in
   offline/idb-store.ts  IndexedDbOfflineDocStore (raw IndexedDB) implementing the lib's OfflineDocStore
@@ -27,7 +27,7 @@ e2e/formats.e2e.ts    Playwright: import Fountain/FDX (picker + drop), export Fo
 
 ## Commands
 
-- `bun install`, `bun run dev` (Vite on **5173**, strict; the API's CORS allows this origin), `bun run typecheck` (`bunx tsc --noEmit`), `bunx vitest run` (never `bun test`), `bun run build`.
+- `bun install`, `bun run dev` (Vite on **5143**, strict; the API's CORS allows this origin), `bun run typecheck` (`bunx tsc --noEmit`), `bunx vitest run` (never `bun test`), `bun run build`.
 - `bun run e2e` = `bunx playwright test`. Starts the API (`../screenwriter_api`, `bun run db:init && bun run src/index.ts`, port 18042, `DATABASE_URL=postgres://localhost:5432/screenwriter_test`, `AI_TEST_MODE=1`, `PUBLIC_APP_URL`/`CORS_ORIGINS` = the app origin) and Vite (port 15173) itself; needs local Postgres. `E2E_API_PORT`/`E2E_APP_PORT` override the ports. Screenshots go to `../screenwriter_plans/.superpowers/sdd/frontend-f4-*.png`. First time: `bunx playwright install chromium`.
 
 - Soak (`e2e/soak.e2e.ts`, skipped unless `SOAK=1`): randomized editing sessions hunting the two anomalies in `../screenwriter_plans/.superpowers/sdd/known-gaps.md`. It needs an already-running stack on non-dev ports (API 18342 with `AI_TEST_MODE=1`, `DATABASE_URL=...screenwriter_test`, `PUBLIC_APP_URL`/`CORS_ORIGINS=http://localhost:15373`; Vite 15373 with `VITE_API_URL=http://localhost:18342 VITE_DEV_AUTH=1`). Run: `SOAK=1 SOAK_SEEDS=1,2,3 SOAK_STEPS=60 [SOAK_CHAOS=1] [SOAK_VERBOSE=1] bunx playwright test -c playwright.soak.config.ts -g "soak seed"`. `SOAK_CHAOS` restarts the API on port 18342 mid-run. `SOAK_MECH=1` also enables a probe showing a letter typed on the focused style picker restyles the editor's stale selection.
@@ -36,8 +36,8 @@ e2e/formats.e2e.ts    Playwright: import Fountain/FDX (picker + drop), export Fo
 
 ## Running API + app together (dev)
 
-1. API: `cd ../screenwriter_api && AI_TEST_MODE=1 PUBLIC_APP_URL=http://localhost:5173 DATABASE_URL=postgres://localhost:5432/screenwriter_dev bun run dev` (its `.env` already has these; port 8042).
-2. App: `bun run dev`, open http://localhost:5173. `.env.local` (git-ignored, copy of `.env.example`) sets `VITE_API_URL=http://localhost:8042`, `VITE_DEV_AUTH=1`.
+1. API: `cd ../screenwriter_api && AI_TEST_MODE=1 PUBLIC_APP_URL=http://localhost:5143 DATABASE_URL=postgres://localhost:5432/screenwriter_dev bun run dev` (its `.env` already has these; port 8036).
+2. App: `bun run dev`, open http://localhost:5143. `.env.local` (git-ignored, copy of `.env.example`) sets `VITE_API_URL=http://localhost:8036`, `VITE_DEV_AUTH=1`.
 
 ## Dev auth flow
 
