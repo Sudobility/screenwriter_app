@@ -20,7 +20,7 @@ const API_PORT = Number(process.env.E2E_API_PORT ?? 18342);
 
 /** Kill whatever listens on our (non-default) API port and start the API again, as `bun --watch` would. */
 async function restartApi() {
-  if (API_PORT === 8042) throw new Error("refusing to touch the dev API port");
+  if (API_PORT === 8036) throw new Error("refusing to touch the dev API port");
   try {
     execSync(`kill $(lsof -tiTCP:${API_PORT} -sTCP:LISTEN)`);
   } catch {

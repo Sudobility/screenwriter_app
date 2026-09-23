@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-// Soak run against an already-started stack (see e2e/soak.e2e.ts). Ports are deliberately not 8042/5173.
+// Soak run against an already-started stack (see e2e/soak.e2e.ts). Ports are deliberately not 8036/5143.
 const APP_PORT = Number(process.env.E2E_APP_PORT ?? 15373);
 
 export default defineConfig({
