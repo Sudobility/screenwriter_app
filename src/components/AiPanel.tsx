@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useAi } from "@sudobility/screenwriter_lib";
+import { useAcceptAiConsent, useAiConsent } from "@sudobility/screenwriter_client";
 import type { AiNote, CoverageReport, Suggestion } from "@sudobility/screenwriter_types";
-import { diffWords } from "../util/diff";
+import { WordDiff as Diff } from "./WordDiff";
+import { GenerateScriptSection } from "./GenerateScriptSection";
+import { PolishSceneSection } from "./PolishSceneSection";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100 disabled:opacity-50";
 const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm hover:bg-neutral-800 disabled:opacity-50";
@@ -119,27 +122,6 @@ function ReportView({ report, createdAt, onJumpTo }: { report: CoverageReport; c
   );
 }
 
-function Diff({ before, after, side }: { before: string; after: string; side: "before" | "after" }) {
-  const parts = useMemo(() => diffWords(before, after), [before, after]);
-  return (
-    <p className="text-sm whitespace-pre-wrap font-mono" data-testid={`ai-diff-${side}`}>
-      {parts.map((p, i) =>
-        p.op === "same" ? (
-          <span key={i}>{p.text}</span>
-        ) : side === "before" && p.op === "del" ? (
-          <del key={i} className="bg-red-100 text-red-800">
-            {p.text}
-          </del>
-        ) : side === "after" && p.op === "add" ? (
-          <ins key={i} className="bg-green-100 text-green-800 no-underline">
-            {p.text}
-          </ins>
-        ) : null
-      )}
-    </p>
-  );
-}
-
 function SuggestionCard({ s, checked, onToggle, stale }: { s: Suggestion; checked: boolean; onToggle(): void; stale: boolean }) {
   const decided = s.status === "accepted" || s.status === "rejected";
   return (
@@ -167,6 +149,8 @@ function SuggestionCard({ s, checked, onToggle, stale }: { s: Suggestion; checke
 
 export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
   const ai = useAi(documentId);
+  const consent = useAiConsent();
+  const acceptConsent = useAcceptAiConsent();
   const selection = useEditorSelection(host);
   const scene = useMemo(() => {
     const id = selection?.head.elementId;
@@ -228,7 +212,32 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
         </div>
       )}
 
-      {ai.error && (
+      {ai.error?.code === "AI_CONSENT_REQUIRED" && (
+        <div role="alertdialog" aria-label="AI consent" data-testid="ai-panel-consent" className="border border-neutral-300 rounded p-3 bg-white text-sm space-y-2">
+          <p className="font-medium">Use AI on your writing?</p>
+          <p className="text-xs text-neutral-600">
+            To review or polish, the script text is sent to an AI provider, which returns notes or suggestions. Nothing changes until you accept a suggestion.
+          </p>
+          <div className="flex gap-2">
+            <button
+              className={primary}
+              data-testid="ai-panel-consent-accept"
+              disabled={acceptConsent.isPending || !consent.data}
+              onClick={async () => {
+                if (!consent.data) return;
+                await acceptConsent.mutateAsync({ version: consent.data.currentVersion });
+                ai.clearError(); // then press the button again
+              }}
+            >
+              I agree
+            </button>
+            <button className={btn} onClick={ai.clearError}>
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
+      {ai.error && ai.error.code !== "AI_CONSENT_REQUIRED" && (
         <div role="alert" data-testid="ai-error" data-code={ai.error.code} className="bg-red-50 border border-red-300 rounded p-2 text-sm text-red-800 flex gap-2">
           <span>{ai.error.message}</span>
           <button className="ml-auto underline text-xs" onClick={ai.clearError}>
@@ -317,6 +326,13 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
               </div>
             )}
           </section>
+
+          {/* Structured AI actions (synchronous): generate a script from a story; polish the scene using the characters' skeletons.
+              Character-level actions (skeleton from a description, dialogue polish) live on the character in the Catalog. */}
+          <div className="border-t border-neutral-200 pt-4 space-y-6">
+            <GenerateScriptSection host={host} onInserted={onJumpTo} />
+            <PolishSceneSection host={host} scene={scene} />
+          </div>
         </>
       )}
     </aside>

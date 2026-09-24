@@ -14,7 +14,8 @@ async function createDoc(page: Page, project: boolean, title: string, template: 
   }
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
   await page.getByLabel("Title", { exact: true }).fill(title);
-  await page.getByLabel("Template").selectOption({ label: template });
+  await page.getByLabel("Template").click();
+  await page.getByRole("option", { name: template, exact: true }).click();
   await page.getByRole("button", { name: "Create document" }).click();
   await expect(page).toHaveURL(/\/d\/doc_/);
   await expect(page.getByTestId("script-editor")).toBeVisible();

@@ -84,6 +84,12 @@ test("AI panel: test-mode banner, coverage review, polish suggestions, accept, s
   // ---- review the whole script
   await line("Something happens in scene 1.").click();
   await page.getByTestId("ai-review-button").click();
+  // First use: the API needs the user's AI consent; the panel asks (not a generic error), then the writer presses Review again.
+  await expect(page.getByTestId("ai-panel-consent")).toBeVisible();
+  await expect(page.getByTestId("ai-error")).toHaveCount(0);
+  await page.getByTestId("ai-panel-consent-accept").click();
+  await expect(page.getByTestId("ai-panel-consent")).toHaveCount(0);
+  await page.getByTestId("ai-review-button").click();
   await expect(page.getByTestId("ai-report")).toBeVisible();
   await expect(page.getByTestId("ai-report-summary")).toContainText("fixture summary");
   await expect(page.getByTestId("ai-verdict")).toHaveText("Consider");

@@ -44,8 +44,9 @@ test("dev login to snapshots, end to end", async ({ page, browser }: { page: Pag
   await page.screenshot({ path: `${SHOTS}/frontend-f4-dashboard.png` });
   await page.getByRole("link", { name: "Feature film" }).click();
 
-  // 3. create a screenplay document (default template)
-  await expect(page.getByLabel("Template")).not.toHaveValue("");
+  // 3. create a screenplay document (default template) — the Select shows the resolved template's
+  // name, not its own "Template" placeholder, once the default-template effect has picked one.
+  await expect(page.getByLabel("Template")).not.toHaveText("Template");
   await page.getByLabel("Title", { exact: true }).fill("Night Train");
   await page.getByRole("button", { name: "Create document" }).click();
   await expect(page).toHaveURL(/\/d\/doc_/);

@@ -53,7 +53,15 @@ function Editor({ documentId }: { documentId: string }) {
   const [caret, setCaret] = useState<PlainPos | null>(null);
   // The sidebar's Catalog selection: when set, `MasterDetailLayout`'s detail area shows that entity
   // (`EntityDetailView`) instead of the script editor — a real master/detail relationship, not a toggle.
+  // `selectedStageId` additionally picks one of a `character`-kind entity's life stages (see
+  // `util/character-skeleton.ts`) instead of the character itself; `null` when none is selected, or the
+  // selected entity has no stages / isn't a character.
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const selectEntity = (entityId: string | null, stageId: string | null = null) => {
+    setSelectedEntityId(entityId);
+    setSelectedStageId(entityId ? stageId : null);
+  };
   // Revised pages list: switch to the Pages tab and scroll to that sheet once it is on screen.
   const [goPage, setGoPage] = useState<{ index: number } | null>(null);
   // Switching tabs by hand drops any pending "put the caret here" so Edit does not jump back to an old jump target.
@@ -65,7 +73,7 @@ function Editor({ documentId }: { documentId: string }) {
   // (ScriptEditor initialCaret). A fresh object each time so jumping to the same scene twice still
   // re-applies the caret. Also clears any Catalog selection, so the detail area snaps back to the script.
   const jumpTo = (elementId: string) => {
-    setSelectedEntityId(null);
+    selectEntity(null);
     setCaret({ elementId, offset: 0 });
     setViewRaw("edit");
   };
@@ -119,6 +127,11 @@ function Editor({ documentId }: { documentId: string }) {
   const projectId = session?.detail?.projectId;
   const st = statusLabel(syncStatus);
   const pageLabel = layout.layout ? `${layout.pageCount} ${layout.pageCount === 1 ? "page" : "pages"}` : "";
+  // Tools that only make sense with the script editor itself (Edit view's style picker/dual dialogue/
+  // scene omit, Pages view's Print), not with the document generally — moved out of the main nav
+  // header into their own bar right above the content area, and hidden entirely once the sidebar's
+  // Catalog selection replaces that content with `EntityDetailView` (none of them act on an entity).
+  const editingBarVisible = !selectedEntityId && (view === "edit" || view === "pages");
 
   return (
     <div className="h-full flex flex-col print-flow">
@@ -152,14 +165,6 @@ function Editor({ documentId }: { documentId: string }) {
             </button>
           ))}
         </div>
-        {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
-        {host && view === "edit" && <DualDialogueToggle host={host} />}
-        {host && view === "edit" && <SceneOmitToggle host={host} />}
-        {view === "pages" && (
-          <button onClick={() => window.print()} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
-            Print / Save as PDF
-          </button>
-        )}
         <span className="ml-auto" />
         {host && <RevisionIndicator host={host} onClick={() => setPanel("revisions")} />}
         {ready && (
@@ -233,16 +238,44 @@ function Editor({ documentId }: { documentId: string }) {
         </div>
       )}
 
+      {editingBarVisible && (
+        <div data-testid="editing-bar" className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 flex-wrap print:hidden">
+          {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
+          {host && view === "edit" && <DualDialogueToggle host={host} />}
+          {host && view === "edit" && <SceneOmitToggle host={host} />}
+          {view === "pages" && (
+            <button onClick={() => window.print()} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
+              Print / Save as PDF
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 min-h-0 flex print-flow" data-testid="editor-split">
         {host && (
           <MasterDetailLayout
-            masterContent={<EditorSidebar host={host} selectedEntityId={selectedEntityId} onSelectEntity={setSelectedEntityId} onJumpToScene={jumpTo} />}
+            masterContent={
+              <EditorSidebar
+                host={host}
+                selectedEntityId={selectedEntityId}
+                selectedStageId={selectedStageId}
+                onSelectEntity={selectEntity}
+                onJumpToScene={jumpTo}
+              />
+            }
             // No width cap: the script editor/pages content has never had one, and 1024px (the
             // component's own default) would newly constrain it on wide screens.
             detailMaxWidth={0}
             detailContent={
               selectedEntityId ? (
-                <EntityDetailView host={host} entityId={selectedEntityId} onJumpTo={jumpTo} onDeleted={() => setSelectedEntityId(null)} />
+                <EntityDetailView
+                  host={host}
+                  entityId={selectedEntityId}
+                  stageId={selectedStageId}
+                  onJumpTo={jumpTo}
+                  onSelectStage={stageId => setSelectedStageId(stageId)}
+                  onDeleted={() => selectEntity(null)}
+                />
               ) : (
                 <>
                   {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}

@@ -3,12 +3,18 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DOCUMENT_KINDS, type DocumentKind } from "@sudobility/screenwriter_types";
 import { useDocuments, useProjects, useTemplates } from "@sudobility/screenwriter_lib";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { ImportScript } from "../components/ImportScript";
 
 const btn = "border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100 disabled:opacity-50";
 const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm disabled:opacity-50";
+// `SelectTrigger` (from mail_box_components) is a fixed `h-9`; the title input and submit button match
+// it exactly (same height as the two selects, per an explicit user requirement) instead of each control
+// following its own padding/font-size.
+const fieldClass = "h-9 border border-neutral-300 rounded px-3 text-sm text-neutral-900";
+const primaryField = "h-9 inline-flex items-center justify-center bg-neutral-900 text-white rounded px-3 text-sm disabled:opacity-50";
 
 export function DashboardPage() {
   const { projectId } = useParams();
@@ -186,30 +192,40 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder={t("dashboard.titlePlaceholder")}
-          className="border border-neutral-300 rounded px-3 py-1.5 text-base text-neutral-900"
+          className={fieldClass}
         />
       </label>
       <label className="flex flex-col text-xs text-neutral-500">
         {t("dashboard.kindLabel")}
-        <select value={kind} onChange={e => setKind(e.target.value as DocumentKind)} className="border border-neutral-300 rounded px-2 py-2 text-sm text-neutral-900">
-          {DOCUMENT_KINDS.map(k => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
+        <Select value={kind} onValueChange={v => setKind(v as DocumentKind)}>
+          <SelectTrigger aria-label={t("dashboard.kindLabel")} className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DOCUMENT_KINDS.map(k => (
+              <SelectItem key={k} value={k}>
+                {k}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
       <label className="flex flex-col text-xs text-neutral-500">
         {t("dashboard.templateLabel")}
-        <select value={templateId} onChange={e => setTemplateId(e.target.value)} className="border border-neutral-300 rounded px-2 py-2 text-sm text-neutral-900">
-          {templates.map(t => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        <Select value={templateId} onValueChange={setTemplateId}>
+          <SelectTrigger aria-label={t("dashboard.templateLabel")} className="w-48">
+            <SelectValue placeholder={t("dashboard.templateLabel")} />
+          </SelectTrigger>
+          <SelectContent>
+            {templates.map(t => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
-      <button type="submit" disabled={busy} className={primary}>
+      <button type="submit" disabled={busy} className={primaryField}>
         {t("dashboard.createDocument")}
       </button>
     </form>

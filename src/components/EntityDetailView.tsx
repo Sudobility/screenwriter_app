@@ -1,37 +1,131 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { EntityKind } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
 import { kindLabel } from "../util/entity-kind-labels";
 import { sceneCountOf } from "../util/entity-scene-count";
+import { CharacterSkeletonEditor } from "./CharacterSkeletonEditor";
+import {
+  addAge,
+  deleteStage,
+  getOwnSkeleton,
+  getStages,
+  setOwnSkeleton,
+  setOwnSkeletonField,
+  setStageField,
+  setStageSkeleton,
+  stageLabel,
+} from "../util/character-skeleton";
+import { GenerateSkeletonBox } from "./GenerateSkeletonBox";
+import { PolishDialogueSection } from "./PolishDialogueSection";
+import {
+  addSubplot,
+  deleteSubplot,
+  getPlotMain,
+  getSubplots,
+  getSynopsis,
+  getTagline,
+  getTheme,
+  isStoryEntity,
+  setPlotMain,
+  setSubplotField,
+  setSynopsis,
+  setTagline,
+  setTheme,
+} from "../util/story-info";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-white";
 
 const SOURCE_LABEL: Record<"speaker" | "heading" | "tag", string> = { speaker: "Speaks", heading: "Scene heading", tag: "Tagged" };
 
+function AddAgeButton({ onAdd }: { onAdd(): void }) {
+  return (
+    <button className={btn} data-testid="add-age" onClick={onAdd}>
+      + Add Age
+    </button>
+  );
+}
+
+function AddSubplotButton({ onAdd }: { onAdd(): void }) {
+  return (
+    <button className={btn} data-testid="add-subplot" onClick={onAdd}>
+      + Add subplot
+    </button>
+  );
+}
+
+/**
+ * Fixed header-less frame every `EntityDetailView` return uses: a real three-region layout (per an
+ * explicit user requirement), not the earlier `position: sticky` footer — sticky only pins once
+ * scrolled *past* its natural position, so on a short skeleton (little content yet) it just sat right
+ * after the last field instead of staying pinned to the bottom of the pane. `MasterDetailLayout`
+ * already gives `detailContent`'s wrapper a definite `h-full` (itself inside its own `overflow-y-auto`,
+ * see that repo's `MasterDetailLayout.tsx`), so this component's own `h-full flex flex-col` exactly
+ * fills that space: the middle `overflow-y-auto` region is genuinely, independently scrollable, and
+ * `footer` (present only on a `character`-kind entity) sits in normal flow at the bottom, always
+ * visible, never scrolling away regardless of content length.
+ */
+function DetailFrame({ children, footer, dataStageId }: { children: ReactNode; footer?: ReactNode; dataStageId?: string }) {
+  return (
+    <div className="h-full flex flex-col" data-testid="entity-detail" data-stage-id={dataStageId}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="max-w-5xl mx-auto p-6 space-y-4">{children}</div>
+      </div>
+      {footer && (
+        <div className="shrink-0 border-t border-neutral-200 bg-white">
+          <div className="max-w-5xl mx-auto px-6 py-3 flex justify-end">{footer}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * The master/detail layout's `detailContent` when a Catalog entity is selected in `EditorSidebar`
  * (instead of the script editor) — the same fields and `entity.*` commands `CatalogPanel.tsx` used to
  * show in its own flyout, relocated here: name (rename), kind + scene count, aliases (add/remove),
- * description, "Appears in" occurrences (`onJumpTo`, same jump mechanism as `Navigator`/`AiPanel`),
- * delete with the existing force-confirm flow.
+ * "Appears in" occurrences (`onJumpTo`, same jump mechanism as `Navigator`/`AiPanel`), delete with the
+ * existing force-confirm flow.
+ *
+ * `character`-kind entities get a structured "skeleton" (Physical/Social/Psychological,
+ * `CharacterSkeletonEditor`) instead of the generic plain-text description, and support multiple life
+ * stages differentiated by age (see `util/character-skeleton.ts` for the data model/storage choice):
+ * with no stages yet, the character's own skeleton is shown directly, with a fixed "+ Add Age" CTA
+ * (`DetailFrame`'s `footer`); once staged, the character view instead lists its stages (each selectable
+ * via `onSelectStage`, same as clicking one in the sidebar tree), and `stageId` (set instead) shows
+ * that one stage's skeleton in a focused view — no name/aliases/occurrences there, those stay at the
+ * character level.
+ *
+ * `EditorPage` passes `detailMaxWidth={0}` to its one `MasterDetailLayout` instance (the script editor
+ * needs full bleed), so `MasterDetailLayout`'s own `detailMaxWidth`/`detailPadding` props aren't
+ * available here — this view constrains and pads itself instead (`max-w-5xl`, matching
+ * `ScreenContainer`'s own `maxWidth: "5xl"` convention, plus `p-6`).
  */
 export function EntityDetailView({
   host,
   entityId,
+  stageId,
   onJumpTo,
+  onSelectStage,
   onDeleted,
 }: {
   host: ScriptEditorHost;
   entityId: string;
+  /** A specific life stage of this (character) entity, or `null` for the character itself. */
+  stageId: string | null;
   onJumpTo(elementId: string): void;
+  /** Select a different life stage of this same entity (or `null` to go back to the character itself). */
+  onSelectStage(stageId: string | null): void;
   /** The entity was deleted (or no longer exists) — the caller clears the selection. */
   onDeleted(): void;
 }) {
   useModelTick(host);
   const [error, setError] = useState<string | null>(null);
   const [deleteBlocked, setDeleteBlocked] = useState(false);
+  const [stageDeletePending, setStageDeletePending] = useState(false);
   const [alias, setAlias] = useState("");
+  // Bumped when the AI fills in a skeleton, so the (uncontrolled) skeleton form remounts and shows the new values.
+  const [skeletonVersion, setSkeletonVersion] = useState(0);
 
   const run = (id: string, params: Record<string, unknown>) => {
     const r = host.execute([{ id, params }], { kind: "local-command" });
@@ -50,7 +144,164 @@ export function EntityDetailView({
     return null;
   }
 
+  if (isStoryEntity(entity)) {
+    // The built-in "Story" record (Plot/Theme/Tagline/Synopsis, see `util/story-info.ts`) — `stageId`
+    // is repurposed here as the story item key ("theme" | "tagline" | "synopsis" | "plot" |
+    // "subplot:<id>"), not a character life stage; no name/aliases/occurrences/delete for this
+    // hidden container entity itself, only the item currently selected in the sidebar.
+    const subplots = getSubplots(entity);
+    const subplotId = stageId?.startsWith("subplot:") ? stageId.slice("subplot:".length) : null;
+    const activeSubplot = subplotId ? subplots.find(s => s.id === subplotId) : undefined;
+    if (subplotId && !activeSubplot) {
+      onSelectStage(null);
+      return null;
+    }
+    const key = activeSubplot ? "subplot" : (stageId ?? "theme");
+    const fieldInput = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900 w-full";
+    return (
+      <DetailFrame footer={key === "plot" || key === "subplot" ? <AddSubplotButton onAdd={() => onSelectStage(`subplot:${addSubplot(host, entity)}`)} /> : undefined}>
+        <h3 className="text-xs font-semibold uppercase text-neutral-500">Story</h3>
+
+        {key === "theme" && (
+          <label className="flex flex-col text-xs text-neutral-500">
+            Theme
+            <input data-testid="story-field-theme" className={fieldInput} defaultValue={getTheme(entity)} key={entity.id} onBlur={e => setTheme(host, entity, e.target.value)} />
+          </label>
+        )}
+        {key === "tagline" && (
+          <label className="flex flex-col text-xs text-neutral-500">
+            Tagline
+            <input data-testid="story-field-tagline" className={fieldInput} defaultValue={getTagline(entity)} key={entity.id} onBlur={e => setTagline(host, entity, e.target.value)} />
+          </label>
+        )}
+        {key === "synopsis" && (
+          <label className="flex flex-col text-xs text-neutral-500">
+            Synopsis
+            <textarea
+              rows={10}
+              data-testid="story-field-synopsis"
+              className={fieldInput}
+              defaultValue={getSynopsis(entity)}
+              key={entity.id}
+              onBlur={e => setSynopsis(host, entity, e.target.value)}
+            />
+          </label>
+        )}
+        {key === "plot" && (
+          <label className="flex flex-col text-xs text-neutral-500">
+            Main plot
+            <textarea
+              rows={8}
+              data-testid="story-field-plot-main"
+              className={fieldInput}
+              defaultValue={getPlotMain(entity)}
+              key={entity.id}
+              onBlur={e => setPlotMain(host, entity, e.target.value)}
+            />
+          </label>
+        )}
+        {activeSubplot && (
+          <>
+            <label className="flex flex-col text-xs text-neutral-500">
+              Name
+              <input
+                data-testid="story-field-subplot-name"
+                className={fieldInput}
+                defaultValue={activeSubplot.name}
+                key={activeSubplot.id}
+                onBlur={e => setSubplotField(host, entity, activeSubplot.id, { name: e.target.value.trim() || "Untitled subplot" })}
+              />
+            </label>
+            <label className="flex flex-col text-xs text-neutral-500">
+              Text
+              <textarea
+                rows={8}
+                data-testid="story-field-subplot-text"
+                className={fieldInput}
+                defaultValue={activeSubplot.text}
+                key={`${activeSubplot.id}-text`}
+                onBlur={e => setSubplotField(host, entity, activeSubplot.id, { text: e.target.value })}
+              />
+            </label>
+            <div className="pt-2 border-t border-neutral-200">
+              {stageDeletePending ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-red-600">Delete this subplot? This cannot be undone.</p>
+                  <div className="flex gap-2">
+                    <button
+                      className={`${btn} text-xs`}
+                      onClick={() => {
+                        deleteSubplot(host, entity, activeSubplot.id);
+                        setStageDeletePending(false);
+                        onSelectStage("plot");
+                      }}
+                    >
+                      Delete subplot
+                    </button>
+                    <button className={`${btn} text-xs`} onClick={() => setStageDeletePending(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className={`${btn} text-xs`} onClick={() => setStageDeletePending(true)}>
+                  Delete this subplot
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </DetailFrame>
+    );
+  }
+
+  const isCharacter = entity.kind === "character";
+  const isLocation = entity.kind === "location";
+  const stages = isCharacter ? getStages(entity) : [];
+  const stage = stageId ? stages.find(s => s.id === stageId) : undefined;
+  if (stageId && !stage) {
+    // The selected stage was deleted from under us (e.g. from another client) — fall back to the
+    // character itself rather than showing a blank/broken stage view.
+    onSelectStage(null);
+    return null;
+  }
+
   const occurrences = host.model.occurrences(entity.id);
+
+  // Character-only (see the non-character branch below) — reused in two places (never both at once): a
+  // standalone section when a staged character's "Life stages" list is shown (no skeleton on screen),
+  // or — per an explicit user requirement — inside the Social section of the un-staged skeleton itself
+  // (`socialExtra` below).
+  const aliasesEditor = (
+    <div>
+      <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Aliases</h4>
+      <ul className="space-y-1">
+        {entity.aliases.map(a => (
+          <li key={a} className="flex items-center gap-2 text-sm">
+            <span className="flex-1">{a}</span>
+            <button className={`${btn} text-xs`} onClick={() => run("entity.removeAlias", { entityId: entity.id, alias: a })}>
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2 mt-2">
+        <input
+          aria-label="New alias"
+          className="flex-1 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
+          value={alias}
+          onChange={e => setAlias(e.target.value)}
+        />
+        <button
+          className={btn}
+          disabled={!alias.trim()}
+          onClick={() => { if (alias.trim()) { run("entity.addAlias", { entityId: entity.id, alias: alias.trim() }); setAlias(""); } }}
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
 
   const deleteEntity = (force: boolean) => {
     const res = run("entity.delete", { entityId: entity.id, ...(force ? { force: true } : {}) });
@@ -58,8 +309,64 @@ export function EntityDetailView({
     else if (!force && (res.detail?.tagIds || res.detail?.locationElementIds)) setDeleteBlocked(true);
   };
 
+  if (stage) {
+    // A single life stage: just its skeleton, no name/aliases/occurrences (those are character-level).
+    return (
+      <DetailFrame dataStageId={stage.id} footer={<AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} />}>
+        <div>
+          <button className="text-xs text-blue-700 hover:underline" onClick={() => onSelectStage(null)}>
+            &larr; {entity.name}
+          </button>
+          <p className="text-sm text-neutral-500 mt-1" data-testid="stage-heading">
+            {entity.name} &middot; Age {stageLabel(stage)}
+          </p>
+        </div>
+
+        <GenerateSkeletonBox
+          existing={stage.skeleton}
+          onApply={merged => {
+            setStageSkeleton(host, entity, stage.id, merged);
+            setSkeletonVersion(v => v + 1);
+          }}
+        />
+        <CharacterSkeletonEditor
+          key={`${stage.id}-${skeletonVersion}`}
+          skeleton={stage.skeleton}
+          onFieldCommit={(key, value) => setStageField(host, entity, stage.id, key, value)}
+        />
+
+        <div className="pt-2 border-t border-neutral-200">
+          {stageDeletePending ? (
+            <div className="space-y-2">
+              <p className="text-xs text-red-600">Delete this life stage? This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  className={`${btn} text-xs`}
+                  onClick={() => {
+                    deleteStage(host, entity, stage.id);
+                    setStageDeletePending(false);
+                    onSelectStage(null);
+                  }}
+                >
+                  Delete stage
+                </button>
+                <button className={`${btn} text-xs`} onClick={() => setStageDeletePending(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className={`${btn} text-xs`} onClick={() => setStageDeletePending(true)}>
+              Delete this stage
+            </button>
+          )}
+        </div>
+      </DetailFrame>
+    );
+  }
+
   return (
-    <div className="space-y-4" data-testid="entity-detail">
+    <DetailFrame footer={isCharacter ? <AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} /> : undefined}>
       <div>
         <label className="flex flex-col text-xs text-neutral-500">
           Name
@@ -76,48 +383,87 @@ export function EntityDetailView({
         </p>
       </div>
 
-      <div>
-        <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Aliases</h4>
-        <ul className="space-y-1">
-          {entity.aliases.map(a => (
-            <li key={a} className="flex items-center gap-2 text-sm">
-              <span className="flex-1">{a}</span>
-              <button className={`${btn} text-xs`} onClick={() => run("entity.removeAlias", { entityId: entity.id, alias: a })}>
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div className="flex gap-2 mt-2">
-          <input
-            aria-label="New alias"
-            className="flex-1 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
-            value={alias}
-            onChange={e => setAlias(e.target.value)}
-          />
-          <button
-            className={btn}
-            disabled={!alias.trim()}
-            onClick={() => { if (alias.trim()) { run("entity.addAlias", { entityId: entity.id, alias: alias.trim() }); setAlias(""); } }}
-          >
-            Add
-          </button>
-        </div>
-      </div>
+      {isCharacter ? (
+        stages.length > 0 ? (
+          <>
+            {aliasesEditor}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Life stages</h4>
+              <ul className="space-y-1" data-testid="life-stages">
+                {stages.map(s => (
+                  <li key={s.id}>
+                    <button className="text-sm text-blue-700 hover:underline" onClick={() => onSelectStage(s.id)}>
+                      {stageLabel(s)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        ) : (
+          <div>
+            <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Skeleton</h4>
+            <div className="mb-3">
+              <GenerateSkeletonBox
+                existing={getOwnSkeleton(entity)}
+                onApply={merged => {
+                  setOwnSkeleton(host, entity, merged);
+                  setSkeletonVersion(v => v + 1);
+                }}
+              />
+            </div>
+            <CharacterSkeletonEditor
+              key={`${entity.id}-${skeletonVersion}`}
+              skeleton={getOwnSkeleton(entity)}
+              onFieldCommit={(key, value) => setOwnSkeletonField(host, entity, key, value)}
+              socialExtra={aliasesEditor}
+            />
+          </div>
+        )
+      ) : (
+        <>
+          {isLocation && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Setting</h4>
+              <div className="flex gap-2">
+                {(["int", "ext"] as const).map(v => {
+                  const selected = (entity.fields as Record<string, unknown>).setting === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      data-testid={`location-setting-${v}`}
+                      aria-pressed={selected}
+                      className={`border rounded px-3 py-1 text-sm ${selected ? "bg-neutral-800 text-white border-neutral-800" : "border-neutral-300 bg-white hover:bg-neutral-100"}`}
+                      onClick={() => run("entity.update", { entityId: entity.id, patch: { fields: { setting: selected ? null : v } } })}
+                    >
+                      {v === "int" ? "Interior (INT)" : "Exterior (EXT)"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {/* Aliases (alternate names an entity is known by) are only offered for Character — the one
+              kind where that's a real, common concept (nicknames); it was never a deliberate choice
+              for every other kind, just the generic fallback they all inherited by default. */}
+          <div>
+            <label className="flex flex-col text-xs text-neutral-500">
+              Description
+              <textarea
+                data-testid="entity-description"
+                rows={3}
+                className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
+                defaultValue={entity.description.plain}
+                key={`${entity.id}-desc`}
+                onBlur={e => e.target.value !== entity.description.plain && run("entity.update", { entityId: entity.id, patch: { description: e.target.value } })}
+              />
+            </label>
+          </div>
+        </>
+      )}
 
-      <div>
-        <label className="flex flex-col text-xs text-neutral-500">
-          Description
-          <textarea
-            data-testid="entity-description"
-            rows={3}
-            className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
-            defaultValue={entity.description.plain}
-            key={`${entity.id}-desc`}
-            onBlur={e => e.target.value !== entity.description.plain && run("entity.update", { entityId: entity.id, patch: { description: e.target.value } })}
-          />
-        </label>
-      </div>
+      {isCharacter && <PolishDialogueSection host={host} entity={entity} />}
 
       <div>
         <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Appears in</h4>
@@ -154,6 +500,6 @@ export function EntityDetailView({
       </div>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
-    </div>
+    </DetailFrame>
   );
 }
