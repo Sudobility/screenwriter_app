@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { ENTITY_KINDS, type EntityKind } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
+
+/** Radix's `Select` reserves the empty string internally (it means "no selection"), so "All kinds" needs
+ * its own sentinel value rather than "" the way the native `<select>` version used. */
+const ALL_KINDS = "all";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-white";
 
@@ -48,7 +53,6 @@ export function CatalogPanel({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleteBlocked, setDeleteBlocked] = useState<string | null>(null);
-  const [newKind, setNewKind] = useState<EntityKind>("character");
   const [newName, setNewName] = useState("");
   const [alias, setAlias] = useState("");
 
@@ -81,10 +85,12 @@ export function CatalogPanel({
   // precomputed count like the API projection's `EntitySummary.sceneCount` does.
   const sceneCountOf = (entityId: string) => new Set(host.model.occurrences(entityId as never).map(o => o.sceneId).filter(Boolean)).size;
 
+  // Only offered while a specific kind is filtered in (see the render below): the entity it creates
+  // always matches that kind, so there is no separate kind picker in this form to keep in sync.
   const addEntity = () => {
     const name = newName.trim();
-    if (!name) return;
-    const res = run("entity.create", { kind: newKind, name });
+    if (!name || !kind) return;
+    const res = run("entity.create", { kind, name });
     if (res.ok) {
       setNewName("");
       const created = res.effects.find(e => e.kind === "entityCreated");
@@ -213,22 +219,21 @@ export function CatalogPanel({
         </section>
       ) : (
         <>
-          <div className="flex gap-2">
-            <select
-              aria-label="Kind"
-              data-testid="entity-kind-filter"
-              className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
-              value={kind}
-              onChange={e => setKind(e.target.value as EntityKind | "")}
-            >
-              <option value="">All kinds</option>
-              {ENTITY_KINDS.map(k => (
-                <option key={k} value={k}>
-                  {kindLabel(k)}
-                </option>
-              ))}
-            </select>
-            <button className={`${btn} text-xs`} onClick={() => run("entity.rebuild", {})} title="Re-scan the script for character and location entities">
+          <div className="flex gap-2 w-full">
+            <Select value={kind || ALL_KINDS} onValueChange={v => setKind(v === ALL_KINDS ? "" : (v as EntityKind))}>
+              <SelectTrigger aria-label="Kind" data-testid="entity-kind-filter" className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_KINDS}>All kinds</SelectItem>
+                {ENTITY_KINDS.map(k => (
+                  <SelectItem key={k} value={k}>
+                    {kindLabel(k)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button className={`${btn} text-xs shrink-0`} onClick={() => run("entity.rebuild", {})} title="Re-scan the script for character and location entities">
               Refresh
             </button>
           </div>
@@ -257,33 +262,20 @@ export function CatalogPanel({
             ))}
           </ul>
 
-          <div className="pt-2 border-t border-neutral-200 space-y-2">
-            <h4 className="text-xs font-semibold uppercase text-neutral-500">Add entity</h4>
-            <div className="flex gap-2">
-              <select
-                aria-label="New entity kind"
-                className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
-                value={newKind}
-                onChange={e => setNewKind(e.target.value as EntityKind)}
-              >
-                {ENTITY_KINDS.map(k => (
-                  <option key={k} value={k}>
-                    {kindLabel(k)}
-                  </option>
-                ))}
-              </select>
+          {kind && (
+            <div className="pt-2 border-t border-neutral-200 flex gap-2">
               <input
-                aria-label="New entity name"
+                aria-label={`New ${kindLabel(kind)} name`}
                 placeholder="Name"
                 className="flex-1 min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
               />
+              <button className={`${btn} shrink-0`} data-testid="entity-add" disabled={!newName.trim()} onClick={addEntity}>
+                Add {kindLabel(kind)}
+              </button>
             </div>
-            <button className={btn} data-testid="entity-add" disabled={!newName.trim()} onClick={addEntity}>
-              Add
-            </button>
-          </div>
+          )}
         </>
       )}
 

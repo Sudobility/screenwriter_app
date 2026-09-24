@@ -23,6 +23,13 @@ async function createDoc(page: Page, title: string) {
   await synced(page);
 }
 
+/** The kind filter is `@sudobility/components`' Radix-backed `Select`, not a native `<select>` — its
+ * options render in a portal as `role="option"`, so picking one is a click, not `.selectOption()`. */
+async function pickKind(page: Page, label: string) {
+  await page.getByTestId("entity-kind-filter").click();
+  await page.getByRole("option", { name: label, exact: true }).click();
+}
+
 /** Scene heading + character + dialogue, through the same command path the editor uses (matches
  * `columns.e2e.ts`'s `seed()`), so the entity harvester has real text to find. */
 async function seedScene(page: Page) {
@@ -48,7 +55,7 @@ test("catalog panel: harvested character/location, jump to scene, and a manual p
   // Harvesting runs once automatically on open; "Refresh" re-confirms it's idempotent to press by hand too.
   await page.getByRole("button", { name: "Refresh" }).click();
 
-  await page.getByLabel("Kind", { exact: true }).selectOption({ label: "Character" });
+  await pickKind(page, "Character");
   const quinn = page.getByTestId("entity-row").filter({ hasText: "QUINN" });
   await expect(quinn).toBeVisible();
   await quinn.click();
@@ -64,15 +71,15 @@ test("catalog panel: harvested character/location, jump to scene, and a manual p
 
   // Locations are harvested too.
   await page.getByRole("button", { name: "Back to list" }).click();
-  await page.getByLabel("Kind", { exact: true }).selectOption({ label: "Location" });
+  await pickKind(page, "Location");
   await expect(page.getByTestId("entity-row").filter({ hasText: "ARCHIVE" })).toBeVisible();
 
-  // A kind that is never harvested: only exists once created by hand.
-  await page.getByLabel("Kind", { exact: true }).selectOption({ label: "Prop" });
+  // A kind that is never harvested: only exists once created by hand. The "Add" form only appears
+  // once a specific kind is picked (not "All kinds"), and always creates that kind.
+  await pickKind(page, "Prop");
   await expect(page.getByText("No entities yet.")).toBeVisible();
-  await page.getByLabel("New entity kind").selectOption({ label: "Prop" });
-  await page.getByLabel("New entity name").fill("The ledger");
-  await page.getByTestId("entity-add").click();
+  await page.getByLabel("New Prop name").fill("The ledger");
+  await page.getByRole("button", { name: "Add Prop", exact: true }).click();
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await expect(page.getByTestId("entity-name")).toHaveValue("The ledger");
   await page.getByRole("button", { name: "Back to list" }).click();
