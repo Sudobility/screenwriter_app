@@ -4,11 +4,17 @@ import { useAuth } from "./app/AuthContext";
 import { ScreenContainer } from "./components/shell/ScreenContainer";
 import { isLanguageSupported } from "./config/languages";
 import { useLang } from "./hooks/useLang";
+import { AboutPage } from "./pages/AboutPage";
+import { ContactPage } from "./pages/ContactPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { DocsPage } from "./pages/DocsPage";
 import { EditorPage } from "./pages/EditorPage";
 import { HomePage } from "./pages/HomePage";
 import { KeysPage } from "./pages/KeysPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
+import { ResourcesPage } from "./pages/ResourcesPage";
+import { TermsPage } from "./pages/TermsPage";
 
 function NotFoundPage() {
   const lang = useLang();
@@ -67,6 +73,12 @@ export function App() {
         <Route element={<ScreenContainerLayout />}>
           <Route index element={<HomeRoute />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="docs" element={<DocsPage />} />
+          <Route path="resources" element={<ResourcesPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
           <Route
             path="projects"
             element={

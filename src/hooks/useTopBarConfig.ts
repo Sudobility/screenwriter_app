@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { TopBarConfig } from "@sudobility/building_blocks";
 import { AuthActionAdapter } from "../components/layout/AuthActionAdapter";
 import { LinkWrapper } from "../components/layout/LinkWrapper";
@@ -18,6 +19,9 @@ const LOGO_SRC =
 export function useTopBarConfig(): TopBarConfig {
   const navigate = useNavigate();
   const lang = useLang();
+  const { t } = useTranslation();
+  const docsLabel = t("nav.docs");
+  const resourcesLabel = t("nav.resources");
 
   return useMemo<TopBarConfig>(
     () => ({
@@ -29,13 +33,16 @@ export function useTopBarConfig(): TopBarConfig {
         appName: APP_NAME,
         onClick: () => navigate(`/${lang}`),
       },
-      menuItems: [],
+      menuItems: [
+        { id: "docs", label: docsLabel, href: `/${lang}/docs` },
+        { id: "resources", label: resourcesLabel, href: `/${lang}/resources` },
+      ],
       hideLanguageSelector: true,
       LinkComponent: LinkWrapper,
       AuthActionComponent: AuthActionAdapter,
       onLoginClick: () => navigate(`/${lang}/login`),
       sticky: true,
     }),
-    [navigate, lang],
+    [navigate, lang, docsLabel, resourcesLabel],
   );
 }

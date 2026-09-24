@@ -2,6 +2,17 @@
   "common": {
     "loading": "Loading..."
   },
+  "nav": {
+    "docs": "Docs",
+    "resources": "Resources",
+    "about": "About",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "footer": {
+    "company": "Company"
+  },
   "home": {
     "logIn": "Log in",
     "tagline": "Screenwriting, in the browser.",
@@ -57,5 +68,202 @@
     "kindLabel": "Kind",
     "templateLabel": "Template",
     "createDocument": "Create document"
+  },
+  "about": {
+    "title": "About {{appName}}",
+    "lead": "{{appName}} is a screenwriting app that runs entirely in your browser.",
+    "body": "Write in industry-standard screenplay format as you type, with a print-accurate Pages view, AI-assisted review and polish, and import/export to Fountain, Final Draft (FDX) and Fade In. Your work is saved offline first and synced when you're online, so a shaky connection never costs you a scene.",
+    "readDocs": "Read the docs",
+    "seeResources": "See resources"
+  },
+  "contact": {
+    "title": "Contact us",
+    "lead": "Questions, feedback or a bug to report — we'd like to hear it.",
+    "whatToInclude": {
+      "title": "What to include",
+      "items": [
+        "What you were trying to do, and what happened instead",
+        "The project or document name, if it's specific to one",
+        "Your browser and operating system"
+      ]
+    }
+  },
+  "docs": {
+    "title": "Documentation",
+    "navLabel": "Documentation topics",
+    "topics": {
+      "gettingStarted": {
+        "title": "Getting started",
+        "body": "Create a project, then a document from a template (screenplay, stage play, TV, and more). The editor opens straight into the Edit view with one empty scene heading, ready to type."
+      },
+      "formatting": {
+        "title": "Formatting screenplay elements",
+        "body": "As you type, Tab and Cmd+number cycle an element between Scene Heading, Action, Character, Parenthetical, Dialogue and Transition. Pasting in multi-line text auto-tags each line with its likely role (scene heading, character, dialogue, action, and so on) so you rarely have to set styles by hand at all — it's not perfect on text with no blank lines between elements (there's no way to tell dialogue from the action that follows without one), so double-check pasted text and fix up any line with Tab or Cmd+number."
+      },
+      "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "body": "The shortcuts that come up most while writing:"
+      },
+      "importExport": {
+        "title": "Import and export",
+        "body": "Import a Fountain, Final Draft (.fdx) or Fade In (.fadein) script from the documents list — by picker or by dropping the file. A conversion report calls out anything lost or changed in the conversion. Export any open document back out to those formats, plus JSON, or print it to PDF from the Pages view."
+      },
+      "structure": {
+        "title": "Structure and navigation",
+        "body": "The Scenes toggle in the editor's top bar opens a Navigator listing every scene, and a Cards view for a corkboard-style overview. Clicking a scene jumps the editor's caret straight to its heading."
+      },
+      "titlePage": {
+        "title": "Title page and page setup",
+        "body": "The Title page and Page setup buttons in the editor's top bar cover title page fields, headers and footers, page numbering, scene numbering, and continueds (\"(MORE)\"/\"(CONT'D)\")."
+      },
+      "snapshots": {
+        "title": "Snapshots",
+        "body": "The Snapshots panel lets you save a named point in a document's history, reopen it read-only, or fork it into a new document — a lightweight alternative to exporting a backup copy by hand."
+      }
+    },
+    "shortcuts": {
+      "styleShortcut": { "label": "Set element style", "keys": "Cmd/Ctrl + 1-9" },
+      "styleCycle": { "label": "Cycle element style", "keys": "Tab / Shift+Tab" },
+      "dualDialogue": { "label": "Toggle dual dialogue", "keys": "Ctrl/Cmd + Alt + D" },
+      "undo": { "label": "Undo", "keys": "Cmd/Ctrl + Z" },
+      "redo": { "label": "Redo", "keys": "Cmd/Ctrl + Shift + Z" }
+    }
+  },
+  "resources": {
+    "title": "Resources",
+    "lead": "Places to find scripts worth importing, and to learn the screenplay format itself.",
+    "groups": {
+      "import": "Find scripts to import",
+      "learn": "Learn the format"
+    },
+    "links": {
+      "simplyScripts": {
+        "title": "Simply Scripts",
+        "body": "A large, free archive of produced and spec screenplays, many in plain text you can paste straight in."
+      },
+      "imsdb": {
+        "title": "Internet Movie Script Database",
+        "body": "Screenplays for produced films, browsable by title or genre."
+      },
+      "fountainSpec": {
+        "title": "Fountain syntax",
+        "body": "The plain-text screenplay format this app's importer and smart paste are built around."
+      },
+      "wgaFormatting": {
+        "title": "Screenwriting 101 (WGA)",
+        "body": "The Writers Guild of America's primer on industry-standard screenplay format."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {{date}}",
+    "sections": {
+      "introduction": {
+        "title": "Introduction",
+        "content": "Welcome to {{appName}}. This policy explains what information we collect when you use the app, and how we use and protect it."
+      },
+      "collection": {
+        "title": "Information we collect",
+        "youProvide": {
+          "title": "Information you provide",
+          "items": ["Account information (email address, via Google sign-in)", "The screenplays and projects you create", "Settings and preferences"]
+        },
+        "automatic": {
+          "title": "Information collected automatically",
+          "items": ["Device and browser information", "IP address", "Basic usage and error logs, to keep the app working"]
+        }
+      },
+      "usage": {
+        "title": "How we use your information",
+        "description": "We use the information we collect to:",
+        "items": ["Provide and improve the editor and its features", "Sync your documents between your devices", "Respond to support requests", "Keep the service secure and working correctly"]
+      },
+      "ai": {
+        "title": "AI features",
+        "content": "The AI review and polish features send the relevant scene or document text to our AI provider to generate a coverage report or polish suggestions. That text is used only to generate the response to your request; it is not used to train models."
+      },
+      "storage": {
+        "title": "Local storage",
+        "content": "The app keeps an offline copy of your open documents in your browser's IndexedDB storage, so you can keep working without a connection. This copy stays on your device and syncs with our servers once you're back online."
+      },
+      "sharing": {
+        "title": "Information sharing",
+        "description": "We do not sell your information. We may share it:",
+        "items": ["With service providers who help us run the app (hosting, AI processing)", "When required by law", "With your consent"]
+      },
+      "retention": {
+        "title": "Data retention",
+        "content": "We keep your account and document data for as long as your account is active. You can delete a project or document at any time; deleting your account removes the rest."
+      },
+      "rights": {
+        "title": "Your rights",
+        "description": "You have the right to:",
+        "items": ["Access the information we hold about you", "Correct inaccurate information", "Request deletion of your account and data", "Export your screenplays (Fountain, FDX or JSON) at any time"]
+      },
+      "children": {
+        "title": "Children's privacy",
+        "content": "This service is not directed at children under 13, and we do not knowingly collect information from them."
+      },
+      "changes": {
+        "title": "Changes to this policy",
+        "content": "We may update this policy from time to time. We'll post the updated policy here and update the \"last updated\" date above."
+      },
+      "contact": {
+        "title": "Contact us",
+        "description": "If you have questions about this policy, contact us:",
+        "emailLabel": "Email:",
+        "websiteLabel": "Website:"
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {{date}}",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of terms",
+        "content": "By using {{appName}}, you agree to these terms. If you don't agree, please don't use the service."
+      },
+      "service": {
+        "title": "Description of service",
+        "content": "{{appName}} is a browser-based screenwriting editor with AI-assisted review and polish, and import/export to common screenplay formats."
+      },
+      "accounts": {
+        "title": "Accounts",
+        "content": "You're responsible for the activity that happens under your account, and for keeping your sign-in credentials secure."
+      },
+      "ownership": {
+        "title": "Your content",
+        "content": "You own the screenplays and other content you create in {{appName}}. We claim no ownership over it; we store and process it only to provide the service to you (see our Privacy Policy)."
+      },
+      "usage": {
+        "title": "Acceptable use",
+        "description": "You agree not to:",
+        "items": ["Use the service for anything unlawful", "Attempt to disrupt or gain unauthorized access to the service", "Infringe anyone else's intellectual property rights"]
+      },
+      "ai": {
+        "title": "AI features",
+        "content": "AI-generated review notes and polish suggestions are provided as-is, to assist your writing, not replace your judgment. You choose whether to accept any suggestion."
+      },
+      "liability": {
+        "title": "Limitation of liability",
+        "content": "{{appName}} is provided \"as is,\" without warranty of any kind. We are not liable for any indirect, incidental or consequential damages arising from your use of the service."
+      },
+      "termination": {
+        "title": "Termination",
+        "content": "You may stop using the service and delete your account at any time. We may suspend or terminate access for conduct that violates these terms."
+      },
+      "changes": {
+        "title": "Changes to these terms",
+        "content": "We may update these terms from time to time. Continued use of the service after a change means you accept the updated terms."
+      },
+      "contact": {
+        "title": "Contact us",
+        "description": "If you have questions about these terms, contact us:",
+        "emailLabel": "Email:",
+        "websiteLabel": "Website:"
+      }
+    }
   }
 }

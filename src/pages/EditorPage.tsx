@@ -14,6 +14,7 @@ import { PageSetupPanel } from "../components/PageSetupPanel";
 import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
+import { CatalogPanel } from "../components/CatalogPanel";
 
 const NAV_KEY = "screenwriter.navigator.open";
 const readNavOpen = () => {
@@ -50,8 +51,8 @@ function Editor({ documentId }: { documentId: string }) {
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
   // One right-hand panel at a time.
-  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | null>(null);
-  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions") => setPanel(cur => (cur === p ? null : p));
+  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | "catalog" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions" | "catalog") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
   const [navOpen, setNavOpen] = useState(readNavOpen);
@@ -214,6 +215,14 @@ function Editor({ documentId }: { documentId: string }) {
           Page setup
         </button>
         <button
+          onClick={() => togglePanel("catalog")}
+          aria-pressed={panel === "catalog"}
+          data-testid="catalog-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "catalog" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Catalog
+        </button>
+        <button
           onClick={() => togglePanel("revisions")}
           aria-pressed={panel === "revisions"}
           data-testid="revisions-button"
@@ -292,6 +301,7 @@ function Editor({ documentId }: { documentId: string }) {
           />
         )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
+        {panel === "catalog" && host && <CatalogPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
       </div>
     </div>
   );
