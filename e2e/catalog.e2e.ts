@@ -23,13 +23,6 @@ async function createDoc(page: Page, title: string) {
   await synced(page);
 }
 
-/** The kind filter is `@sudobility/components`' Radix-backed `Select`, not a native `<select>` — its
- * options render in a portal as `role="option"`, so picking one is a click, not `.selectOption()`. */
-async function pickKind(page: Page, label: string) {
-  await page.getByTestId("entity-kind-filter").click();
-  await page.getByRole("option", { name: label, exact: true }).click();
-}
-
 /** Scene heading + character + dialogue, through the same command path the editor uses (matches
  * `columns.e2e.ts`'s `seed()`), so the entity harvester has real text to find. */
 async function seedScene(page: Page) {
@@ -44,44 +37,48 @@ async function seedScene(page: Page) {
   await expect(page.getByTestId("page-count")).toHaveAttribute("data-status", "ready", { timeout: 30_000 });
 }
 
-test("catalog panel: harvested character/location, jump to scene, and a manual prop", async ({ page }) => {
+test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to script, and a manual kind", async ({ page }) => {
   await login(page);
   await createDoc(page, "Catalog doc");
   await seedScene(page);
 
-  await page.getByTestId("catalog-button").click();
-  await expect(page.getByTestId("catalog-panel")).toBeVisible();
-
-  // Harvesting runs once automatically on open; "Refresh" re-confirms it's idempotent to press by hand too.
+  // No standalone "Catalog" button/panel any more — it's always in the sidebar, alongside Script
+  // Structure, inside one persistent `MasterDetailLayout` (fixed upstream in `mail_box_components` to
+  // mount exactly one copy of each pane — was two, one CSS-hidden, which is what broke a live
+  // `ScriptEditor` the first time this was tried; see that repo's `MasterDetailLayout.tsx`). The
+  // initial harvest already ran (on mount, before this text existed); Refresh re-scans.
+  await expect(page.getByTestId("editor-sidebar")).toBeVisible();
+  const charGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="character"]');
+  const locationGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="location"]');
   await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(charGroup.getByText("1", { exact: true })).toBeVisible();
+  await expect(locationGroup.getByText("1", { exact: true })).toBeVisible();
 
-  await pickKind(page, "Character");
-  const quinn = page.getByTestId("entity-row").filter({ hasText: "QUINN" });
-  await expect(quinn).toBeVisible();
-  await quinn.click();
+  // Selecting an entity is a real master/detail selection: the sidebar stays visible, and the script
+  // editor is replaced by that entity's detail.
+  await charGroup.getByText("QUINN", { exact: true }).click();
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await expect(page.getByTestId("entity-name")).toHaveValue("QUINN");
+  await expect(page.getByText("Character · 1 scene")).toBeVisible();
 
-  // Jump to where it appears: back to the Edit view, caret at the character cue. The panel itself
-  // stays open (jumping only changes the Edit/Pages/Cards view), still showing QUINN's detail.
-  await page.getByRole("button", { name: "Speaks" }).first().click();
+  // "Appears in" jumps back into the script and clears the selection, snapping the detail pane back
+  // to the editor — the sidebar itself never left.
+  await page.getByRole("button", { name: "Speaks" }).click();
   await expect(page.getByTestId("view-edit")).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".wui-el", { hasText: "QUINN" })).toBeVisible();
-  await expect(page.getByTestId("catalog-panel")).toBeVisible();
+  await expect(page.getByTestId("editor-sidebar")).toBeVisible();
+  await expect(page.getByTestId("script-editor")).toBeVisible();
 
-  // Locations are harvested too.
-  await page.getByRole("button", { name: "Back to list" }).click();
-  await pickKind(page, "Location");
-  await expect(page.getByTestId("entity-row").filter({ hasText: "ARCHIVE" })).toBeVisible();
+  // A kind nothing ever harvests: only exists once created by hand, via "+ Add other kind".
+  await expect(page.getByText("+ Add other kind")).toBeVisible();
+  await page.getByText("+ Add other kind").click();
+  await page.getByTestId("other-kind-select").click();
+  await page.getByRole("option", { name: "Prop", exact: true }).click();
+  await page.getByLabel("New entity name").fill("The ledger");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
 
-  // A kind that is never harvested: only exists once created by hand. The "Add" form only appears
-  // once a specific kind is picked (not "All kinds"), and always creates that kind.
-  await pickKind(page, "Prop");
-  await expect(page.getByText("No entities yet.")).toBeVisible();
-  await page.getByLabel("New Prop name").fill("The ledger");
-  await page.getByRole("button", { name: "Add Prop", exact: true }).click();
+  // Creating it selects it immediately (same as clicking an existing row).
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await expect(page.getByTestId("entity-name")).toHaveValue("The ledger");
-  await page.getByRole("button", { name: "Back to list" }).click();
-  await expect(page.getByTestId("entity-row").filter({ hasText: "The ledger" })).toBeVisible();
+  await expect(page.locator('[data-testid="catalog-kind-group"][data-kind="prop"]')).toBeVisible();
 });

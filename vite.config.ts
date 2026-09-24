@@ -18,6 +18,12 @@ export default defineConfig({
       { find: /^@sudobility\/writing_ui$/, replacement: p("../writing_ui/src/index.ts") },
       { find: /^@sudobility\/writing_core$/, replacement: p("../writing_core/src/index.ts") },
       { find: /^@sudobility\/writing_formats\/fountain-classify$/, replacement: p("../writing_formats/src/fountain/classify.ts") },
+      // `MasterDetailLayout`/`MasterListItem` are in mail_box_components' source (@sudobility/components'
+      // real repo) but not yet in the published dist this app otherwise depends on for everything else —
+      // a narrow, single-file alias, not a whole-package one (too high a blast radius for a package this
+      // pervasive). No safe npm fallback exists yet (nothing publishes this component at all); acceptable
+      // since this app has no CI of its own and always runs with this sibling checked out.
+      { find: /^@sudobility\/components\/master-detail-layout$/, replacement: p("../mail_box_components/src/layout/MasterDetailLayout.tsx") },
       { find: /^yjs$/, replacement: p("../writing_core/node_modules/yjs/dist/yjs.mjs") },
       { find: /^lib0\/(.*)$/, replacement: p("../writing_core/node_modules/lib0/") + "$1" },
       // building_blocks' optional peer deps this app doesn't install for real (the sudobility "stubs system" —

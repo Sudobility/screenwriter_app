@@ -21,6 +21,7 @@
       "@sudobility/writing_ui": ["../writing_ui/src/index.ts"],
       "@sudobility/writing_core": ["../writing_core/src/index.ts"],
       "@sudobility/writing_formats/fountain-classify": ["../writing_formats/src/fountain/classify.ts"],
+      "@sudobility/components/master-detail-layout": ["../mail_box_components/src/layout/MasterDetailLayout.tsx"],
       "yjs": ["../writing_core/node_modules/yjs/dist/yjs", "../writing_core/node_modules/yjs"],
       "lib0": ["../writing_core/node_modules/lib0"],
       "lib0/*": ["../writing_core/node_modules/lib0/*"],

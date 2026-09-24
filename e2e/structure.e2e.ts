@@ -67,7 +67,7 @@ test("structure tools: navigator sidebar and index cards", async ({ page }) => {
   // ---- Navigator: one row per scene, headings and numbers
   const nav = page.getByTestId("navigator");
   const rows = nav.locator("li[data-scene-id]");
-  await expect(page.getByTestId("navigator-sidebar")).toBeVisible();
+  await expect(nav).toBeVisible();
   await expect(rows).toHaveCount(6);
   await expect(nav.getByTestId("nav-number")).toHaveText(["1", "2", "3", "4", "5", "6"]);
   await expect(nav.getByTestId("nav-heading")).toHaveText(H);

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { MasterDetailLayout } from "@sudobility/components/master-detail-layout";
 import { useLang } from "../hooks/useLang";
-import { ElementStylePicker, IndexCards, Navigator, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
+import { ElementStylePicker, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
@@ -14,16 +15,8 @@ import { PageSetupPanel } from "../components/PageSetupPanel";
 import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
-import { CatalogPanel } from "../components/CatalogPanel";
-
-const NAV_KEY = "screenwriter.navigator.open";
-const readNavOpen = () => {
-  try {
-    return localStorage.getItem(NAV_KEY) !== "0";
-  } catch {
-    return true;
-  }
-};
+import { EditorSidebar } from "../components/EditorSidebar";
+import { EntityDetailView } from "../components/EntityDetailView";
 
 type View = "edit" | "pages" | "cards";
 const VIEW_LABEL: Record<View, string> = { edit: "Edit", pages: "Pages", cards: "Cards" };
@@ -50,14 +43,17 @@ function Editor({ documentId }: { documentId: string }) {
   const { session, ready, error, syncStatus } = useDocumentSession(documentId);
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
-  // One right-hand panel at a time.
-  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | "catalog" | null>(null);
-  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions" | "catalog") => setPanel(cur => (cur === p ? null : p));
+  // One right-hand panel at a time (Title page/Page setup/Revisions/AI/Snapshots — unrelated to the
+  // sidebar's own master/detail selection below, which owns the main content area instead).
+  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
-  const [navOpen, setNavOpen] = useState(readNavOpen);
   const [printPending, setPrintPending] = useState(false);
   const [caret, setCaret] = useState<PlainPos | null>(null);
+  // The sidebar's Catalog selection: when set, `MasterDetailLayout`'s detail area shows that entity
+  // (`EntityDetailView`) instead of the script editor — a real master/detail relationship, not a toggle.
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   // Revised pages list: switch to the Pages tab and scroll to that sheet once it is on screen.
   const [goPage, setGoPage] = useState<{ index: number } | null>(null);
   // Switching tabs by hand drops any pending "put the caret here" so Edit does not jump back to an old jump target.
@@ -65,21 +61,14 @@ function Editor({ documentId }: { documentId: string }) {
     setCaret(null);
     setViewRaw(v);
   };
-  // Navigator click / card double-click: Edit view, caret at the scene heading, scrolled into view (ScriptEditor initialCaret).
-  // A fresh object each time so jumping to the same scene twice still re-applies the caret.
+  // Navigator click / card double-click: Edit view, caret at the scene heading, scrolled into view
+  // (ScriptEditor initialCaret). A fresh object each time so jumping to the same scene twice still
+  // re-applies the caret. Also clears any Catalog selection, so the detail area snaps back to the script.
   const jumpTo = (elementId: string) => {
+    setSelectedEntityId(null);
     setCaret({ elementId, offset: 0 });
     setViewRaw("edit");
   };
-  const toggleNav = () =>
-    setNavOpen(o => {
-      try {
-        localStorage.setItem(NAV_KEY, o ? "0" : "1");
-      } catch {
-        /* private mode: the toggle still works for this visit */
-      }
-      return !o;
-    });
   // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
   const layout = useLayout(host);
 
@@ -149,15 +138,6 @@ function Editor({ documentId }: { documentId: string }) {
           onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           className="font-semibold text-lg border border-transparent hover:border-neutral-300 focus:border-neutral-400 rounded px-2 py-0.5 min-w-48"
         />
-        <button
-          onClick={toggleNav}
-          aria-pressed={navOpen}
-          data-testid="navigator-toggle"
-          title="Show or hide the scene navigator"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${navOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Scenes
-        </button>
         <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
           {(["edit", "pages", "cards"] as const).map(v => (
             <button
@@ -215,14 +195,6 @@ function Editor({ documentId }: { documentId: string }) {
           Page setup
         </button>
         <button
-          onClick={() => togglePanel("catalog")}
-          aria-pressed={panel === "catalog"}
-          data-testid="catalog-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "catalog" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Catalog
-        </button>
-        <button
           onClick={() => togglePanel("revisions")}
           aria-pressed={panel === "revisions"}
           data-testid="revisions-button"
@@ -261,28 +233,43 @@ function Editor({ documentId }: { documentId: string }) {
         </div>
       )}
 
-      <div className="flex-1 min-h-0 flex print-flow">
-        {host && navOpen && (
-          <aside data-testid="navigator-sidebar" className="w-72 shrink-0 border-r border-neutral-200 bg-white min-h-0 print:hidden">
-            <Navigator host={host} onJumpTo={jumpTo} />
-          </aside>
+      <div className="flex-1 min-h-0 flex print-flow" data-testid="editor-split">
+        {host && (
+          <MasterDetailLayout
+            masterContent={<EditorSidebar host={host} selectedEntityId={selectedEntityId} onSelectEntity={setSelectedEntityId} onJumpToScene={jumpTo} />}
+            // No width cap: the script editor/pages content has never had one, and 1024px (the
+            // component's own default) would newly constrain it on wide screens.
+            detailMaxWidth={0}
+            detailContent={
+              selectedEntityId ? (
+                <EntityDetailView host={host} entityId={selectedEntityId} onJumpTo={jumpTo} onDeleted={() => setSelectedEntityId(null)} />
+              ) : (
+                <>
+                  {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
+                  {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
+                  {view === "edit" && <ScriptEditor host={host} initialCaret={caret} />}
+                  {view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
+                  {view === "pages" && (
+                    <PageView
+                      host={host}
+                      layout={layout}
+                      onRequestEdit={(elementId, offset) => {
+                        setCaret({ elementId, offset });
+                        setViewRaw("edit");
+                      }}
+                    />
+                  )}
+                </>
+              )
+            }
+          />
         )}
-        <main className="flex-1 min-w-0 print-flow">
-          {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
-          {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
-          {host && view === "edit" && <ScriptEditor host={host} initialCaret={caret} />}
-          {host && view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
-          {host && view === "pages" && (
-            <PageView
-              host={host}
-              layout={layout}
-              onRequestEdit={(elementId, offset) => {
-                setCaret({ elementId, offset });
-                setViewRaw("edit");
-              }}
-            />
-          )}
-        </main>
+        {!host && (error || !ready) && (
+          <main className="flex-1 min-w-0 print-flow">
+            {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
+            {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
+          </main>
+        )}
         {panel === "snapshots" && session && (
           <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
         )}
@@ -301,7 +288,6 @@ function Editor({ documentId }: { documentId: string }) {
           />
         )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
-        {panel === "catalog" && host && <CatalogPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
       </div>
     </div>
   );

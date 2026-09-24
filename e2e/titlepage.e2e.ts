@@ -174,7 +174,7 @@ test("title page, headers/footers and scene numbers, end to end", async ({ page 
   expect(numbered[1]!.left[0]).toBe("1");
 
   // The Navigator shows the same numbers, and the Edit view has the gutter number.
-  await expect(page.getByTestId("navigator-sidebar").getByTestId("nav-number").first()).toHaveText("1");
+  await expect(page.getByTestId("navigator").getByTestId("nav-number").first()).toHaveText("1");
 
   // 4. Omit a scene: it keeps its number slot (spec 02 section 21.2), its body stops printing.
   const omittedId = await page.evaluate(() => {

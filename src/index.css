@@ -10,4 +10,9 @@ body { background: #f6f6f4; color: #1a1a1a; }
 @media print {
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   .print-flow { height: auto !important; overflow: visible !important; display: block !important; }
+  /* MasterDetailLayout's own master panel is a plain <aside> with no prop to reach it directly (only its
+     inner content div takes a className) — the old Navigator sidebar was print:hidden directly on itself;
+     this targets the same element by its stable position instead, scoped to the editor's own split so it
+     can't affect an unrelated <aside> elsewhere. */
+  [data-testid="editor-split"] aside { display: none !important; }
 }
