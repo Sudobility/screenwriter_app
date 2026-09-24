@@ -48,9 +48,10 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Locking project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
@@ -130,12 +131,15 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
   // 3. Lock pages (with a confirmation), then pile lines onto page 1: an A page appears, later pages keep their labels.
   const before = await sheetInfo(page);
   expect(before.length).toBeGreaterThanOrEqual(3);
+  // The confirm dialog is @sudobility/components' FormModal (Phase C) — no testid seam on its container or action
+  // buttons; its "Lock pages" action shares its accessible name with the trigger button behind it, so scope to
+  // the dialog to disambiguate.
   await page.getByTestId("setup-button").click();
   await page.getByTestId("lock-pages").click();
-  await page.getByTestId("lock-pages-cancel").click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByTestId("page-lock-status")).toContainText("not locked");
   await page.getByTestId("lock-pages").click();
-  await page.getByTestId("lock-pages-ok").click();
+  await page.getByRole("dialog").getByRole("button", { name: "Lock pages" }).click();
   await expect(page.getByTestId("page-lock-status")).toContainText("Pages locked at");
   await page.getByTestId("setup-button").click();
   const headersBefore = (await sheetInfo(page)).map(s => s.header);

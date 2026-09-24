@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { resolveStyle } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
-import { Modal } from "./Modal";
+import { FormModal } from "@sudobility/components";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-white";
 const when = (ms: number | null) => (ms ? new Date(ms).toLocaleString() : "");
@@ -55,30 +55,27 @@ export function LockingSection({ host }: { host: ScriptEditorHost }) {
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
-      {confirming && (
-        <Modal title={prod.pagesLocked ? "Lock the A pages?" : "Lock pages?"} testId="lock-pages-confirm">
-          <p className="text-sm mb-4">
-            {prod.pagesLocked
-              ? "Every A page becomes a locked page with its current number."
-              : "The current page breaks and page numbers are frozen. Later edits will not move them; extra text goes onto A pages."}
-          </p>
-          <div className="flex gap-2 justify-end">
-            <button className={btn} data-testid="lock-pages-cancel" onClick={() => setConfirming(false)}>
-              Cancel
-            </button>
-            <button
-              className="border border-neutral-800 bg-neutral-800 text-white rounded px-3 py-1 text-sm"
-              data-testid="lock-pages-ok"
-              onClick={() => {
-                setConfirming(false);
-                run("page.lock");
-              }}
-            >
-              Lock pages
-            </button>
-          </div>
-        </Modal>
-      )}
+      <FormModal
+        open={confirming}
+        title={prod.pagesLocked ? "Lock the A pages?" : "Lock pages?"}
+        onClose={() => setConfirming(false)}
+        actions={[
+          { label: "Cancel", onClick: () => setConfirming(false), variant: "ghost" },
+          {
+            label: "Lock pages",
+            onClick: () => {
+              setConfirming(false);
+              run("page.lock");
+            },
+          },
+        ]}
+      >
+        <p className="text-sm">
+          {prod.pagesLocked
+            ? "Every A page becomes a locked page with its current number."
+            : "The current page breaks and page numbers are frozen. Later edits will not move them; extra text goes onto A pages."}
+        </p>
+      </FormModal>
     </section>
   );
 }

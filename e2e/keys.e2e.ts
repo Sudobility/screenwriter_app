@@ -7,10 +7,13 @@ const email = `e2e-keys-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example
 test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke", async ({ page }) => {
   page.on("pageerror", e => console.log("[pageerror]", e.message));
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.getByTestId("keys-link").click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // "API keys" moved into the account menu (Phase C's topbar) — open it first.
+  await page.getByTestId("account-menu").click();
+  await page.getByRole("button", { name: "API keys" }).click();
   await expect(page).toHaveURL(/\/settings\/keys$/);
   await expect(page.getByRole("heading", { name: "API keys" })).toBeVisible();
   await expect(page.getByText("No keys yet.")).toBeVisible();
@@ -70,12 +73,14 @@ test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke",
   expect(await page.content()).not.toContain(key);
 
   // ---- revoke through the UI (with confirm)
+  // The confirm dialog is @sudobility/components' FormModal (Phase C) — no testid seam on its container or
+  // action buttons, so this asserts by visible text/role instead.
   await page.getByRole("button", { name: "Revoke" }).click();
-  await expect(page.getByTestId("revoke-confirm")).toBeVisible();
+  await expect(page.getByText("Revoke this key?")).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
   expect((await page.request.get(`${API}/api/v1/me`, { headers })).status()).toBe(200);
   await page.getByRole("button", { name: "Revoke" }).click();
-  await page.getByTestId("revoke-confirm-button").click();
+  await page.getByRole("button", { name: "Revoke key" }).click();
   await expect(page.getByTestId("key-status")).toHaveText("Revoked");
   await expect(page.getByRole("button", { name: "Revoke" })).toHaveCount(0);
   expect((await page.request.get(`${API}/api/v1/me`, { headers })).status()).toBe(401);

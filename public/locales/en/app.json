@@ -1,0 +1,61 @@
+{
+  "common": {
+    "loading": "Loading..."
+  },
+  "home": {
+    "logIn": "Log in",
+    "tagline": "Screenwriting, in the browser.",
+    "features": {
+      "editor": {
+        "title": "Screenplay editor",
+        "body": "Industry-standard formatting as you type, with Pages view for a print-accurate layout and Print / Save as PDF."
+      },
+      "ai": {
+        "title": "AI review and polish",
+        "body": "A coverage report with scene notes, and scene-by-scene polish suggestions you can accept or reject."
+      },
+      "formats": {
+        "title": "Import and export",
+        "body": "Bring in Fountain, Final Draft (FDX) or Fade In scripts, and export back out to any of them, or PDF."
+      }
+    }
+  },
+  "login": {
+    "backTo": "Back to {{appName}}",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "devEmailLabel": "Dev login (email, no password)",
+    "signIn": "Sign in",
+    "googleSignInFailed": "Google sign-in failed",
+    "signInFailed": "Sign in failed",
+    "notConfigured": {
+      "lead": "Sign-in is not configured. Set",
+      "or": "for the dev login, or configure",
+      "tail": "for Google sign-in."
+    }
+  },
+  "dashboard": {
+    "projects": "Projects",
+    "trashedProjects": "Trashed projects",
+    "documents": "Documents",
+    "trashedDocuments": "Trashed documents",
+    "showTrash": "Show trash",
+    "backToProjects": "Back to projects",
+    "backToDocuments": "Back to documents",
+    "newProjectNameLabel": "New project name",
+    "createProject": "Create project",
+    "trashEmpty": "Trash is empty.",
+    "noProjects": "No projects yet.",
+    "noDocuments": "No documents yet.",
+    "documentCount": "{{count}} documents",
+    "documentMeta": "{{kind}} - {{words}} words - edited {{edited}}",
+    "restore": "Restore",
+    "trash": "Trash",
+    "newDocumentFormLabel": "New document",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Untitled screenplay",
+    "kindLabel": "Kind",
+    "templateLabel": "Template",
+    "createDocument": "Create document"
+  }
+}

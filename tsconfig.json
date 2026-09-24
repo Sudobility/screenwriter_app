@@ -20,6 +20,7 @@
       "@sudobility/screenwriter_types": ["../screenwriter_types/src/index.ts"],
       "@sudobility/writing_ui": ["../writing_ui/src/index.ts"],
       "@sudobility/writing_core": ["../writing_core/src/index.ts"],
+      "@sudobility/writing_formats/fountain-classify": ["../writing_formats/src/fountain/classify.ts"],
       "yjs": ["../writing_core/node_modules/yjs/dist/yjs", "../writing_core/node_modules/yjs"],
       "lib0": ["../writing_core/node_modules/lib0"],
       "lib0/*": ["../writing_core/node_modules/lib0/*"],
@@ -29,7 +30,10 @@
       "react-dom/*": ["./node_modules/@types/react-dom/*"],
       "zustand": ["./node_modules/zustand"],
       "zustand/*": ["./node_modules/zustand/*"],
-      "@tanstack/react-query": ["./node_modules/@tanstack/react-query"]
+      "@tanstack/react-query": ["./node_modules/@tanstack/react-query"],
+      "@sudobility/subscription-components": ["./src/stubs/subscription-components.ts"],
+      "@sudobility/devops-components": ["./src/stubs/devops-components.ts"],
+      "@sudobility/subscription_lib": ["./src/stubs/subscription_lib.ts"]
     }
   },
   "include": ["src", "tests", "e2e", "vite.config.ts", "playwright.config.ts"]

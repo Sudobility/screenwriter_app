@@ -67,9 +67,10 @@ test("revisions: sets, marks, page labels, mode off, clearing and the Revised pa
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Revisions project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();

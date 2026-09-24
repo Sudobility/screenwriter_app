@@ -1,12 +1,12 @@
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
+import { FormModal } from "@sudobility/components";
 import { useImportExport, type ImportOutcome } from "@sudobility/screenwriter_lib";
+import { useLang } from "../hooks/useLang";
 import { ConversionReportView } from "./ConversionReportView";
-import { Modal } from "./Modal";
 import { describeError } from "../util/import-error";
 
 const btn = "border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100 disabled:opacity-50";
-const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm disabled:opacity-50";
 const FALLBACK_ACCEPT = [".fountain", ".fdx", ".fadein", ".txt"];
 
 /**
@@ -16,6 +16,7 @@ const FALLBACK_ACCEPT = [".fountain", ".fdx", ".fadein", ".txt"];
 export function ImportScript({ projectId, children }: { projectId: string; children: ReactNode }) {
   const { formats, importing, importScript, error, clearError } = useImportExport();
   const navigate = useNavigate();
+  const lang = useLang();
   const input = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportOutcome | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -89,25 +90,27 @@ export function ImportScript({ projectId, children }: { projectId: string; child
         </div>
       )}
       {children}
-      {result && (
-        <Modal title="Import results" testId="import-results">
-          <p className="text-sm mb-1">
-            Detected format: <strong data-testid="import-format">{result.format}</strong>
-          </p>
-          <p className="text-sm mb-3">
-            Document: <strong data-testid="import-title">{result.document.title}</strong>
-          </p>
-          <ConversionReportView report={result.report} />
-          <div className="flex gap-2 justify-end mt-4">
-            <button className={btn} data-testid="import-stay" onClick={() => setResult(null)}>
-              Stay here
-            </button>
-            <button className={primary} data-testid="import-open" onClick={() => navigate(`/d/${result.document.id}`)}>
-              Open document
-            </button>
-          </div>
-        </Modal>
-      )}
+      <FormModal
+        open={!!result}
+        title="Import results"
+        onClose={() => setResult(null)}
+        actions={[
+          { label: "Stay here", onClick: () => setResult(null), variant: "ghost" },
+          ...(result ? [{ label: "Open document", onClick: () => navigate(`/${lang}/d/${result.document.id}`) }] : []),
+        ]}
+      >
+        {result && (
+          <>
+            <p className="text-sm mb-1">
+              Detected format: <strong data-testid="import-format">{result.format}</strong>
+            </p>
+            <p className="text-sm mb-3">
+              Document: <strong data-testid="import-title">{result.document.title}</strong>
+            </p>
+            <ConversionReportView report={result.report} />
+          </>
+        )}
+      </FormModal>
     </div>
   );
 }

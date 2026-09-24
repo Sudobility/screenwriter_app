@@ -7,9 +7,14 @@ const editor = (page: Page) => page.getByTestId("script-editor");
 const text = (page: Page) => page.locator(".wui-page");
 
 async function login(page: Page) {
+  // The only spec that walks the public home page rather than jumping straight to /login: it is the "whole
+  // flow" test, so the home page + its "Log in" button are part of the flow it verifies.
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Fadewright" })).toBeVisible();
+  await page.getByRole("link", { name: "Log in" }).first().click();
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
 }
 

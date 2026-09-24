@@ -65,9 +65,10 @@ test("continueds and dual dialogue, end to end", async ({ page }) => {
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Continueds project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();

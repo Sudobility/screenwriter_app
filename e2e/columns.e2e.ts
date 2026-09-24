@@ -63,9 +63,10 @@ test("columns: AV two-column, BBC name-beside-dialogue and graphic novel panels"
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
 
   // ---- AV: video (Action, column 1) beside audio (Character/Dialogue, column 2). ----
   await createDoc(page, true, "AV script", "AV Script (Two-Column)");
@@ -117,7 +118,7 @@ test("columns: AV two-column, BBC name-beside-dialogue and graphic novel panels"
   expect(style).toBe("st_action");
 
   // ---- BBC stage play: name beside dialogue. ----
-  await page.getByRole("link", { name: "← Project" }).click();
+  await page.getByRole("link", { name: "Project" }).click();
   await createDoc(page, false, "BBC play", "Stage Play (BBC)");
   await seed(page, [
     { style: "st_scene_heading", text: "the kitchen" },
@@ -140,7 +141,7 @@ test("columns: AV two-column, BBC name-beside-dialogue and graphic novel panels"
   expect(bbc.find(l => l.text === "(quietly)")!.top).toBe(ben.top);
 
   // ---- Graphic novel: pages and panels. ----
-  await page.getByRole("link", { name: "← Project" }).click();
+  await page.getByRole("link", { name: "Project" }).click();
   await createDoc(page, false, "Comic", "Graphic Novel");
   await seed(page, [
     { style: "st_page", text: "" },

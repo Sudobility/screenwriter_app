@@ -37,12 +37,14 @@ async function exportAs(page: Page, id: string): Promise<{ text: string; report:
   await page.getByTestId("export-button").click();
   const download = page.waitForEvent("download");
   await page.getByTestId(`export-${id}`).click();
-  const modal = page.getByTestId("export-report");
+  // The loss-report dialog is @sudobility/components' FormModal (Phase C) — no testid seam on its container,
+  // but it does render with role="dialog".
+  const modal = page.getByRole("dialog");
   let report: string | null = null;
   const shown = await modal.waitFor({ state: "visible", timeout: 4_000 }).then(() => true, () => false);
   if (shown) {
     report = await modal.innerText();
-    await page.getByTestId("export-anyway").click();
+    await page.getByRole("button", { name: "Download anyway" }).click();
   }
   return { text: readFileSync(await (await download).path(), "utf8"), report };
 }
@@ -79,9 +81,10 @@ test("title page, headers/footers and scene numbers, end to end", async ({ page 
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Title page project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();

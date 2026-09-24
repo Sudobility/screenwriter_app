@@ -221,14 +221,15 @@ for (const seed of SEEDS) {
 
     // ---------- session setup ----------
     const t0 = await openTab();
-    await t0.page.goto("/");
+    await t0.page.goto("/en/login");
     await t0.page.getByLabel("Dev login (email, no password)").fill(email);
-    await t0.page.getByRole("button", { name: "Sign in" }).click();
+    await t0.page.getByLabel("Password", { exact: true }).fill("x");
+    await t0.page.getByRole("button", { name: "Sign in", exact: true }).click();
     await t0.page.getByLabel("New project name").fill("Soak");
     await t0.page.getByRole("button", { name: "Create project" }).click();
     await expect(t0.page.getByRole("heading", { name: "Documents" })).toBeVisible();
     projectId = new URL(t0.page.url()).pathname.split("/")[2]!;
-    const projectPath = `/p/${projectId}`;
+    const projectPath = `/en/p/${projectId}`;
     if (chance(0.5)) await openTab();
 
     // ---------- actions ----------
@@ -267,7 +268,7 @@ for (const seed of SEEDS) {
       if (chance(0.5)) await frames(t); // otherwise Enter lands in the same tick as the last keystroke, as a script would
       await t.page.keyboard.press("Enter");
       d.texts.push("");
-      await guardUrl(t, `/d/${d.id}`, "Enter after first heading in a new document");
+      await guardUrl(t, `/en/d/${d.id}`, "Enter after first heading in a new document");
     };
 
     const openDoc = async (t: Tab, d: Doc, how: "link" | "goto" | "reload") => {
@@ -277,7 +278,7 @@ for (const seed of SEEDS) {
         await t.page.reload();
       } else if (how === "goto") {
         step(`goto ${d.title} (full page load)`);
-        await t.page.goto(`/d/${d.id}`);
+        await t.page.goto(`/en/d/${d.id}`);
       } else {
         if (!/\/p\//.test(t.page.url())) await gotoProject(t);
         step(`open ${d.title} via link (in-app)`);
@@ -335,7 +336,7 @@ for (const seed of SEEDS) {
           if (d.texts.length === 0) d.texts.push("");
           // Enter on an empty Action is a no-op (flow.onEnter is null, enterAction -> 'none').
           else if (d.texts[d.texts.length - 1] !== "") d.texts.push("");
-          await guardUrl(t, `/d/${d.id}`, "Enter");
+          await guardUrl(t, `/en/d/${d.id}`, "Enter");
         } else {
           await focusEnd(t);
           step(`Backspace in ${d.title}`);
@@ -387,7 +388,7 @@ for (const seed of SEEDS) {
         step("close snapshots panel");
         await t.page.getByRole("button", { name: "Close" }).click().catch(() => undefined);
       }
-      await guardUrl(t, `/d/${d.id}`, "snapshot UI");
+      await guardUrl(t, `/en/d/${d.id}`, "snapshot UI");
     };
 
     const otherUi = async (t: Tab) => {
@@ -405,7 +406,7 @@ for (const seed of SEEDS) {
         step("click status/blank area");
         await t.page.getByTestId("sync-status").click();
       }
-      await guardUrl(t, `/d/${t.cur!.id}`, "other UI click");
+      await guardUrl(t, `/en/d/${t.cur!.id}`, "other UI click");
     };
 
     // ---------- main loop ----------
@@ -465,7 +466,7 @@ for (const seed of SEEDS) {
         notes.push(`step error: ${String(e).split("\n")[0]}`);
       }
       if (t.cur && t.page.url().includes("/d/")) await synced(t);
-      await guardUrl(t, t.cur ? `/d/${t.cur.id}` : /^\/(p\/.*)?$/, `step ${i}`);
+      await guardUrl(t, t.cur ? `/en/d/${t.cur.id}` : /^\/en(\/p\/.*)?$/, `step ${i}`);
       await checkAll(touched[touched.length - 1]);
       for (const d of touched) await check(d, true);
     }
@@ -489,9 +490,10 @@ test("mechanism: keys typed on the focused style picker restyle the stale select
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   await ctx.addInitScript(INIT);
   const page = await ctx.newPage();
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Mech");
   await page.getByRole("button", { name: "Create project" }).click();
   await page.getByLabel("Title", { exact: true }).fill("Mech doc");

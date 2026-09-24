@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { useLang } from "../hooks/useLang";
 import { ElementStylePicker, IndexCards, Navigator, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
@@ -43,6 +45,7 @@ export function statusLabel(s: SessionSyncStatus | null): { label: string; tone:
 function Editor({ documentId }: { documentId: string }) {
   const sw = useScreenwriter();
   const navigate = useNavigate();
+  const lang = useLang();
   const { session, ready, error, syncStatus } = useDocumentSession(documentId);
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
   const [title, setTitle] = useState("");
@@ -130,17 +133,12 @@ function Editor({ documentId }: { documentId: string }) {
   return (
     <div className="h-full flex flex-col print-flow">
       <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-x-3 gap-y-1 flex-wrap print:hidden">
-        <button
-          onClick={toggleNav}
-          aria-pressed={navOpen}
-          data-testid="navigator-toggle"
-          title="Show or hide the scene navigator"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${navOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        <Link
+          to={projectId ? `/${lang}/p/${projectId}` : `/${lang}`}
+          className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:underline"
         >
-          Scenes
-        </button>
-        <Link to={projectId ? `/p/${projectId}` : "/"} className="text-sm text-neutral-600 hover:underline">
-          &larr; {projectId ? "Project" : "Home"}
+          <ChevronLeftIcon className="size-[18px] shrink-0" />
+          {projectId ? "Project" : "Home"}
         </Link>
         <input
           aria-label="Document title"
@@ -150,6 +148,15 @@ function Editor({ documentId }: { documentId: string }) {
           onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           className="font-semibold text-lg border border-transparent hover:border-neutral-300 focus:border-neutral-400 rounded px-2 py-0.5 min-w-48"
         />
+        <button
+          onClick={toggleNav}
+          aria-pressed={navOpen}
+          data-testid="navigator-toggle"
+          title="Show or hide the scene navigator"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${navOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Scenes
+        </button>
         <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
           {(["edit", "pages", "cards"] as const).map(v => (
             <button
@@ -268,7 +275,7 @@ function Editor({ documentId }: { documentId: string }) {
           )}
         </main>
         {panel === "snapshots" && session && (
-          <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/d/${id}`)} rebasedTick={rebased} />
+          <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
         )}
         {panel === "title" && host && <TitlePagePanel host={host} onClose={() => setPanel(null)} />}
         {panel === "setup" && host && <PageSetupPanel host={host} onClose={() => setPanel(null)} />}

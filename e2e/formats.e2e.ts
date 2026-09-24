@@ -37,9 +37,10 @@ test("import and export, end to end", async ({ page }) => {
   page.on("pageerror", e => console.log("[pageerror]", e.message));
 
   // sign in, project
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Imports");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
@@ -47,7 +48,9 @@ test("import and export, end to end", async ({ page }) => {
 
   // --- import Fountain
   await importFile(page, fx("rain-check.fountain"));
-  const results = page.getByTestId("import-results");
+  // The results dialog is @sudobility/components' FormModal (Phase C) — no testid seam on its container, so this
+  // asserts by its visible title text instead.
+  const results = page.getByText("Import results");
   await expect(results).toBeVisible();
   await expect(page.getByTestId("import-format")).toHaveText("fountain");
   await expect(page.getByTestId("import-title")).toHaveText("Rain Check");
@@ -56,7 +59,7 @@ test("import and export, end to end", async ({ page }) => {
   await page.screenshot({ path: `${SHOTS}/formats-g2b-import-results.png` });
 
   // "Stay here": the document is in the list
-  await page.getByTestId("import-stay").click();
+  await page.getByRole("button", { name: "Stay here" }).click();
   await expect(results).toBeHidden();
   await expect(page.getByTestId("document-row").filter({ hasText: "Rain Check" })).toHaveCount(1);
 
@@ -74,7 +77,7 @@ test("import and export, end to end", async ({ page }) => {
   await expect(results).toBeVisible();
   await expect(page.getByTestId("import-format")).toHaveText("fdx");
   await expect(page.getByTestId("conversion-report")).toBeVisible();
-  await page.getByTestId("import-open").click();
+  await page.getByRole("button", { name: "Open document" }).click();
 
   // --- the FDX document opens with element text and styles
   await expect(page).toHaveURL(/\/d\/doc_/);

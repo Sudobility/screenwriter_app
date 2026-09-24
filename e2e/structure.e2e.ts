@@ -24,9 +24,10 @@ test("structure tools: navigator sidebar and index cards", async ({ page }) => {
   page.on("pageerror", e => console.log("[pageerror]", e.message));
   page.on("console", m => { if (m.type() === "error") console.log("[console.error]", m.text()); });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("Structure project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();

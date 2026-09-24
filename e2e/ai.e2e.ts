@@ -30,9 +30,10 @@ test("AI panel: test-mode banner, coverage review, polish suggestions, accept, s
     if (m.type() === "error") console.log("[console.error]", m.text());
   });
 
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(email);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("AI project");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
@@ -198,9 +199,10 @@ test("AI panel explains when AI is not configured", async ({ page }) => {
   await page.route("**/api/v1/ai/status", r =>
     r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, data: { available: false, mode: "unavailable" } }) })
   );
-  await page.goto("/");
+  await page.goto("/en/login");
   await page.getByLabel("Dev login (email, no password)").fill(mail);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill("x");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByLabel("New project name").fill("AI off");
   await page.getByRole("button", { name: "Create project" }).click();
   await page.getByLabel("Title", { exact: true }).fill("No AI");

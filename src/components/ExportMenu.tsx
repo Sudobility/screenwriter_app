@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExportFormatId } from "@sudobility/screenwriter_types";
+import { FormModal } from "@sudobility/components";
 import { useImportExport, type ExportOutcome } from "@sudobility/screenwriter_lib";
 import { ConversionReportView } from "./ConversionReportView";
-import { Modal } from "./Modal";
 import { downloadBytes } from "../util/download";
 import { describeError } from "../util/import-error";
 
@@ -14,7 +14,6 @@ const FALLBACK: { id: ExportFormatId; label: string }[] = [
 const LABELS: Record<string, string> = { fountain: "Fountain (.fountain)", fdx: "Final Draft (.fdx)", json: "Backup (JSON)" };
 
 const btn = "border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100 disabled:opacity-50";
-const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm";
 
 /** Export menu for the editor top bar. Exports the live document; a lossy conversion asks before downloading. */
 export function ExportMenu({ documentId, onPrint }: { documentId: string; onPrint(): void }) {
@@ -96,19 +95,17 @@ export function ExportMenu({ documentId, onPrint }: { documentId: string; onPrin
           </button>
         </div>
       )}
-      {pending && (
-        <Modal title={`Export to ${pending.format.toUpperCase()}: some features are not kept`} testId="export-report">
-          <ConversionReportView report={pending.report} />
-          <div className="flex gap-2 justify-end mt-4">
-            <button className={btn} data-testid="export-cancel" onClick={() => setPending(null)}>
-              Cancel
-            </button>
-            <button className={primary} data-testid="export-anyway" onClick={() => save(pending)}>
-              Download anyway
-            </button>
-          </div>
-        </Modal>
-      )}
+      <FormModal
+        open={!!pending}
+        title={pending ? `Export to ${pending.format.toUpperCase()}: some features are not kept` : ""}
+        onClose={() => setPending(null)}
+        actions={[
+          { label: "Cancel", onClick: () => setPending(null), variant: "ghost" },
+          ...(pending ? [{ label: "Download anyway", onClick: () => save(pending) }] : []),
+        ]}
+      >
+        {pending && <ConversionReportView report={pending.report} />}
+      </FormModal>
     </div>
   );
 }

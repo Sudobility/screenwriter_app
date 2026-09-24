@@ -1,51 +1,60 @@
-import { useState, type FormEvent } from "react";
-import { useAuth } from "@sudobility/screenwriter_lib";
-import { DEV_AUTH } from "../config";
+import { useNavigate } from "react-router-dom";
+import { LoginPage as LoginPageComponent } from "@sudobility/building_blocks";
+import { useAuth } from "../app/AuthContext";
+import { useLang } from "../hooks/useLang";
+import { APP_NAME } from "../config";
 
+/**
+ * Uses `@sudobility/building_blocks`' actual `LoginPage` component, matching `../music_app`'s real rendering
+ * exactly (title, "Sign in to your account", email+password form, Sign in, divider, real Google button with its
+ * logo, sign-up toggle) — not a hand-composed alternative. This app's real auth has no password at all (only
+ * Google + the dev email-only bypass), so the email/password form is repurposed for `devSignIn` (password
+ * ignored) when `VITE_DEV_AUTH=1`; without it, submitting throws a clear error instead of pretending to work.
+ */
 export function LoginPage() {
-  const { status, error, signIn } = useAuth();
-  const [email, setEmail] = useState("");
+  const { hasGoogle, hasDevAuth, signInGoogle, devSignIn } = useAuth();
+  const navigate = useNavigate();
+  const lang = useLang();
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    void signIn(email);
+  if (!hasGoogle && !hasDevAuth) {
+    return (
+      <div className="min-h-full flex items-center justify-center p-6">
+        <div className="w-full max-w-sm bg-white border border-neutral-200 rounded-lg p-6 shadow-sm text-center">
+          <h1 className="text-2xl font-semibold mb-2">{APP_NAME}</h1>
+          <p className="text-sm text-neutral-600">
+            Sign-in is not configured. Set <code>VITE_DEV_AUTH=1</code> for the dev login, or configure{" "}
+            <code>VITE_FIREBASE_*</code> for Google sign-in.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const devLogin = async (email: string) => {
+    if (!hasDevAuth) throw new Error("Email sign-in isn't available in this build — use Google.");
+    await devSignIn(email);
   };
 
   return (
-    <div className="min-h-full flex items-center justify-center p-6">
-      <div className="w-full max-w-sm bg-white border border-neutral-200 rounded-lg p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold mb-1">Fadewright</h1>
-        <p className="text-sm text-neutral-500 mb-6">Screenwriting, in the browser.</p>
-        {DEV_AUTH ? (
-          <form onSubmit={submit} className="space-y-3">
-            <label className="block text-sm font-medium" htmlFor="dev-email">
-              Dev login (email, no password)
-            </label>
-            <input
-              id="dev-email"
-              type="email"
-              required
-              autoFocus
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full border border-neutral-300 rounded px-3 py-2"
-            />
-            <button
-              type="submit"
-              disabled={status === "signingIn"}
-              className="w-full bg-neutral-900 text-white rounded px-3 py-2 disabled:opacity-50"
-            >
-              Sign in
-            </button>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-          </form>
-        ) : (
-          <p className="text-sm text-neutral-600">
-            Sign-in is not configured. Firebase login is not wired yet; set <code>VITE_DEV_AUTH=1</code> for the dev login.
-          </p>
-        )}
-      </div>
-    </div>
+    <LoginPageComponent
+      appName={APP_NAME}
+      showGoogleSignIn={hasGoogle}
+      // emailLabel: every e2e spec's login helper depends on this exact text (getByLabel("Dev login (email, no
+      // password)")). The password field stays the component's own default ("Password") for full visual parity
+      // with music_app — it's native-`required` (no prop removes it) so a value must still be typed, but the
+      // component's own default label is enough; e2e disambiguates it from the email field with `exact: true`
+      // rather than a relabel.
+      // signInWithGoogle: the component's own default ("Sign in with Google") contains "Sign in" as a substring,
+      // which makes every e2e spec's getByRole("button", { name: "Sign in" }) ambiguous (Playwright's default
+      // name match is substring, not exact) — matches music_app's own override to the same text for the same reason.
+      text={{
+        ...(hasDevAuth ? { emailLabel: "Dev login (email, no password)" } : {}),
+        signInWithGoogle: "Continue with Google",
+      }}
+      onEmailSignIn={devLogin}
+      onEmailSignUp={devLogin}
+      onGoogleSignIn={hasGoogle ? signInGoogle : undefined}
+      onSuccess={() => navigate(`/${lang}/projects`)}
+    />
   );
 }

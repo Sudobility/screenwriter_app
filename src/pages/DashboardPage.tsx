@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { DOCUMENT_KINDS, type DocumentKind } from "@sudobility/screenwriter_types";
 import { useDocuments, useProjects, useTemplates } from "@sudobility/screenwriter_lib";
-import { Shell } from "../components/Shell";
+import { useLang } from "../hooks/useLang";
+import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { ImportScript } from "../components/ImportScript";
 
 const btn = "border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100 disabled:opacity-50";
@@ -10,10 +12,12 @@ const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm disabled:op
 
 export function DashboardPage() {
   const { projectId } = useParams();
-  return <Shell>{projectId ? <ProjectView projectId={projectId} /> : <ProjectList />}</Shell>;
+  return projectId ? <ProjectView projectId={projectId} /> : <ProjectList />;
 }
 
 function ProjectList() {
+  const { t } = useTranslation();
+  const lang = useLang();
   const { projects, showingTrash, loading, error, load, create, trash, restore } = useProjects();
   const [name, setName] = useState("");
   const navigate = useNavigate();
@@ -23,49 +27,52 @@ function ProjectList() {
     const created = await create({ name });
     if (created) {
       setName("");
-      navigate(`/p/${created.id}`);
+      navigate(`/${lang}/p/${created.id}`);
     }
   };
 
   return (
     <section>
       <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold">{showingTrash ? "Trashed projects" : "Projects"}</h2>
+        <h2 className="text-xl font-semibold">{showingTrash ? t("dashboard.trashedProjects") : t("dashboard.projects")}</h2>
         <button className={`${btn} ml-auto`} onClick={() => void load({ trashed: !showingTrash })}>
-          {showingTrash ? "Back to projects" : "Show trash"}
+          {showingTrash ? t("dashboard.backToProjects") : t("dashboard.showTrash")}
         </button>
       </div>
       {!showingTrash && (
-        <form onSubmit={submit} className="flex gap-2 mb-4">
+        <form onSubmit={(e) => void submit(e)} className="flex gap-2 mb-4">
           <input
-            aria-label="New project name"
+            aria-label={t("dashboard.newProjectNameLabel")}
             required
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="New project name"
+            placeholder={t("dashboard.newProjectNameLabel")}
             className="flex-1 border border-neutral-300 rounded px-3 py-1.5"
           />
           <button type="submit" className={primary}>
-            Create project
+            {t("dashboard.createProject")}
           </button>
         </form>
       )}
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-      {loading && projects.length === 0 && <p className="text-sm text-neutral-500">Loading...</p>}
-      {!loading && projects.length === 0 && <p className="text-sm text-neutral-500">{showingTrash ? "Trash is empty." : "No projects yet."}</p>}
+      {loading && projects.length === 0 && <p className="text-sm text-neutral-500">{t("common.loading")}</p>}
+      {!loading && projects.length === 0 && (
+        <p className="text-sm text-neutral-500">{showingTrash ? t("dashboard.trashEmpty") : t("dashboard.noProjects")}</p>
+      )}
       <ul className="space-y-2">
         {projects.map(p => (
-          <li key={p.id} className="bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3" data-testid="project-row">
-            {showingTrash ? (
-              <span className="font-medium">{p.name}</span>
-            ) : (
-              <Link to={`/p/${p.id}`} className="font-medium hover:underline">
-                {p.name}
-              </Link>
-            )}
-            <span className="text-xs text-neutral-500">{p.documentCount} documents</span>
-            <button className={`${btn} ml-auto`} onClick={() => void (showingTrash ? restore(p.id) : trash(p.id))}>
-              {showingTrash ? "Restore" : "Trash"}
+          <li
+            key={p.id}
+            className={`relative bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3 ${showingTrash ? "" : "hover:bg-neutral-50"}`}
+            data-testid="project-row"
+          >
+            {/* Covers the whole row so clicking anywhere (not just the title) navigates — the visible title below
+             * stays plain text; the Trash/Restore button sits above this via z-10 so its own click still wins. */}
+            {!showingTrash && <Link to={`/${lang}/p/${p.id}`} className="absolute inset-0 rounded" aria-label={p.name} />}
+            <span className="font-medium">{p.name}</span>
+            <span className="text-xs text-neutral-500">{t("dashboard.documentCount", { count: p.documentCount })}</span>
+            <button className={`${btn} ml-auto relative z-10`} onClick={() => void (showingTrash ? restore(p.id) : trash(p.id))}>
+              {showingTrash ? t("dashboard.restore") : t("dashboard.trash")}
             </button>
           </li>
         ))}
@@ -75,44 +82,54 @@ function ProjectList() {
 }
 
 function ProjectView({ projectId }: { projectId: string }) {
+  const { t } = useTranslation();
+  const lang = useLang();
   const { documents, showingTrash, loading, error, load, trash, restore } = useDocuments(projectId);
   const { projects } = useProjects();
   const project = projects.find(p => p.id === projectId);
 
+  // The real breadcrumbs system (building_blocks' AppBreadcrumbs, via ScreenContainer's BreadcrumbContext),
+  // not a hand-rolled "Projects / name" line — matches music_app's own per-page useSetBreadcrumbs usage.
+  useSetBreadcrumbs([
+    { label: t("dashboard.projects"), href: `/${lang}/projects` },
+    { label: project?.name ?? projectId, current: true },
+  ]);
+
   return (
     <section>
-      <div className="text-sm mb-2">
-        <Link to="/" className="text-neutral-500 hover:underline">
-          Projects
-        </Link>{" "}
-        / <span>{project?.name ?? projectId}</span>
-      </div>
       <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold">{showingTrash ? "Trashed documents" : "Documents"}</h2>
+        <h2 className="text-xl font-semibold">{showingTrash ? t("dashboard.trashedDocuments") : t("dashboard.documents")}</h2>
         <button className={`${btn} ml-auto`} onClick={() => void load({ trashed: !showingTrash })}>
-          {showingTrash ? "Back to documents" : "Show trash"}
+          {showingTrash ? t("dashboard.backToDocuments") : t("dashboard.showTrash")}
         </button>
       </div>
       {!showingTrash && <NewDocumentForm projectId={projectId} />}
       <ImportScript projectId={projectId}>
         {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-        {loading && documents.length === 0 && <p className="text-sm text-neutral-500">Loading...</p>}
-        {!loading && documents.length === 0 && <p className="text-sm text-neutral-500">{showingTrash ? "Trash is empty." : "No documents yet."}</p>}
+        {loading && documents.length === 0 && <p className="text-sm text-neutral-500">{t("common.loading")}</p>}
+        {!loading && documents.length === 0 && (
+          <p className="text-sm text-neutral-500">{showingTrash ? t("dashboard.trashEmpty") : t("dashboard.noDocuments")}</p>
+        )}
         <ul className="space-y-2">
           {documents.map(d => (
-            <li key={d.id} className="bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3" data-testid="document-row">
-              {showingTrash ? (
-                <span className="font-medium">{d.title}</span>
-              ) : (
-                <Link to={`/d/${d.id}`} className="font-medium hover:underline">
-                  {d.title}
-                </Link>
-              )}
+            <li
+              key={d.id}
+              className={`relative bg-white border border-neutral-200 rounded px-4 py-3 flex items-center gap-3 ${showingTrash ? "" : "hover:bg-neutral-50"}`}
+              data-testid="document-row"
+            >
+              {/* Covers the whole row so clicking anywhere (not just the title) navigates — see the matching
+               * comment on the project row above. */}
+              {!showingTrash && <Link to={`/${lang}/d/${d.id}`} className="absolute inset-0 rounded" aria-label={d.title} />}
+              <span className="font-medium">{d.title}</span>
               <span className="text-xs text-neutral-500">
-                {d.kind} - {d.wordCount} words - edited {new Date(d.lastEditedAt ?? d.updatedAt).toLocaleString()}
+                {t("dashboard.documentMeta", {
+                  kind: d.kind,
+                  words: d.wordCount,
+                  edited: new Date(d.lastEditedAt ?? d.updatedAt).toLocaleString(),
+                })}
               </span>
-              <button className={`${btn} ml-auto`} onClick={() => void (showingTrash ? restore(d.id) : trash(d.id))}>
-                {showingTrash ? "Restore" : "Trash"}
+              <button className={`${btn} ml-auto relative z-10`} onClick={() => void (showingTrash ? restore(d.id) : trash(d.id))}>
+                {showingTrash ? t("dashboard.restore") : t("dashboard.trash")}
               </button>
             </li>
           ))}
@@ -123,8 +140,12 @@ function ProjectView({ projectId }: { projectId: string }) {
 }
 
 function NewDocumentForm({ projectId }: { projectId: string }) {
+  const { t } = useTranslation();
+  const lang = useLang();
   const { create } = useDocuments(projectId);
-  const { templates } = useTemplates();
+  // Built-ins are filtered to the app's current UI language (screenwriter_lib's business logic; see useTemplates'
+  // own doc comment) — a user in English shouldn't see the catalogue's zh-Hans/zh-Hant/ja/ko/es/fr/de variants.
+  const { templates } = useTemplates(lang);
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<DocumentKind>("script");
@@ -145,7 +166,7 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
       const doc = await create({ title, kind, ...(templateId ? { templateId } : {}) });
       if (doc) {
         setTitle("");
-        navigate(`/d/${doc.id}`);
+        navigate(`/${lang}/d/${doc.id}`);
       }
     } finally {
       setBusy(false);
@@ -153,19 +174,23 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
   };
 
   return (
-    <form onSubmit={submit} className="bg-white border border-neutral-200 rounded p-3 mb-4 flex flex-wrap gap-2 items-end" aria-label="New document">
+    <form
+      onSubmit={(e) => void submit(e)}
+      className="bg-white border border-neutral-200 rounded p-3 mb-4 flex flex-wrap gap-2 items-end"
+      aria-label={t("dashboard.newDocumentFormLabel")}
+    >
       <label className="flex flex-col text-xs text-neutral-500 flex-1 min-w-40">
-        Title
+        {t("dashboard.titleLabel")}
         <input
           required
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="Untitled screenplay"
+          placeholder={t("dashboard.titlePlaceholder")}
           className="border border-neutral-300 rounded px-3 py-1.5 text-base text-neutral-900"
         />
       </label>
       <label className="flex flex-col text-xs text-neutral-500">
-        Kind
+        {t("dashboard.kindLabel")}
         <select value={kind} onChange={e => setKind(e.target.value as DocumentKind)} className="border border-neutral-300 rounded px-2 py-2 text-sm text-neutral-900">
           {DOCUMENT_KINDS.map(k => (
             <option key={k} value={k}>
@@ -175,7 +200,7 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
         </select>
       </label>
       <label className="flex flex-col text-xs text-neutral-500">
-        Template
+        {t("dashboard.templateLabel")}
         <select value={templateId} onChange={e => setTemplateId(e.target.value)} className="border border-neutral-300 rounded px-2 py-2 text-sm text-neutral-900">
           {templates.map(t => (
             <option key={t.id} value={t.id}>
@@ -185,7 +210,7 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
         </select>
       </label>
       <button type="submit" disabled={busy} className={primary}>
-        Create document
+        {t("dashboard.createDocument")}
       </button>
     </form>
   );

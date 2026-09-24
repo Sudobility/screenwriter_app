@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import type { ApiKeySummary } from "@sudobility/screenwriter_types";
 import { useApiKeys } from "@sudobility/screenwriter_lib";
-import { Shell } from "../components/Shell";
-import { Modal } from "../components/Modal";
+import { FormModal } from "@sudobility/components";
+import { useLang } from "../hooks/useLang";
 import { API_URL } from "../config";
 import { mcpAddCommand, mcpJsonConfig } from "../util/mcp-config";
 
@@ -67,6 +67,7 @@ function ConnectSection({ revealedKey }: { revealedKey: string | null }) {
 
 export function KeysPage() {
   const k = useApiKeys();
+  const lang = useLang();
   const [name, setName] = useState("");
   const [scope, setScope] = useState<"read" | "read_write">("read_write");
   const [ai, setAi] = useState(false);
@@ -80,10 +81,10 @@ export function KeysPage() {
   };
 
   return (
-    <Shell>
+    <>
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-xl font-semibold">API keys</h2>
-        <Link to="/" className="ml-auto text-sm text-neutral-600 hover:underline">
+        <Link to={`/${lang}/projects`} className="ml-auto text-sm text-neutral-600 hover:underline">
           Back to projects
         </Link>
       </div>
@@ -209,29 +210,30 @@ export function KeysPage() {
 
       <ConnectSection revealedKey={k.revealed?.key ?? null} />
 
-      {confirming && (
-        <Modal title="Revoke this key?" testId="revoke-confirm">
-          <p className="text-sm mb-4">
+      <FormModal
+        open={!!confirming}
+        title="Revoke this key?"
+        onClose={() => setConfirming(null)}
+        actions={[
+          { label: "Cancel", onClick: () => setConfirming(null), variant: "ghost" },
+          {
+            label: "Revoke key",
+            variant: "destructive",
+            onClick: () => {
+              if (!confirming) return;
+              const id = confirming.id;
+              setConfirming(null);
+              void k.revoke(id);
+            },
+          },
+        ]}
+      >
+        {confirming && (
+          <p className="text-sm">
             Anything using <strong>{confirming.name}</strong> (fwk_{confirming.prefix}_...) will stop working right away. This cannot be undone.
           </p>
-          <div className="flex justify-end gap-2">
-            <button className={btn} onClick={() => setConfirming(null)}>
-              Cancel
-            </button>
-            <button
-              className="bg-red-700 text-white rounded px-3 py-1 text-sm"
-              data-testid="revoke-confirm-button"
-              onClick={() => {
-                const id = confirming.id;
-                setConfirming(null);
-                void k.revoke(id);
-              }}
-            >
-              Revoke key
-            </button>
-          </div>
-        </Modal>
-      )}
-    </Shell>
+        )}
+      </FormModal>
+    </>
   );
 }
