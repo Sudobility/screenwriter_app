@@ -10,7 +10,7 @@ async function login(page: Page) {
   // The only spec that walks the public home page rather than jumping straight to /login: it is the "whole
   // flow" test, so the home page + its "Log in" button are part of the flow it verifies.
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Fadewright" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ViaInk" })).toBeVisible();
   await page.getByRole("link", { name: "Log in" }).first().click();
   await page.getByLabel("Dev login (email, no password)").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("x");

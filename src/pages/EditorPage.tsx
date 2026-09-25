@@ -66,6 +66,7 @@ function Editor({ documentId }: { documentId: string }) {
   const [goPage, setGoPage] = useState<{ index: number } | null>(null);
   // Switching tabs by hand drops any pending "put the caret here" so Edit does not jump back to an old jump target.
   const setView = (v: View) => {
+    selectEntity(null); // choosing a view goes back to the script, out of any Catalog item
     setCaret(null);
     setViewRaw(v);
   };
@@ -127,11 +128,12 @@ function Editor({ documentId }: { documentId: string }) {
   const projectId = session?.detail?.projectId;
   const st = statusLabel(syncStatus);
   const pageLabel = layout.layout ? `${layout.pageCount} ${layout.pageCount === 1 ? "page" : "pages"}` : "";
-  // Tools that only make sense with the script editor itself (Edit view's style picker/dual dialogue/
-  // scene omit, Pages view's Print), not with the document generally — moved out of the main nav
-  // header into their own bar right above the content area, and hidden entirely once the sidebar's
-  // Catalog selection replaces that content with `EntityDetailView` (none of them act on an entity).
-  const editingBarVisible = !selectedEntityId && (view === "edit" || view === "pages");
+  // The script toolbar: the Edit | Pages | Cards switch, the tools that only make sense with the script editor
+  // (Edit view's style picker/dual dialogue/scene omit, Pages view's Print), and the script's page facts on the
+  // right (page count, Title page, Page setup). It stays visible while the sidebar's Catalog selection replaces
+  // the content area with `EntityDetailView`: the script-only tools grey out (none of them act on an entity),
+  // choosing a view returns to the script, and the panel buttons keep working (their panels sit beside the content).
+  const scriptActive = !selectedEntityId;
 
   return (
     <div className="h-full flex flex-col print-flow">
@@ -151,20 +153,6 @@ function Editor({ documentId }: { documentId: string }) {
           onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           className="font-semibold text-lg border border-transparent hover:border-neutral-300 focus:border-neutral-400 rounded px-2 py-0.5 min-w-48"
         />
-        <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
-          {(["edit", "pages", "cards"] as const).map(v => (
-            <button
-              key={v}
-              role="tab"
-              aria-selected={view === v}
-              data-testid={`view-${v}`}
-              onClick={() => setView(v)}
-              className={`px-3 py-1 ${view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
-            >
-              {VIEW_LABEL[v]}
-            </button>
-          ))}
-        </div>
         <span className="ml-auto" />
         {host && <RevisionIndicator host={host} onClick={() => setPanel("revisions")} />}
         {ready && (
@@ -176,29 +164,10 @@ function Editor({ documentId }: { documentId: string }) {
             }}
           />
         )}
-        <span className="text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
-          {pageLabel}
-        </span>
         <span className="flex items-center gap-2 text-sm" data-testid="sync-status" data-state={st.label.toLowerCase()}>
           <span className={`inline-block w-2.5 h-2.5 rounded-full ${st.tone}`} />
           {st.label}
         </span>
-        <button
-          onClick={() => togglePanel("title")}
-          aria-pressed={panel === "title"}
-          data-testid="title-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "title" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Title page
-        </button>
-        <button
-          onClick={() => togglePanel("setup")}
-          aria-pressed={panel === "setup"}
-          data-testid="setup-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "setup" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Page setup
-        </button>
         <button
           onClick={() => togglePanel("revisions")}
           aria-pressed={panel === "revisions"}
@@ -238,8 +207,27 @@ function Editor({ documentId }: { documentId: string }) {
         </div>
       )}
 
-      {editingBarVisible && (
-        <div data-testid="editing-bar" className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 flex-wrap print:hidden">
+      <div
+        data-testid="editing-bar"
+        data-script-active={scriptActive}
+        className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 flex-wrap print:hidden"
+      >
+        <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
+          {(["edit", "pages", "cards"] as const).map(v => (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={scriptActive && view === v}
+              data-testid={`view-${v}`}
+              onClick={() => setView(v)}
+              className={`px-3 py-1 ${scriptActive && view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
+            >
+              {VIEW_LABEL[v]}
+            </button>
+          ))}
+        </div>
+        {/* The script-only tools grey out (and stop taking input) while a Catalog item replaces the script in the content area. */}
+        <div className={`flex items-center gap-3 flex-wrap ${scriptActive ? "" : "opacity-40 pointer-events-none"}`} inert={!scriptActive}>
           {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
           {host && view === "edit" && <DualDialogueToggle host={host} />}
           {host && view === "edit" && <SceneOmitToggle host={host} />}
@@ -249,7 +237,27 @@ function Editor({ documentId }: { documentId: string }) {
             </button>
           )}
         </div>
-      )}
+        <span className="ml-auto" />
+        <span className="text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
+          {pageLabel}
+        </span>
+        <button
+          onClick={() => togglePanel("title")}
+          aria-pressed={panel === "title"}
+          data-testid="title-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "title" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Title page
+        </button>
+        <button
+          onClick={() => togglePanel("setup")}
+          aria-pressed={panel === "setup"}
+          data-testid="setup-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "setup" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Page setup
+        </button>
+      </div>
 
       <div className="flex-1 min-h-0 flex print-flow" data-testid="editor-split">
         {host && (

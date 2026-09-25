@@ -1,6 +1,6 @@
 # screenwriter_app
 
-Fadewright web app: sign in (dev login), manage projects and documents, write in the script editor, save snapshots, go back to one or fork it into a new document.
+ViaInk web app: sign in (dev login), manage projects and documents, write in the script editor, save snapshots, go back to one or fork it into a new document.
 
 Private, local-packages phase. It expects its sibling repos next to it in `~/projects`: `screenwriter_api`, `screenwriter_lib`, `screenwriter_client`, `screenwriter_types`, `writing_ui`, `writing_core` (each with `bun install` done).
 

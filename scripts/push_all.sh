@@ -2,7 +2,7 @@
 
 # push_all.sh - Project-specific configuration for push_projects.sh
 #
-# Defines the Fadewright (screenwriter/writing) family projects in dependency
+# Defines the ViaInk (screenwriter/writing) family projects in dependency
 # order and sources the reusable push_projects.sh script from the workflows
 # repo.
 #

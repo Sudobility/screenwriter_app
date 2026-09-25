@@ -14,7 +14,7 @@ async function expectPage(page: Page, path: string, heading: string) {
 test("content pages render directly", async ({ page }) => {
   await expectPage(page, "/en/docs", "Documentation");
   await expectPage(page, "/en/resources", "Resources");
-  await expectPage(page, "/en/about", "About Fadewright");
+  await expectPage(page, "/en/about", "About ViaInk");
   await expectPage(page, "/en/contact", "Contact us");
   await expectPage(page, "/en/privacy", "Privacy Policy");
   await expectPage(page, "/en/terms", "Terms of Service");
@@ -38,7 +38,7 @@ test("home page's full footer links to About, Docs, Resources, Contact, Privacy 
   await expect(footer.getByRole("link", { name: "About", exact: true })).toBeVisible();
 
   await footer.getByRole("link", { name: "About", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "About Fadewright", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "About ViaInk", exact: true })).toBeVisible();
 
   await page.goto("/en");
   await page.locator("footer").getByRole("link", { name: "Contact", exact: true }).click();

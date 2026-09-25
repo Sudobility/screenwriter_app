@@ -151,6 +151,6 @@ test("import and export, end to end", async ({ page }) => {
   const err = page.getByTestId("import-error");
   await expect(err).toBeVisible();
   await expect(err).toHaveAttribute("data-code", "UNSUPPORTED_FORMAT");
-  await expect(err).toContainText("not a format Fadewright can import");
+  await expect(err).toContainText("not a format ViaInk can import");
   await expect(page.getByTestId("document-row")).toHaveCount(2);
 });

@@ -1,4 +1,5 @@
 import { isApiError } from "@sudobility/screenwriter_client";
+import { APP_NAME } from "../config";
 
 export interface DescribedError {
   code: string;
@@ -12,7 +13,7 @@ export function describeError(e: Error): DescribedError {
   if (!isApiError(e)) return { code: "UNKNOWN", message: e.message, issues: [] };
   switch (e.code) {
     case "UNSUPPORTED_FORMAT":
-      return { code: e.code, message: `This file is not a format Fadewright can import (Fountain, Final Draft FDX, Fade In). ${e.message}`, issues: [] };
+      return { code: e.code, message: `This file is not a format ${APP_NAME} can import (Fountain, Final Draft FDX, Fade In). ${e.message}`, issues: [] };
     case "IMPORT_FAILED":
       return { code: e.code, message: `The file looks like a script but could not be read: ${e.message}`, issues: [] };
     case "IMPORT_INVALID": {
