@@ -7,13 +7,6 @@ import { LinkWrapper } from "../components/layout/LinkWrapper";
 import { APP_NAME } from "../config";
 import { useLang } from "./useLang";
 
-// A monogram data-URI in place of a real logo asset (LogoConfig.src is required; this app has none yet).
-const LOGO_SRC =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="6" fill="#171717"/><text x="16" y="22" font-family="sans-serif" font-size="18" font-weight="600" fill="#fff" text-anchor="middle">F</text></svg>`,
-  );
-
 /** The top bar, as configuration — `ScreenContainer` renders whatever this returns via `building_blocks`'
  * `AppPageLayout`, matching music_app's own `useTopBarConfig` pattern. */
 export function useTopBarConfig(): TopBarConfig {
@@ -28,7 +21,8 @@ export function useTopBarConfig(): TopBarConfig {
       variant: "firebase",
       topBarVariant: "app",
       logo: {
-        src: LOGO_SRC,
+        // The quill mark (public/logo.svg; its PNG/ICO derivatives come from `bun run icons`). The SVG itself, so it is crisp at any DPI.
+        src: "/logo.svg",
         alt: APP_NAME,
         appName: APP_NAME,
         onClick: () => navigate(`/${lang}`),

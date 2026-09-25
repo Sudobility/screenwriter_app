@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DOCUMENT_KINDS, type DocumentKind } from "@sudobility/screenwriter_types";
 import { useDocuments, useProjects, useTemplates } from "@sudobility/screenwriter_lib";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
+import { FormModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { ImportScript } from "../components/ImportScript";
@@ -14,6 +14,26 @@ const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm disabled:op
 // it exactly (same height as the two selects, per an explicit user requirement) instead of each control
 // following its own padding/font-size.
 const fieldClass = "h-9 border border-neutral-300 rounded px-3 text-sm text-neutral-900";
+/**
+ * "Trash" asks first (per an explicit user requirement): a `FormModal` (the same component the import results and
+ * export loss reports use) naming what is about to be trashed, with "Move to trash" as its action. Trash is
+ * reversible from the trash view, so the copy says so rather than warning of loss.
+ */
+function TrashConfirm({ target, kind, onConfirm, onClose }: { target: { id: string; name: string } | null; kind: "project" | "document"; onConfirm(id: string): void; onClose(): void }) {
+  const { t } = useTranslation();
+  return (
+    <FormModal
+      open={!!target}
+      title={kind === "project" ? t("dashboard.trashProjectTitle") : t("dashboard.trashDocumentTitle")}
+      onClose={onClose}
+      // Only the confirming action: the modal's own top-bar close button is already labelled "Cancel".
+      actions={target ? [{ label: t("dashboard.trashConfirm"), onClick: () => onConfirm(target.id) }] : []}
+    >
+      {target && <p className="text-sm">{kind === "project" ? t("dashboard.trashProjectBody", { name: target.name }) : t("dashboard.trashDocumentBody", { name: target.name })}</p>}
+    </FormModal>
+  );
+}
+
 const primaryField = "h-9 inline-flex items-center justify-center bg-neutral-900 text-white rounded px-3 text-sm disabled:opacity-50";
 
 export function DashboardPage() {
@@ -26,6 +46,7 @@ function ProjectList() {
   const lang = useLang();
   const { projects, showingTrash, loading, error, load, create, trash, restore } = useProjects();
   const [name, setName] = useState("");
+  const [trashing, setTrashing] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
 
   const submit = async (e: FormEvent) => {
@@ -77,12 +98,21 @@ function ProjectList() {
             {!showingTrash && <Link to={`/${lang}/p/${p.id}`} className="absolute inset-0 rounded" aria-label={p.name} />}
             <span className="font-medium">{p.name}</span>
             <span className="text-xs text-neutral-500">{t("dashboard.documentCount", { count: p.documentCount })}</span>
-            <button className={`${btn} ml-auto relative z-10`} onClick={() => void (showingTrash ? restore(p.id) : trash(p.id))}>
+            <button className={`${btn} ml-auto relative z-10`} onClick={() => (showingTrash ? void restore(p.id) : setTrashing({ id: p.id, name: p.name }))}>
               {showingTrash ? t("dashboard.restore") : t("dashboard.trash")}
             </button>
           </li>
         ))}
       </ul>
+      <TrashConfirm
+        target={trashing}
+        kind="project"
+        onClose={() => setTrashing(null)}
+        onConfirm={id => {
+          setTrashing(null);
+          void trash(id);
+        }}
+      />
     </section>
   );
 }
@@ -93,6 +123,7 @@ function ProjectView({ projectId }: { projectId: string }) {
   const { documents, showingTrash, loading, error, load, trash, restore } = useDocuments(projectId);
   const { projects } = useProjects();
   const project = projects.find(p => p.id === projectId);
+  const [trashing, setTrashing] = useState<{ id: string; name: string } | null>(null);
 
   // The real breadcrumbs system (building_blocks' AppBreadcrumbs, via ScreenContainer's BreadcrumbContext),
   // not a hand-rolled "Projects / name" line — matches music_app's own per-page useSetBreadcrumbs usage.
@@ -134,12 +165,21 @@ function ProjectView({ projectId }: { projectId: string }) {
                   edited: new Date(d.lastEditedAt ?? d.updatedAt).toLocaleString(),
                 })}
               </span>
-              <button className={`${btn} ml-auto relative z-10`} onClick={() => void (showingTrash ? restore(d.id) : trash(d.id))}>
+              <button className={`${btn} ml-auto relative z-10`} onClick={() => (showingTrash ? void restore(d.id) : setTrashing({ id: d.id, name: d.title }))}>
                 {showingTrash ? t("dashboard.restore") : t("dashboard.trash")}
               </button>
             </li>
           ))}
         </ul>
+        <TrashConfirm
+          target={trashing}
+          kind="document"
+          onClose={() => setTrashing(null)}
+          onConfirm={id => {
+            setTrashing(null);
+            void trash(id);
+          }}
+        />
       </ImportScript>
     </section>
   );

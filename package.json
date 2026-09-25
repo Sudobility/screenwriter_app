@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "description": "Fadewright web app (Vite + React): dev login, dashboard, script editor, snapshots",
@@ -11,7 +11,8 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "icons": "bun run scripts/make-icons.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
