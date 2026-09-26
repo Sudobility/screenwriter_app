@@ -115,6 +115,8 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
           }}
         >
           <input
+            spellCheck={true}
+            autoCorrect="off"
             aria-label="Fork title"
             required
             autoFocus
@@ -168,6 +170,8 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
       </p>
       <form onSubmit={save} className="space-y-1">
         <input
+          spellCheck={true}
+          autoCorrect="off"
           aria-label="Snapshot name"
           required
           value={name}
@@ -176,6 +180,8 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
           className="w-full border border-neutral-300 rounded px-2 py-1 text-sm"
         />
         <input
+          spellCheck={true}
+          autoCorrect="off"
           aria-label="Snapshot note"
           value={note}
           onChange={e => setNote(e.target.value)}

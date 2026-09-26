@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { MasterListItem } from "@sudobility/components/master-detail-layout";
 import { ENTITY_KINDS, type EntityKind, type EntityView } from "@sudobility/writing_core";
-import { Navigator, type ScriptEditorHost } from "@sudobility/writing_ui";
+import { defaultSpellingPolicy, Navigator, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
 import { kindLabel } from "../util/entity-kind-labels";
 import { sceneCountOf } from "../util/entity-scene-count";
@@ -305,6 +305,8 @@ export function EditorSidebar({
                     <div className="flex gap-2 px-3 py-1.5">
                       <input
                         autoFocus
+                        spellCheck={defaultSpellingPolicy.entityName(k)}
+                        autoCorrect="off"
                         aria-label={`New ${kindLabel(k)} name`}
                         placeholder="Name"
                         className="flex-1 min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
@@ -343,6 +345,8 @@ export function EditorSidebar({
               </SelectContent>
             </Select>
             <input
+              spellCheck={otherKind ? defaultSpellingPolicy.entityName(otherKind) : false}
+              autoCorrect="off"
               aria-label="New entity name"
               placeholder="Name"
               className="flex-1 min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"

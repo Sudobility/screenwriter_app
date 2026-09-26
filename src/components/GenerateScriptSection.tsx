@@ -51,6 +51,8 @@ export function GenerateScriptSection({ host, onInserted }: { host: ScriptEditor
       <label className="flex flex-col text-xs text-neutral-500">
         Story
         <textarea
+          spellCheck={true}
+          autoCorrect="off"
           rows={6}
           data-testid="ai-story"
           className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
@@ -63,6 +65,8 @@ export function GenerateScriptSection({ host, onInserted }: { host: ScriptEditor
       <label className="flex flex-col text-xs text-neutral-500">
         Title (optional)
         <input
+          spellCheck={true}
+          autoCorrect="off"
           data-testid="ai-story-title"
           className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
           value={title}

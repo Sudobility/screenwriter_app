@@ -51,6 +51,8 @@ export function TitlePagePanel({ host, onClose }: { host: ScriptEditorHost; onCl
           {label}
           {multiline ? (
             <textarea
+              spellCheck={!["author", "contact", "draftDate"].includes(field)}
+              autoCorrect="off"
               data-testid={`title-${field}`}
               className={`${input} mt-0.5 font-normal`}
               rows={3}
@@ -62,6 +64,8 @@ export function TitlePagePanel({ host, onClose }: { host: ScriptEditorHost; onCl
             />
           ) : (
             <input
+              spellCheck={!["author", "contact", "draftDate"].includes(field)}
+              autoCorrect="off"
               data-testid={`title-${field}`}
               className={`${input} mt-0.5 font-normal`}
               placeholder={hint}

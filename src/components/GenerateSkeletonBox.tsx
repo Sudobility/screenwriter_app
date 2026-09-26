@@ -45,6 +45,8 @@ export function GenerateSkeletonBox({ existing, onApply }: { existing: Skeleton;
       <label className="flex flex-col text-xs text-neutral-500">
         Describe the character in your own words
         <textarea
+          spellCheck={true}
+          autoCorrect="off"
           rows={4}
           data-testid="ai-skeleton-text"
           className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"

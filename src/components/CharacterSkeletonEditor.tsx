@@ -89,6 +89,8 @@ export function CharacterSkeletonEditor({
                       <div className="relative">
                         {f.multiline ? (
                           <textarea
+                            spellCheck={!["age", "height", "weight"].includes(f.key)}
+                            autoCorrect="off"
                             rows={2}
                             data-testid={`skeleton-field-${f.key}`}
                             className={`${fieldInput} w-full ${f.required ? "" : "pr-6"}`}
@@ -97,6 +99,8 @@ export function CharacterSkeletonEditor({
                           />
                         ) : (
                           <input
+                            spellCheck={!["age", "height", "weight"].includes(f.key)}
+                            autoCorrect="off"
                             data-testid={`skeleton-field-${f.key}`}
                             className={`${fieldInput} w-full ${f.required ? "" : "pr-6"}`}
                             defaultValue={skeleton[f.key] ?? ""}

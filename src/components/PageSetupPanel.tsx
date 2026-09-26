@@ -109,6 +109,8 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
             <label key={s} className="flex items-center gap-2 text-xs text-neutral-700">
               <span className="w-12 capitalize">{s}</span>
               <input
+                spellCheck={false}
+                autoCorrect="off"
                 data-testid={`${which}-${s}`}
                 className={input}
                 value={draft[`${which}-${s}`] ?? template[which][s]}

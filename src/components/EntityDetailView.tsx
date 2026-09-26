@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { EntityKind } from "@sudobility/writing_core";
-import type { ScriptEditorHost } from "@sudobility/writing_ui";
+import { defaultSpellingPolicy, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
 import { kindLabel } from "../util/entity-kind-labels";
 import { sceneCountOf } from "../util/entity-scene-count";
@@ -165,19 +165,21 @@ export function EntityDetailView({
         {key === "theme" && (
           <label className="flex flex-col text-xs text-neutral-500">
             Theme
-            <input data-testid="story-field-theme" className={fieldInput} defaultValue={getTheme(entity)} key={entity.id} onBlur={e => setTheme(host, entity, e.target.value)} />
+            <input spellCheck autoCorrect="off" data-testid="story-field-theme" className={fieldInput} defaultValue={getTheme(entity)} key={entity.id} onBlur={e => setTheme(host, entity, e.target.value)} />
           </label>
         )}
         {key === "tagline" && (
           <label className="flex flex-col text-xs text-neutral-500">
             Tagline
-            <input data-testid="story-field-tagline" className={fieldInput} defaultValue={getTagline(entity)} key={entity.id} onBlur={e => setTagline(host, entity, e.target.value)} />
+            <input spellCheck autoCorrect="off" data-testid="story-field-tagline" className={fieldInput} defaultValue={getTagline(entity)} key={entity.id} onBlur={e => setTagline(host, entity, e.target.value)} />
           </label>
         )}
         {key === "synopsis" && (
           <label className="flex flex-col text-xs text-neutral-500">
             Synopsis
             <textarea
+              spellCheck={true}
+              autoCorrect="off"
               rows={10}
               data-testid="story-field-synopsis"
               className={fieldInput}
@@ -191,6 +193,8 @@ export function EntityDetailView({
           <label className="flex flex-col text-xs text-neutral-500">
             Main plot
             <textarea
+              spellCheck={true}
+              autoCorrect="off"
               rows={8}
               data-testid="story-field-plot-main"
               className={fieldInput}
@@ -205,6 +209,8 @@ export function EntityDetailView({
             <label className="flex flex-col text-xs text-neutral-500">
               Name
               <input
+                spellCheck={true}
+                autoCorrect="off"
                 data-testid="story-field-subplot-name"
                 className={fieldInput}
                 defaultValue={activeSubplot.name}
@@ -215,6 +221,8 @@ export function EntityDetailView({
             <label className="flex flex-col text-xs text-neutral-500">
               Text
               <textarea
+                spellCheck={true}
+                autoCorrect="off"
                 rows={8}
                 data-testid="story-field-subplot-text"
                 className={fieldInput}
@@ -287,6 +295,8 @@ export function EntityDetailView({
       </ul>
       <div className="flex gap-2 mt-2">
         <input
+          spellCheck={false}
+          autoCorrect="off"
           aria-label="New alias"
           className="flex-1 border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
           value={alias}
@@ -371,6 +381,8 @@ export function EntityDetailView({
         <label className="flex flex-col text-xs text-neutral-500">
           Name
           <input
+            spellCheck={defaultSpellingPolicy.entityName(entity.kind as EntityKind)}
+            autoCorrect="off"
             data-testid="entity-name"
             className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
             defaultValue={entity.name}
@@ -451,6 +463,8 @@ export function EntityDetailView({
             <label className="flex flex-col text-xs text-neutral-500">
               Description
               <textarea
+                spellCheck={true}
+                autoCorrect="off"
                 data-testid="entity-description"
                 rows={3}
                 className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"

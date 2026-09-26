@@ -146,6 +146,8 @@ function Editor({ documentId }: { documentId: string }) {
           {projectId ? "Project" : "Home"}
         </Link>
         <input
+          spellCheck={true}
+          autoCorrect="off"
           aria-label="Document title"
           value={title}
           onChange={e => setTitle(e.target.value)}

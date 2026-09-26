@@ -126,6 +126,8 @@ export function KeysPage() {
         <label className="flex-1 min-w-48 text-sm">
           <span className="block text-neutral-600 mb-1">Name</span>
           <input
+            spellCheck
+            autoCorrect="off"
             aria-label="Key name"
             required
             maxLength={60}

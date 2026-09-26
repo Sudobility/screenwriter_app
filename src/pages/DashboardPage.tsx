@@ -69,6 +69,8 @@ function ProjectList() {
       {!showingTrash && (
         <form onSubmit={(e) => void submit(e)} className="flex gap-2 mb-4">
           <input
+            spellCheck={true}
+            autoCorrect="off"
             aria-label={t("dashboard.newProjectNameLabel")}
             required
             value={name}
@@ -228,6 +230,8 @@ function NewDocumentForm({ projectId }: { projectId: string }) {
       <label className="flex flex-col text-xs text-neutral-500 flex-1 min-w-40">
         {t("dashboard.titleLabel")}
         <input
+          spellCheck={true}
+          autoCorrect="off"
           required
           value={title}
           onChange={e => setTitle(e.target.value)}

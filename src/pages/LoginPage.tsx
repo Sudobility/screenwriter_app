@@ -36,25 +36,27 @@ export function LoginPage() {
   };
 
   return (
-    <LoginPageComponent
-      appName={APP_NAME}
-      showGoogleSignIn={hasGoogle}
-      // emailLabel: every e2e spec's login helper depends on this exact text (getByLabel("Dev login (email, no
-      // password)")). The password field stays the component's own default ("Password") for full visual parity
-      // with music_app — it's native-`required` (no prop removes it) so a value must still be typed, but the
-      // component's own default label is enough; e2e disambiguates it from the email field with `exact: true`
-      // rather than a relabel.
-      // signInWithGoogle: the component's own default ("Sign in with Google") contains "Sign in" as a substring,
-      // which makes every e2e spec's getByRole("button", { name: "Sign in" }) ambiguous (Playwright's default
-      // name match is substring, not exact) — matches music_app's own override to the same text for the same reason.
-      text={{
-        ...(hasDevAuth ? { emailLabel: "Dev login (email, no password)" } : {}),
-        signInWithGoogle: "Continue with Google",
-      }}
-      onEmailSignIn={devLogin}
-      onEmailSignUp={devLogin}
-      onGoogleSignIn={hasGoogle ? signInGoogle : undefined}
-      onSuccess={() => navigate(`/${lang}/projects`)}
-    />
+    <div className="contents" spellCheck={false} autoCorrect="off">
+      <LoginPageComponent
+        appName={APP_NAME}
+        showGoogleSignIn={hasGoogle}
+        // emailLabel: every e2e spec's login helper depends on this exact text (getByLabel("Dev login (email, no
+        // password)")). The password field stays the component's own default ("Password") for full visual parity
+        // with music_app — it's native-`required` (no prop removes it) so a value must still be typed, but the
+        // component's own default label is enough; e2e disambiguates it from the email field with `exact: true`
+        // rather than a relabel.
+        // signInWithGoogle: the component's own default ("Sign in with Google") contains "Sign in" as a substring,
+        // which makes every e2e spec's getByRole("button", { name: "Sign in" }) ambiguous (Playwright's default
+        // name match is substring, not exact) — matches music_app's own override to the same text for the same reason.
+        text={{
+          ...(hasDevAuth ? { emailLabel: "Dev login (email, no password)" } : {}),
+          signInWithGoogle: "Continue with Google",
+        }}
+        onEmailSignIn={devLogin}
+        onEmailSignUp={devLogin}
+        onGoogleSignIn={hasGoogle ? signInGoogle : undefined}
+        onSuccess={() => navigate(`/${lang}/projects`)}
+      />
+    </div>
   );
 }
