@@ -6,6 +6,7 @@ import { AuthActionAdapter } from "../components/layout/AuthActionAdapter";
 import { LinkWrapper } from "../components/layout/LinkWrapper";
 import { APP_NAME } from "../config";
 import { useLang } from "./useLang";
+import { useAuth } from "../app/AuthContext";
 
 /** The top bar, as configuration — `ScreenContainer` renders whatever this returns via `building_blocks`'
  * `AppPageLayout`, matching music_app's own `useTopBarConfig` pattern. */
@@ -13,6 +14,7 @@ export function useTopBarConfig(): TopBarConfig {
   const navigate = useNavigate();
   const lang = useLang();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const docsLabel = t("nav.docs");
   const resourcesLabel = t("nav.resources");
 
@@ -28,6 +30,15 @@ export function useTopBarConfig(): TopBarConfig {
         onClick: () => navigate(`/${lang}`),
       },
       menuItems: [
+        ...(user
+          ? [
+              {
+                id: "dashboard",
+                label: t("dashboard.title", "Dashboard"),
+                href: `/${lang}/projects`,
+              },
+            ]
+          : []),
         { id: "docs", label: docsLabel, href: `/${lang}/docs` },
         { id: "resources", label: resourcesLabel, href: `/${lang}/resources` },
       ],
@@ -37,6 +48,6 @@ export function useTopBarConfig(): TopBarConfig {
       onLoginClick: () => navigate(`/${lang}/login`),
       sticky: true,
     }),
-    [navigate, lang, docsLabel, resourcesLabel],
+    [navigate, lang, docsLabel, resourcesLabel, user, t],
   );
 }

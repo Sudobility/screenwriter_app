@@ -1,9 +1,16 @@
 import { configureTheme } from "@sudobility/design";
 import { generateThemeCSS, retroTheme } from "@sudobility/design/themes";
 import { createFetchNetworkClient } from "@sudobility/screenwriter_client";
-import { createScreenwriter, type Screenwriter } from "@sudobility/screenwriter_lib";
-import { authBackendAsPort, unifiedAuthBackend, type AuthBackend } from "./auth/backend";
-import { API_URL } from "./config";
+import {
+  createScreenwriter,
+  type Screenwriter,
+} from "@sudobility/screenwriter_lib";
+import {
+  authBackendAsPort,
+  unifiedAuthBackend,
+  type AuthBackend,
+} from "./auth/backend";
+import { API_URL, SHOW_ENTITIES } from "./config";
 import { IndexedDbOfflineDocStore } from "./offline/idb-store";
 
 // Activate the design-system theme. configureTheme() registers the JS class overrides; the semantic tokens
@@ -13,7 +20,10 @@ import { IndexedDbOfflineDocStore } from "./offline/idb-store";
 // throughout this app, never overridden) picks up its actual color/type treatment from whichever theme is active
 // here, with no other code change.
 configureTheme(retroTheme);
-if (typeof document !== "undefined" && !document.getElementById("sudobility-design-theme")) {
+if (
+  typeof document !== "undefined" &&
+  !document.getElementById("sudobility-design-theme")
+) {
   const styleEl = document.createElement("style");
   styleEl.id = "sudobility-design-theme";
   styleEl.textContent = generateThemeCSS(retroTheme);
@@ -38,6 +48,10 @@ export function createServices(): Services {
     baseUrl: API_URL,
     auth: authBackendAsPort(auth),
     offline: new IndexedDbOfflineDocStore(),
+    getSelectedWorkspaceId: () =>
+      SHOW_ENTITIES && typeof localStorage !== "undefined"
+        ? localStorage.getItem("screenwriter.selectedWorkspaceId")
+        : null,
   });
   services = { screenwriter, auth };
   return services;
