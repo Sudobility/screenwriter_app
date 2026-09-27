@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AuthUser } from "@sudobility/screenwriter_lib";
 import { getServices } from "../services";
+import { setConsumablesUserId } from "@sudobility/consumables_client";
 
 /**
  * This app's own auth context, matching music_app's `AuthContext.tsx` shape — the UI reads THIS `useAuth()`, not
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = auth.observe((nextUser) => {
       setUser(nextUser);
+      void setConsumablesUserId(nextUser?.uid, nextUser?.email ?? undefined);
       setLoading(false);
     });
     return unsubscribe;
