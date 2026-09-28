@@ -10,14 +10,8 @@ import {
   useProjects,
   useTemplates,
 } from "@sudobility/screenwriter_lib";
-import {
-  FormModal,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@sudobility/components";
+import { FormModal } from "@sudobility/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
 import { useLang } from "../hooks/useLang";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { ImportScript } from "../components/ImportScript";

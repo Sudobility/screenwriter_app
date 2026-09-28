@@ -10,7 +10,6 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { DocsPage } from "./pages/DocsPage";
 import { EditorPage } from "./pages/EditorPage";
 import { HomePage } from "./pages/HomePage";
-import { KeysPage } from "./pages/KeysPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { ResourcesPage } from "./pages/ResourcesPage";
@@ -53,6 +52,11 @@ function HomeRoute() {
 function CatchAll() {
   const lang = useLang();
   return <Navigate to={`/${lang}/404`} replace />;
+}
+
+function LegacyKeysRedirect() {
+  const lang = useLang();
+  return <Navigate to={`/${lang}/projects`} replace />;
 }
 
 /** Adapts `ScreenContainer`'s children-based API to a layout-route element, matching music_app's own
@@ -99,7 +103,7 @@ export function App() {
             path="settings/keys"
             element={
               <ProtectedRoute>
-                <KeysPage />
+                <LegacyKeysRedirect />
               </ProtectedRoute>
             }
           />

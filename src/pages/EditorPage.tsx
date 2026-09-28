@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { MasterDetailLayout } from "@sudobility/components/master-detail-layout";
@@ -10,6 +11,8 @@ import { sessionToHost } from "../adapter/session-host";
 import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
 import { AiPanel } from "../components/AiPanel";
 import { DualDialogueToggle } from "../components/DualDialogueToggle";
+import { FixFormattingButton } from "../components/FixFormattingButton";
+import { TechniqueMenu } from "../components/TechniqueMenu";
 import { SceneOmitToggle } from "../components/SceneOmitToggle";
 import { PageSetupPanel } from "../components/PageSetupPanel";
 import { TitlePagePanel } from "../components/TitlePagePanel";
@@ -99,9 +102,40 @@ function Editor({ documentId }: { documentId: string }) {
     setGoPage(null);
   }, [goPage, view, layout.status, layout.pageCount]);
 
-  // "PDF (print)": switch to Pages, wait for the layout, then open the print dialog.
+  // What is printed is never the screen's layout: while printing, the sheets are rendered on their own, straight
+  // under <body> (`print-sheets`), and the app is hidden. The screen layout cannot be trusted on paper: the
+  // master/detail layout goes "mobile" below 768px and hides the script, and a printed page is narrower than that
+  // as soon as the browser adds its own margins (Safari does by default), which printed blank pages.
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    // `beforeprint` also fires for the browser's own Print command; the sheets must be in the DOM before it returns.
+    // Not while a Catalog item is being printed on its own (`util/print-item.ts`): that is not the script.
+    const before = () => !document.body.classList.contains("printing-doc") && flushSync(() => setPrinting(true));
+    const after = () => setPrinting(false);
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    // Not every way of printing sends `beforeprint` (saving a PDF without a dialog does not): the print medium
+    // coming into force is the second signal, the same kind the layout itself reacts to.
+    const medium = typeof window.matchMedia === "function" ? window.matchMedia("print") : null;
+    const onMedium = (e: MediaQueryListEvent) => (e.matches ? before() : after());
+    medium?.addEventListener?.("change", onMedium);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+      medium?.removeEventListener?.("change", onMedium);
+    };
+  }, []);
+  // Only while printing: a second copy of the pages kept around would double the page view's DOM (and its test ids).
+  const printable = printing && !!host && layout.status === "ready";
+  useEffect(() => {
+    document.body.classList.toggle("printing-sheets", printable);
+    return () => document.body.classList.remove("printing-sheets");
+  }, [printable]);
+
+  // "PDF (print)": switch to Pages, wait for the layout, put the sheets up, then open the print dialog.
   useEffect(() => {
     if (!printPending || view !== "pages" || layout.status !== "ready") return;
+    setPrinting(true);
     const t = setTimeout(() => {
       setPrintPending(false);
       window.print();
@@ -137,6 +171,13 @@ function Editor({ documentId }: { documentId: string }) {
 
   return (
     <div className="h-full flex flex-col print-flow">
+      {printable &&
+        createPortal(
+          <div className="print-sheets" data-testid="print-sheets">
+            <PageView host={host!} layout={layout} />
+          </div>,
+          document.body
+        )}
       <header className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-x-3 gap-y-1 flex-wrap print:hidden">
         <Link
           to={projectId ? `/${lang}/p/${projectId}` : `/${lang}`}
@@ -233,8 +274,10 @@ function Editor({ documentId }: { documentId: string }) {
           {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
           {host && view === "edit" && <DualDialogueToggle host={host} />}
           {host && view === "edit" && <SceneOmitToggle host={host} />}
+          {host && view === "edit" && <FixFormattingButton host={host} />}
+          {host && view === "edit" && <TechniqueMenu host={host} onInserted={jumpTo} />}
           {view === "pages" && (
-            <button onClick={() => window.print()} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
+            <button onClick={() => setPrintPending(true)} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
               Print / Save as PDF
             </button>
           )}
@@ -285,6 +328,7 @@ function Editor({ documentId }: { documentId: string }) {
                   onJumpTo={jumpTo}
                   onSelectStage={stageId => setSelectedStageId(stageId)}
                   onDeleted={() => selectEntity(null)}
+                  scriptTitle={title}
                 />
               ) : (
                 <>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { SKELETON_SECTIONS, type Skeleton, type SkeletonFieldDef, type SkeletonSection } from "../util/character-skeleton";
 
 const fieldInput = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900";
@@ -52,6 +52,17 @@ export function CharacterSkeletonEditor({
     return v;
   });
 
+  // A field filled from outside this form (Smart Paste, a collaborator) shows up without a remount: it becomes
+  // visible here, and its input below is keyed on "has a stored value" so it takes the new value.
+  const filledKeys = Object.keys(skeleton)
+    .filter(k => skeleton[k]?.trim())
+    .sort()
+    .join(",");
+  useEffect(() => {
+    const filled = filledKeys ? filledKeys.split(",") : [];
+    setVisible(v => (filled.every(k => v.has(k)) ? v : new Set([...v, ...filled])));
+  }, [filledKeys]);
+
   const removeField = (key: string) => {
     onFieldCommit(key, "");
     setVisible(v => {
@@ -89,6 +100,7 @@ export function CharacterSkeletonEditor({
                       <div className="relative">
                         {f.multiline ? (
                           <textarea
+                            key={skeleton[f.key]?.trim() ? "filled" : "blank"}
                             spellCheck={!["age", "height", "weight"].includes(f.key)}
                             autoCorrect="off"
                             rows={2}
@@ -99,6 +111,7 @@ export function CharacterSkeletonEditor({
                           />
                         ) : (
                           <input
+                            key={skeleton[f.key]?.trim() ? "filled" : "blank"}
                             spellCheck={!["age", "height", "weight"].includes(f.key)}
                             autoCorrect="off"
                             data-testid={`skeleton-field-${f.key}`}

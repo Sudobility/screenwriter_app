@@ -1,9 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import type { ApiKeySummary } from "@sudobility/screenwriter_types";
 import { useApiKeys } from "@sudobility/screenwriter_lib";
 import { FormModal } from "@sudobility/components";
-import { useLang } from "../hooks/useLang";
 import { API_URL } from "../config";
 import { mcpAddCommand, mcpJsonConfig } from "../util/mcp-config";
 
@@ -67,7 +65,6 @@ function ConnectSection({ revealedKey }: { revealedKey: string | null }) {
 
 export function KeysPage() {
   const k = useApiKeys();
-  const lang = useLang();
   const [name, setName] = useState("");
   const [scope, setScope] = useState<"read" | "read_write">("read_write");
   const [ai, setAi] = useState(false);
@@ -82,12 +79,7 @@ export function KeysPage() {
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold">API keys</h2>
-        <Link to={`/${lang}/projects`} className="ml-auto text-sm text-neutral-600 hover:underline">
-          Back to projects
-        </Link>
-      </div>
+      <h2 className="mb-4 text-xl font-semibold">API keys</h2>
       <p className="text-sm text-neutral-600 mb-4">
         Personal keys let scripts and MCP clients act as you on your personal workspace. Treat a key like a password.
       </p>

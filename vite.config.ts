@@ -24,6 +24,8 @@ export default defineConfig({
       // pervasive). No safe npm fallback exists yet (nothing publishes this component at all); acceptable
       // since this app has no CI of its own and always runs with this sibling checked out.
       { find: /^@sudobility\/components\/master-detail-layout$/, replacement: p("../mail_box_components/src/layout/MasterDetailLayout.tsx") },
+      // The Select whose menu opens upward at the bottom of the window: fixed in the source, not in a published build yet.
+      { find: /^@sudobility\/components\/select$/, replacement: p("../mail_box_components/src/ui/select.tsx") },
       { find: /^yjs$/, replacement: p("../writing_core/node_modules/yjs/dist/yjs.mjs") },
       { find: /^lib0\/(.*)$/, replacement: p("../writing_core/node_modules/lib0/") + "$1" },
       // building_blocks' optional peer deps this app doesn't install for real (the sudobility "stubs system" —

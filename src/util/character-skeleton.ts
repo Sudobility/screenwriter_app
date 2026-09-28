@@ -104,6 +104,22 @@ export function stageLabel(stage: CharacterStage): string {
   return stage.skeleton.age?.trim() || "New";
 }
 
+/** A new life stage holding `skeleton`. */
+export function newStage(skeleton: Skeleton = {}): CharacterStage {
+  return { id: newStageId(), skeleton };
+}
+
+/** The attributes a new character is created with: one skeleton is the character's own, several are life stages. */
+export function characterAttributes(skeletons: Skeleton[]): Record<string, unknown> {
+  if (skeletons.length === 0) return {};
+  return skeletons.length === 1 ? { [SKELETON_ATTR]: skeletons[0] } : { [STAGES_ATTR]: skeletons.map(newStage) };
+}
+
+/** Replace the whole list of life stages; the un-staged skeleton is removed, as it is when "Add Age" makes the first stage. */
+export function setStages(host: ScriptEditorHost, entity: EntityView, stages: CharacterStage[]) {
+  return run(host, entity.id, { [STAGES_ATTR]: stages.length > 0 ? stages : null, [SKELETON_ATTR]: null });
+}
+
 function newStageId(): string {
   return `stg_${Math.random().toString(36).slice(2, 10)}`;
 }

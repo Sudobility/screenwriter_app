@@ -68,6 +68,18 @@ export const setTagline = (host: ScriptEditorHost, e: EntityView, value: string)
 export const setSynopsis = (host: ScriptEditorHost, e: EntityView, value: string) => run(host, e.id, { [SYNOPSIS_ATTR]: value });
 export const setPlotMain = (host: ScriptEditorHost, e: EntityView, value: string) => run(host, e.id, { [PLOT_MAIN_ATTR]: value });
 
+/** Write the main plot and/or the whole subplot list in one command (Smart Paste applies both at once). */
+export function setPlots(host: ScriptEditorHost, e: EntityView, plots: { plotMain?: string; subplots?: Subplot[] }) {
+  const attributes: Record<string, unknown> = {};
+  if (plots.plotMain !== undefined) attributes[PLOT_MAIN_ATTR] = plots.plotMain;
+  if (plots.subplots !== undefined) attributes[SUBPLOTS_ATTR] = plots.subplots;
+  if (Object.keys(attributes).length > 0) run(host, e.id, attributes);
+}
+
+export function newSubplot(name: string, text: string): Subplot {
+  return { id: newSubplotId(), name, text };
+}
+
 function newSubplotId(): string {
   return `sub_${Math.random().toString(36).slice(2, 10)}`;
 }

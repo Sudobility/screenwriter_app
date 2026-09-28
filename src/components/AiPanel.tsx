@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
-import { useAi } from "@sudobility/screenwriter_lib";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { useAi, useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAcceptAiConsent, useAiConsent } from "@sudobility/screenwriter_client";
-import type { AiNote, CoverageReport, Suggestion } from "@sudobility/screenwriter_types";
+import type { AiNote, CoverageReport, SceneSummaryStatus, Suggestion } from "@sudobility/screenwriter_types";
+import { checkSceneReview } from "../util/review-scope";
+import { useModelTick } from "../util/use-model-tick";
 import { WordDiff as Diff } from "./WordDiff";
 import { GenerateScriptSection } from "./GenerateScriptSection";
 import { PolishSceneSection } from "./PolishSceneSection";
+import { SmartPasteSection } from "./SmartPasteSection";
+import { NoteFixes } from "./NoteFixes";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100 disabled:opacity-50";
 const primary = "bg-neutral-900 text-white rounded px-3 py-1 text-sm hover:bg-neutral-800 disabled:opacity-50";
@@ -43,9 +48,12 @@ function NoteBody({ note }: { note: AiNote }) {
   );
 }
 
-function ReportView({ report, createdAt, onJumpTo }: { report: CoverageReport; createdAt: string | null; onJumpTo(sceneId: string): void }) {
+function ReportView({ report, createdAt, host, onJumpTo }: { report: CoverageReport; createdAt: string | null; host: ScriptEditorHost; onJumpTo(sceneId: string): void }) {
   return (
     <div data-testid="ai-report" className="space-y-3">
+      <p className="text-xs font-medium" data-testid="ai-report-scope" data-scope={report.scope?.kind ?? "script"}>
+        {report.scope?.kind === "scene" ? <>Review of one scene: {report.scope.heading || "(untitled scene)"}</> : <>Review of the complete script</>}
+      </p>
       {createdAt && <p className="text-[11px] text-neutral-500">Last review: {new Date(createdAt).toLocaleString()}</p>}
       {report.logline && <p className="text-sm italic">{report.logline}</p>}
       <div className="flex flex-wrap items-center gap-1">
@@ -82,8 +90,9 @@ function ReportView({ report, createdAt, onJumpTo }: { report: CoverageReport; c
           <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Weaknesses</h4>
           <ul className="space-y-2">
             {report.weaknesses.map(n => (
-              <li key={n.id} className="border border-neutral-200 rounded p-2 bg-white">
+              <li key={n.id} className="border border-neutral-200 rounded p-2 bg-white" data-testid="ai-weakness">
                 <NoteBody note={n} />
+                <NoteFixes host={host} note={n} onJumpTo={onJumpTo} />
               </li>
             ))}
           </ul>
@@ -110,6 +119,7 @@ function ReportView({ report, createdAt, onJumpTo }: { report: CoverageReport; c
                       >
                         <NoteBody note={n} />
                       </button>
+                      <NoteFixes host={host} note={n} sceneId={g.sceneId} onJumpTo={onJumpTo} />
                     </li>
                   ))}
                 </ul>
@@ -132,12 +142,20 @@ function SuggestionCard({ s, checked, onToggle, stale }: { s: Suggestion; checke
       data-status={stale ? "stale" : s.status}
       className={`border rounded p-2 bg-white space-y-1 ${stale ? "border-amber-400" : "border-neutral-200"}`}
     >
-      <label className="flex items-center gap-2 text-xs">
-        <input type="checkbox" aria-label="Select suggestion" checked={checked} disabled={decided || stale} onChange={onToggle} />
-        {stale && <span className="text-amber-700 font-medium">Out of date: this line changed</span>}
-        {s.status === "accepted" && <span className="text-green-700 font-medium">Accepted</span>}
-        {s.status === "rejected" && <span className="text-neutral-500 font-medium">Rejected</span>}
-      </label>
+      {/* A checkbox only where there is something to choose: a decided or out-of-date suggestion has a label instead,
+          never a greyed-out, unticked box that reads as "you may not select this". */}
+      {decided || stale ? (
+        <p className="text-xs" data-testid="ai-suggestion-state">
+          {stale && <span className="text-amber-700 font-medium">Out of date: this line changed</span>}
+          {s.status === "accepted" && <span className="text-green-700 font-medium">Accepted: already in your script</span>}
+          {s.status === "rejected" && <span className="text-neutral-500 font-medium">Rejected</span>}
+        </p>
+      ) : (
+        <label className="flex items-center gap-2 text-xs">
+          <input type="checkbox" aria-label="Select suggestion" checked={checked} onChange={onToggle} />
+          <span className="text-neutral-600">{checked ? "Selected" : "Not selected"}</span>
+        </label>
+      )}
       <div className="text-[10px] uppercase text-neutral-500">Before</div>
       <Diff before={s.before} after={s.after} side="before" />
       <div className="text-[10px] uppercase text-neutral-500">After</div>
@@ -149,6 +167,8 @@ function SuggestionCard({ s, checked, onToggle, stale }: { s: Suggestion; checke
 
 export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
   const ai = useAi(documentId);
+  const sw = useScreenwriter();
+  useModelTick(host);
   const consent = useAiConsent();
   const acceptConsent = useAcceptAiConsent();
   const selection = useEditorSelection(host);
@@ -169,6 +189,9 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
   const stale = new Set(ai.staleSuggestionIds);
   const pending = (set?.suggestions ?? []).filter(s => s.status === "pending" && !stale.has(s.id));
   const chosen = pending.filter(s => !unticked.has(s.id)).map(s => s.id);
+  const isDecided = (s: Suggestion) => s.status === "accepted" || s.status === "rejected";
+  const open = (set?.suggestions ?? []).filter(s => !isDecided(s));
+  const decidedList = (set?.suggestions ?? []).filter(isDecided);
   const anyStale = stale.size > 0 || (set?.suggestions ?? []).some(s => s.status === "stale");
 
   const acceptSome = async (ids: string[]) => {
@@ -180,6 +203,27 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
     const r = await ai.acceptAll();
     if (!r.ok && r.reason === "stale") setStaleNotice(true);
   };
+
+  // Review scope: the complete script, or the scene the caret is in, which needs a summary of every scene before it.
+  const [reviewScope, setReviewScope] = useState<"script" | "scene">("script");
+  const [summaries, setSummaries] = useState<SceneSummaryStatus[] | null>(null);
+  const jobStatus = ai.job?.status;
+  useEffect(() => {
+    let on = true;
+    sw.client
+      .listSceneSummaries(documentId)
+      .then(r => on && setSummaries(r.scenes))
+      .catch(() => on && setSummaries([]));
+    return () => {
+      on = false;
+    };
+    // again whenever a job ends: a review writes summaries
+  }, [sw, documentId, jobStatus]);
+  const allScenes = host.model.scenes().map(s => ({ id: String(s.id), heading: s.headingText }));
+  const sceneCheck = checkSceneReview(allScenes, scene?.id, summaries);
+  const sceneScope = reviewScope === "scene";
+  const canReview = !sceneScope || (!!scene && sceneCheck.allowed);
+  const startReview = () => void (sceneScope && scene ? ai.startReview(undefined, { sceneIds: [scene.id], storySoFar: true }) : ai.startReview());
 
   const job = ai.job;
   const running = job?.status === "queued" || job?.status === "running";
@@ -248,15 +292,61 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
 
       {usable && (
         <>
+          {/* Smart Paste: clipboard text -> characters, a formatted script, a script written from a story, or plots. */}
+          <div className="border-b border-neutral-200 pb-4">
+            <SmartPasteSection host={host} scene={scene} onInserted={onJumpTo} />
+          </div>
+
           <section className="space-y-2" data-testid="ai-review-section">
             <h3 className="text-xs font-semibold uppercase text-neutral-500">Review</h3>
-            <p className="text-xs text-neutral-600">Coverage notes on the whole script: summary, strengths, weaknesses and notes by scene.</p>
-            <button className={primary} disabled={ai.busy} onClick={() => void ai.startReview()} data-testid="ai-review-button">
-              Review this script
+            <p className="text-xs text-neutral-600">Coverage notes: summary, strengths, weaknesses and notes by scene.</p>
+            <label className="flex flex-col text-xs text-neutral-500 gap-1">
+              What to review
+              <Select value={reviewScope} onValueChange={v => setReviewScope(v as "script" | "scene")} disabled={ai.busy}>
+                <SelectTrigger aria-label="What to review" data-testid="ai-review-scope" className="w-full bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="script">Complete script</SelectItem>
+                  <SelectItem value="scene" disabled={!scene || !sceneCheck.allowed} data-testid="ai-review-scope-scene">
+                    Current scene
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </label>
+            <p className="text-xs text-neutral-600" data-testid="ai-review-scope-note" data-scene-allowed={!!scene && sceneCheck.allowed}>
+              {!scene ? (
+                <>To review one scene, click in it in the script first.</>
+              ) : sceneCheck.allowed ? (
+                sceneScope ? (
+                  <>
+                    Reviews <strong>{scene.heading || "(untitled scene)"}</strong> in full
+                    {sceneCheck.before > 0 ? `, with the ${sceneCheck.before} scene${sceneCheck.before === 1 ? "" : "s"} before it as summaries` : " (it is the first scene)"}. Costs far fewer credits than the
+                    complete script.
+                    {sceneCheck.outdated > 0 &&
+                      ` ${sceneCheck.outdated} of those summaries ${sceneCheck.outdated === 1 ? "is" : "are"} from before the scene was last changed; a review of the complete script refreshes them.`}
+                  </>
+                ) : (
+                  <>
+                    Current scene: <strong>{scene.heading || "(untitled scene)"}</strong> can also be reviewed on its own.
+                  </>
+                )
+              ) : summaries === null ? (
+                <>Checking which scenes have a summary...</>
+              ) : (
+                <>
+                  <strong>{scene.heading || "(untitled scene)"}</strong> cannot be reviewed on its own yet: {sceneCheck.missing.length} of the {sceneCheck.before} scene
+                  {sceneCheck.before === 1 ? "" : "s"} before it {sceneCheck.missing.length === 1 ? "has" : "have"} no summary (first: scene {sceneCheck.missing[0]?.position},{" "}
+                  {sceneCheck.missing[0]?.heading || "untitled"}). Review the complete script once; that summarises every scene.
+                </>
+              )}
+            </p>
+            <button className={primary} disabled={ai.busy || !canReview} onClick={startReview} data-testid="ai-review-button">
+              {sceneScope ? "Review this scene" : "Review this script"}
             </button>
             {activeTask === "coverage" && <Progress ai={ai} />}
             {job?.task === "coverage" && job.status === "cancelled" && <p className="text-xs text-neutral-500">Review cancelled.</p>}
-            {ai.report && <ReportView report={ai.report} createdAt={ai.reportCreatedAt} onJumpTo={onJumpTo} />}
+            {ai.report && <ReportView report={ai.report} createdAt={ai.reportCreatedAt} host={host} onJumpTo={onJumpTo} />}
           </section>
 
           <section className="space-y-2" data-testid="ai-polish-section">
@@ -291,24 +381,32 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
                     </div>
                   </div>
                 )}
-                <ul className="space-y-2">
-                  {set.suggestions.map(s => (
-                    <SuggestionCard
-                      key={s.id}
-                      s={s}
-                      stale={stale.has(s.id) || s.status === "stale"}
-                      checked={s.status === "pending" && !unticked.has(s.id)}
-                      onToggle={() =>
-                        setUnticked(u => {
-                          const n = new Set(u);
-                          if (!n.delete(s.id)) n.add(s.id);
-                          return n;
-                        })
-                      }
-                    />
-                  ))}
-                </ul>
-                <div className="flex flex-wrap gap-2">
+                {/* What still needs a decision comes first and alone; what was decided is folded away below, so a
+                    list reopened later does not start with suggestions that can no longer be chosen. */}
+                {open.length > 0 ? (
+                  <ul className="space-y-2" data-testid="ai-open-suggestions">
+                    {open.map(s => (
+                      <SuggestionCard
+                        key={s.id}
+                        s={s}
+                        stale={stale.has(s.id) || s.status === "stale"}
+                        checked={s.status === "pending" && !unticked.has(s.id)}
+                        onToggle={() =>
+                          setUnticked(u => {
+                            const n = new Set(u);
+                            if (!n.delete(s.id)) n.add(s.id);
+                            return n;
+                          })
+                        }
+                      />
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-neutral-600" data-testid="ai-all-decided">
+                    Every suggestion has been decided. Run polish again for new ones.
+                  </p>
+                )}
+                <div className={`flex flex-wrap gap-2 ${pending.length === 0 ? "hidden" : ""}`}>
                   <button className={primary} disabled={ai.deciding || chosen.length === 0} onClick={() => void acceptSome(chosen)} data-testid="ai-accept-selected">
                     Accept selected ({chosen.length})
                   </button>
@@ -319,6 +417,18 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
                     Reject
                   </button>
                 </div>
+                {decidedList.length > 0 && (
+                  <details data-testid="ai-decided" className="text-xs">
+                    <summary className="cursor-pointer text-neutral-600">
+                      Already decided ({decidedList.length}): {set.counts.accepted} accepted, {set.counts.rejected} rejected
+                    </summary>
+                    <ul className="space-y-2 mt-2">
+                      {decidedList.map(s => (
+                        <SuggestionCard key={s.id} s={s} stale={false} checked={false} onToggle={() => {}} />
+                      ))}
+                    </ul>
+                  </details>
+                )}
                 <p className="text-[11px] text-neutral-500" data-testid="ai-set-counts">
                   {set.counts.accepted} accepted, {set.counts.rejected} rejected, {set.counts.pending} pending
                   {set.counts.stale > 0 ? `, ${set.counts.stale} out of date` : ""}

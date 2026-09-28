@@ -30,6 +30,8 @@ export default defineConfig({
         PUBLIC_APP_URL: APP,
         CORS_ORIGINS: APP,
         AI_TEST_MODE: "1",
+        // The API's own `.env` (autoloaded by Bun) may set AI_FIXTURE=0 for local dev with real AI: tests always use the canned answers.
+        AI_FIXTURE: "1",
       },
     },
     {

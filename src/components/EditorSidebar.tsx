@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
 import { MasterListItem } from "@sudobility/components/master-detail-layout";
 import { ENTITY_KINDS, type EntityKind, type EntityView } from "@sudobility/writing_core";
 import { defaultSpellingPolicy, Navigator, type ScriptEditorHost } from "@sudobility/writing_ui";
@@ -8,6 +8,7 @@ import { kindLabel } from "../util/entity-kind-labels";
 import { sceneCountOf } from "../util/entity-scene-count";
 import { getStages, stageLabel } from "../util/character-skeleton";
 import { addSubplot, ensureStoryEntity, findStoryEntity, getSubplots, isStoryEntity } from "../util/story-info";
+import { addNote, isNote, listNotes } from "../util/notes";
 
 const DEFAULT_EXPANDED_KINDS: readonly EntityKind[] = ["character", "location"];
 const btn = "border border-neutral-300 rounded px-2 py-1 text-xs bg-white hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-white";
@@ -73,7 +74,13 @@ export function EditorSidebar({
 
   // The built-in "Story" record is rendered in its own pinned group below, never as a normal Catalog
   // (misc) row.
-  const all = host.model.entities().filter(e => !isStoryEntity(e));
+  const all = host.model.entities().filter(e => !isStoryEntity(e) && !isNote(e));
+  const notes = listNotes(host);
+  // The two top-level sections fold away like everything under them (both open to begin with).
+  const structureOpen = !expanded.has("__structure_closed__");
+  const catalogOpen = !expanded.has("__catalog_closed__");
+  const notesOpen = expanded.has("__notes__");
+  const sceneCount = host.model.scenes().length;
   const storyEntity = findStoryEntity(host);
   const subplots = storyEntity ? getSubplots(storyEntity) : [];
   const storyOpen = expanded.has("__story__");
@@ -131,14 +138,29 @@ export function EditorSidebar({
 
   return (
     <div className="text-sm" data-testid="editor-sidebar">
-      <section>
-        <h3 className="px-3 pt-3 pb-1 text-xs font-semibold uppercase text-neutral-500">Script Structure</h3>
-        <Navigator host={host} onJumpTo={onJumpToScene} />
+      <section data-testid="structure-section" data-open={structureOpen}>
+        <button
+          type="button"
+          className="w-full flex items-center gap-1 px-3 pt-3 pb-1 text-left hover:bg-neutral-100"
+          aria-expanded={structureOpen}
+          data-testid="structure-toggle"
+          onClick={() => toggle("__structure_closed__")}
+        >
+          <span className="text-neutral-400 w-3 shrink-0">{structureOpen ? "▾" : "▸"}</span>
+          <h3 className="flex-1 text-xs font-semibold uppercase text-neutral-500">Script Structure</h3>
+          <span className="text-xs text-neutral-400">
+            {sceneCount} {sceneCount === 1 ? "scene" : "scenes"}
+          </span>
+        </button>
+        {structureOpen && <Navigator host={host} onJumpTo={onJumpToScene} />}
       </section>
 
-      <section className="border-t border-neutral-200 mt-2 pt-2" data-testid="catalog-tree">
-        <div className="flex items-center px-3 pb-1">
-          <h3 className="text-xs font-semibold uppercase text-neutral-500">Catalog</h3>
+      <section className="border-t border-neutral-200 mt-2 pt-2" data-testid="catalog-tree" data-open={catalogOpen}>
+        <div className="flex items-center px-3 pb-1 hover:bg-neutral-100">
+          <button type="button" className="flex-1 flex items-center gap-1 text-left" aria-expanded={catalogOpen} data-testid="catalog-toggle" onClick={() => toggle("__catalog_closed__")}>
+            <span className="text-neutral-400 w-3 shrink-0">{catalogOpen ? "▾" : "▸"}</span>
+            <h3 className="text-xs font-semibold uppercase text-neutral-500">Catalog</h3>
+          </button>
           <button
             type="button"
             className="ml-auto text-xs text-neutral-400 hover:text-neutral-700"
@@ -148,6 +170,8 @@ export function EditorSidebar({
             Refresh
           </button>
         </div>
+        {catalogOpen && (
+          <>
 
         {/* Built-in story-bible items (Plot — one main plot, 0..N subplots — Theme, Tagline, Synopsis),
             per an explicit user requirement: "under Catalog", not their own top-level sidebar section,
@@ -223,6 +247,41 @@ export function EditorSidebar({
               </div>
             </>
           )}
+        </div>
+
+        {/* Notes: free text kept with the script (`util/notes.ts`). Always shown, like Character and Location. */}
+        <div data-testid="catalog-notes-group">
+          <div className="flex items-center gap-1 px-3 py-1.5 hover:bg-neutral-100 cursor-pointer" onClick={() => toggle("__notes__")}>
+            <span className="text-neutral-400 w-3 shrink-0">{notesOpen ? "▾" : "▸"}</span>
+            <span className="flex-1 font-medium">Notes</span>
+            <span className="text-xs text-neutral-400">{notes.length}</span>
+            <button
+              type="button"
+              className="text-neutral-400 hover:text-neutral-700 px-1"
+              title="Add a note"
+              data-testid="note-add"
+              onClick={e => {
+                e.stopPropagation();
+                ensureExpanded("__notes__");
+                const id = addNote(host);
+                if (id) onSelectEntity(id, null);
+                else setError("Could not add a note.");
+              }}
+            >
+              +
+            </button>
+          </div>
+          {notesOpen &&
+            notes.map(n => (
+              <MasterListItem
+                key={n.id}
+                isSelected={selectedEntityId === n.id}
+                onClick={() => onSelectEntity(n.id, null)}
+                label={n.name}
+                description={n.description.plain.trim().split("\n")[0]?.slice(0, 60) || "Empty"}
+                className="pl-8"
+              />
+            ))}
         </div>
 
         {visibleKinds.map(k => {
@@ -371,6 +430,8 @@ export function EditorSidebar({
               + Add other kind
             </button>
           )
+        )}
+          </>
         )}
       </section>
 

@@ -7,7 +7,12 @@ body { background: #f6f6f4; color: #1a1a1a; }
 
 /* Print / Save as PDF from the Pages view: only the sheets, one per physical page (sheet rules live in writing_ui). */
 @page { size: letter; margin: 0; }
+/* The sheets as printed (EditorPage renders them under <body> while printing): never on screen. */
+.print-sheets { display: none; }
 @media print {
+  .print-sheets { display: block; }
+  /* The app itself is not printed once the sheets are up, whatever its layout would do at the paper's width. */
+  body.printing-sheets > #root { display: none !important; }
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   .print-flow { height: auto !important; overflow: visible !important; display: block !important; }
   /* MasterDetailLayout's own master panel is a plain <aside> with no prop to reach it directly (only its
@@ -15,4 +20,29 @@ body { background: #f6f6f4; color: #1a1a1a; }
      this targets the same element by its stable position instead, scoped to the editor's own split so it
      can't affect an unrelated <aside> elsewhere. */
   [data-testid="editor-split"] aside { display: none !important; }
+}
+
+/* A Catalog item printed on its own (util/print-item.ts): a plain document, never on screen. */
+.print-doc { display: none; }
+@page doc { size: letter; margin: 1in; }
+@media print {
+  body.printing-doc > #root,
+  body.printing-doc > .print-sheets { display: none !important; }
+  /* The font family and size are the script's own, set on the element (util/print-item.ts `scriptFont`): every
+     size below is relative to it, and nothing here names a font. One size throughout, as in a script: a title is
+     bold and in capitals, not bigger. */
+  .print-doc {
+    display: block;
+    page: doc;
+    line-height: 1.4;
+    color: #000;
+  }
+  .print-doc-title { font-size: 1em; font-weight: 700; text-transform: uppercase; text-decoration: underline; margin: 0; }
+  .print-doc-subtitle { font-size: 1em; color: #444; margin: 0 0 1.4em; }
+  .print-doc-section { margin: 0 0 1.4em; }
+  .print-doc-heading { font-size: 1em; font-weight: 700; text-transform: uppercase; margin: 0; break-after: avoid; }
+  .print-doc-fact { margin: 0 0 2pt; }
+  .print-doc-label { font-weight: 700; }
+  .print-doc-text { margin: 0 0 1.4em; white-space: pre-wrap; orphans: 2; widows: 2; }
+  .print-doc-section > .print-doc-text:last-child { margin-bottom: 0; }
 }

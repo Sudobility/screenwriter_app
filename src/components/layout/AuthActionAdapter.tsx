@@ -1,9 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import type { AuthActionProps } from "@sudobility/building_blocks";
 import { Avatar } from "@sudobility/auth-components";
 import { Button, Dropdown } from "@sudobility/components";
 import { useAuth } from "../../app/AuthContext";
-import { useLang } from "../../hooks/useLang";
 
 /**
  * Fed to `building_blocks`' topbar as its `AuthActionComponent` — that component is injected as a prop rather
@@ -15,8 +13,6 @@ import { useLang } from "../../hooks/useLang";
  */
 export function AuthActionAdapter({ onLoginClick, menuItems = [], avatarSize, dropdownAlign }: AuthActionProps) {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const lang = useLang();
 
   if (!user) {
     // The library's own Button (variant="primary"), matching music_app's AuthActionAdapter exactly — not a
@@ -48,7 +44,6 @@ export function AuthActionAdapter({ onLoginClick, menuItems = [], avatarSize, dr
         </span>
       }
       items={[
-        { id: "keys", label: "API keys", onClick: () => navigate(`/${lang}/settings/keys`) },
         ...menuItems.map((m) => ({ id: m.id, label: m.label, onClick: m.onClick ?? (() => {}) })),
         { id: "sign-out", label: "Sign out", onClick: () => void signOut() },
       ]}

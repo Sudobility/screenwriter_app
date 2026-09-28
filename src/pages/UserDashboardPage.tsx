@@ -12,16 +12,10 @@ import {
   ClockIcon,
   TicketIcon,
   TagIcon,
+  KeyIcon,
 } from "@heroicons/react/24/outline";
-import {
-  MasterDetailLayout,
-  MasterListItem,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@sudobility/components";
+import { MasterDetailLayout, MasterListItem } from "@sudobility/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -56,6 +50,7 @@ import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAuth } from "../app/AuthContext";
 import { REVENUECAT_API_KEY, SHOW_ENTITIES } from "../config";
 import { ProjectList, ProjectView } from "./DashboardPage";
+import { KeysPage } from "./KeysPage";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { useSetPageConfig } from "../hooks/usePageConfig";
 import { useLang } from "../hooks/useLang";
@@ -72,7 +67,8 @@ type Section =
   | "credits"
   | "history"
   | "redeem"
-  | "manage-coupons";
+  | "manage-coupons"
+  | "api-keys";
 const button =
   "rounded border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50";
 const primary =
@@ -181,6 +177,12 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
       icon: MusicalNoteIcon,
     },
     {
+      id: "api-keys",
+      label: t("dashboard.apiKeys", "API keys"),
+      description: t("dashboard.apiKeysDesc", "Manage keys for scripts and integrations"),
+      icon: KeyIcon,
+    },
+    {
       id: "credits",
       label: t("dashboard.creditPacks", "Credits"),
       description: t("dashboard.creditPacksDesc", "Purchase credit packs"),
@@ -224,6 +226,8 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
     <ProjectView projectId={projectId} />
   ) : section === "projects" ? (
     <ProjectList />
+  ) : section === "api-keys" ? (
+    <KeysPage />
   ) : section === "entities" && SHOW_ENTITIES ? (
     <WorkspacesView
       rows={entities}

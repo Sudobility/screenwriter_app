@@ -187,23 +187,52 @@ const isBlank = (host: ScriptEditorHost): boolean => {
   return els.length > 0 && els.every(e => !e.text.plain.trim());
 };
 
+export interface ScriptRow {
+  /** An element role of the template: `sceneHeading`, `action`, `character`, ... */
+  role: string;
+  text: string;
+}
+
+/** A generated script as rows: every scene's heading, then its elements. */
+export function scriptRows(script: GenerateScriptResult): ScriptRow[] {
+  return script.scenes.flatMap(s => [{ role: "sceneHeading", text: headingText(s.heading) }, ...s.elements.map(e => ({ role: roleOfType[e.type], text: e.text }))]);
+}
+
+/** Scenes whose heading is already text (Smart Paste keeps the writer's own); a null heading is text before the first one. */
+export function pastedRows(scenes: { heading: string | null; elements: ScriptElement[] }[]): ScriptRow[] {
+  return scenes.flatMap(s => [...(s.heading ? [{ role: "sceneHeading", text: s.heading }] : []), ...s.elements.map(e => ({ role: roleOfType[e.type], text: e.text }))]);
+}
+
+/** The last element of a scene: what comes after it belongs to the next scene. Null when the scene is gone. */
+export function lastElementOfScene(host: ScriptEditorHost, sceneId: string): string | null {
+  const scene = host.model.scene(sceneId as ElementId);
+  if (!scene) return null;
+  const ids = scene.elementIds;
+  return String(ids.length > 0 ? ids[ids.length - 1] : scene.id);
+}
+
+export interface InsertResult {
+  firstId: string | null;
+  written: number;
+  skipped: number;
+}
+
 /**
- * Write a generated script into the document. A new document holds one empty element, which is reused for the
- * first heading; otherwise the script is appended after the last element. Returns the first new element's id, how
- * many elements were written, and how many were skipped (a template with no style for the role).
+ * Write rows into the document as ordinary `element.insert` commands. A new document holds one empty element, which
+ * is reused for the first row; otherwise the rows go after the scene `afterSceneId` (so no scene is split), or after
+ * the last element when no scene is given or it no longer exists. `afterElementId` puts them after that one element
+ * instead (a technique inserted at the caret). Returns the first new element's id, how many
+ * elements were written, and how many were skipped (a template with no style for the role).
  */
-export function insertScript(host: ScriptEditorHost, script: GenerateScriptResult): { firstId: string | null; written: number; skipped: number } {
-  const rows: { role: string; text: string }[] = [];
-  for (const s of script.scenes) {
-    rows.push({ role: "sceneHeading", text: headingText(s.heading) });
-    for (const e of s.elements) rows.push({ role: roleOfType[e.type], text: e.text });
-  }
+export function insertRows(host: ScriptEditorHost, rows: ScriptRow[], afterSceneId?: string | null, afterElementId?: string | null): InsertResult {
   let prev: string | null = null;
   let firstId: string | null = null;
   let written = 0;
   let skipped = 0;
   let starter: string | null = null;
   if (isBlank(host)) starter = String(host.model.elements()[0]!.id);
+  else if (afterElementId && host.model.element(afterElementId as ElementId)) prev = afterElementId;
+  else if (afterSceneId) prev = lastElementOfScene(host, afterSceneId);
   for (const [i, row] of rows.entries()) {
     let id: string | null = null;
     if (i === 0 && starter) {
@@ -225,4 +254,12 @@ export function insertScript(host: ScriptEditorHost, script: GenerateScriptResul
     firstId ??= id;
   }
   return { firstId, written, skipped };
+}
+
+/**
+ * Write a generated script into the document: into the empty starter element of a new document, otherwise after
+ * the last element.
+ */
+export function insertScript(host: ScriptEditorHost, script: GenerateScriptResult): InsertResult {
+  return insertRows(host, scriptRows(script));
 }

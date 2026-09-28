@@ -16,6 +16,8 @@ import {
   setStageSkeleton,
   stageLabel,
 } from "../util/character-skeleton";
+import { isNote } from "../util/notes";
+import { hasParagraphs, printableFor, printDoc } from "../util/print-item";
 import { GenerateSkeletonBox } from "./GenerateSkeletonBox";
 import { PolishDialogueSection } from "./PolishDialogueSection";
 import {
@@ -65,11 +67,14 @@ function AddSubplotButton({ onAdd }: { onAdd(): void }) {
  * `footer` (present only on a `character`-kind entity) sits in normal flow at the bottom, always
  * visible, never scrolling away regardless of content length.
  */
-function DetailFrame({ children, footer, dataStageId }: { children: ReactNode; footer?: ReactNode; dataStageId?: string }) {
+function DetailFrame({ children, footer, dataStageId, actions }: { children: ReactNode; footer?: ReactNode; dataStageId?: string; actions?: ReactNode }) {
   return (
     <div className="h-full flex flex-col" data-testid="entity-detail" data-stage-id={dataStageId}>
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-6 space-y-4">{children}</div>
+        <div className="max-w-5xl mx-auto p-6 space-y-4">
+          {actions && <div className="flex justify-end -mb-2">{actions}</div>}
+          {children}
+        </div>
       </div>
       {footer && (
         <div className="shrink-0 border-t border-neutral-200 bg-white">
@@ -108,9 +113,12 @@ export function EntityDetailView({
   onJumpTo,
   onSelectStage,
   onDeleted,
+  scriptTitle,
 }: {
   host: ScriptEditorHost;
   entityId: string;
+  /** The script's title, shown under the title of a printed item. */
+  scriptTitle?: string;
   /** A specific life stage of this (character) entity, or `null` for the character itself. */
   stageId: string | null;
   onJumpTo(elementId: string): void;
@@ -124,6 +132,7 @@ export function EntityDetailView({
   const [deleteBlocked, setDeleteBlocked] = useState(false);
   const [stageDeletePending, setStageDeletePending] = useState(false);
   const [alias, setAlias] = useState("");
+  const [nothingToPrint, setNothingToPrint] = useState(false);
   // Bumped when the AI fills in a skeleton, so the (uncontrolled) skeleton form remounts and shows the new values.
   const [skeletonVersion, setSkeletonVersion] = useState(0);
 
@@ -144,6 +153,31 @@ export function EntityDetailView({
     return null;
   }
 
+  // Print: for whatever of this item is written as paragraphs (a note, a description, a synopsis, a plot, a
+  // skeleton). Read from the document at the moment of the click, after the field being typed in has been saved
+  // (leaving it for the button saves it).
+  const printButton = hasParagraphs(entity, stageId) ? (
+    <span className="inline-flex items-center gap-2">
+      {nothingToPrint && (
+        <span role="status" data-testid="print-item-empty" className="text-xs text-neutral-500">
+          Nothing written here yet.
+        </span>
+      )}
+      <button
+        className={`${btn} text-xs`}
+        data-testid="print-item"
+        title="Print this, or save it as a PDF"
+        onClick={() => {
+          const doc = printableFor(host, entity.id, stageId, scriptTitle);
+          setNothingToPrint(!doc);
+          if (doc) printDoc(doc);
+        }}
+      >
+        Print
+      </button>
+    </span>
+  ) : undefined;
+
   if (isStoryEntity(entity)) {
     // The built-in "Story" record (Plot/Theme/Tagline/Synopsis, see `util/story-info.ts`) — `stageId`
     // is repurposed here as the story item key ("theme" | "tagline" | "synopsis" | "plot" |
@@ -159,7 +193,7 @@ export function EntityDetailView({
     const key = activeSubplot ? "subplot" : (stageId ?? "theme");
     const fieldInput = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900 w-full";
     return (
-      <DetailFrame footer={key === "plot" || key === "subplot" ? <AddSubplotButton onAdd={() => onSelectStage(`subplot:${addSubplot(host, entity)}`)} /> : undefined}>
+      <DetailFrame actions={printButton} footer={key === "plot" || key === "subplot" ? <AddSubplotButton onAdd={() => onSelectStage(`subplot:${addSubplot(host, entity)}`)} /> : undefined}>
         <h3 className="text-xs font-semibold uppercase text-neutral-500">Story</h3>
 
         {key === "theme" && (
@@ -322,7 +356,7 @@ export function EntityDetailView({
   if (stage) {
     // A single life stage: just its skeleton, no name/aliases/occurrences (those are character-level).
     return (
-      <DetailFrame dataStageId={stage.id} footer={<AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} />}>
+      <DetailFrame actions={printButton} dataStageId={stage.id} footer={<AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} />}>
         <div>
           <button className="text-xs text-blue-700 hover:underline" onClick={() => onSelectStage(null)}>
             &larr; {entity.name}
@@ -375,8 +409,69 @@ export function EntityDetailView({
     );
   }
 
+  if (isNote(entity)) {
+    // A note: a title and a body, nothing else. It is not something a scene "has", so no occurrences.
+    return (
+      <DetailFrame actions={printButton}>
+        <label className="flex flex-col text-xs text-neutral-500">
+          Title
+          <input
+            spellCheck={true}
+            autoCorrect="off"
+            data-testid="note-title"
+            className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
+            defaultValue={entity.name}
+            key={entity.id}
+            onBlur={e => e.target.value.trim() && e.target.value.trim() !== entity.name && run("entity.update", { entityId: entity.id, patch: { name: e.target.value.trim() } })}
+          />
+        </label>
+        <p className="text-xs text-neutral-500">Note</p>
+        <label className="flex flex-col text-xs text-neutral-500">
+          Text
+          <textarea
+            spellCheck={true}
+            autoCorrect="off"
+            data-testid="note-body"
+            rows={18}
+            className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white text-neutral-900"
+            defaultValue={entity.description.plain}
+            key={`${entity.id}-note`}
+            onBlur={e => e.target.value !== entity.description.plain && run("entity.update", { entityId: entity.id, patch: { description: e.target.value } })}
+          />
+        </label>
+        <div className="pt-2 border-t border-neutral-200">
+          {stageDeletePending ? (
+            <div className="space-y-2">
+              <p className="text-xs text-red-600">Delete this note? This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  className={`${btn} text-xs`}
+                  data-testid="note-delete-confirm"
+                  onClick={() => {
+                    setStageDeletePending(false);
+                    if (run("entity.delete", { entityId: entity.id, force: true }).ok) onDeleted();
+                  }}
+                >
+                  Delete note
+                </button>
+                <button className={`${btn} text-xs`} onClick={() => setStageDeletePending(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className={`${btn} text-xs`} data-testid="note-delete" onClick={() => setStageDeletePending(true)}>
+              Delete this note
+            </button>
+          )}
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+      </DetailFrame>
+    );
+  }
+
   return (
-    <DetailFrame footer={isCharacter ? <AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} /> : undefined}>
+    <DetailFrame actions={printButton} footer={isCharacter ? <AddAgeButton onAdd={() => onSelectStage(addAge(host, entity))} /> : undefined}>
       <div>
         <label className="flex flex-col text-xs text-neutral-500">
           Name

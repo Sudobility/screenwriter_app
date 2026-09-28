@@ -50,10 +50,6 @@ export function useFooterConfig(variant: "full" | "compact"): FooterConfig {
         links: [{ label: "Projects", href: `/${lang}/projects` }],
       },
       {
-        title: "Account",
-        links: [{ label: "API keys", href: `/${lang}/settings/keys` }],
-      },
-      {
         title: t("footer.company"),
         links: [
           { label: t("nav.about"), href: `/${lang}/about` },
