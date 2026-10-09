@@ -11,11 +11,9 @@ test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke",
   await page.getByLabel("Dev login (email, no password)").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("x");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  // "API keys" moved into the account menu (Phase C's topbar) — open it first.
-  await page.getByTestId("account-menu").click();
-  await page.getByRole("button", { name: "API keys" }).click();
-  await expect(page).toHaveURL(/\/settings\/keys$/);
-  await expect(page.getByRole("heading", { name: "API keys" })).toBeVisible();
+  // "API keys" is a section of the dashboard's master list (UserDashboardPage); the section is local state, not a URL.
+  await page.getByText("API keys", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "API keys", level: 2 })).toBeVisible();
   await expect(page.getByText("No keys yet.")).toBeVisible();
   // placeholder snippet before any key exists
   await expect(page.getByTestId("mcp-json")).toContainText('"FADEWRIGHT_API_KEY": "fwk_..."');

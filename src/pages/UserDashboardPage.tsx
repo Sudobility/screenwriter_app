@@ -48,6 +48,7 @@ import {
 } from "@sudobility/consumables_pages";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAuth } from "../app/AuthContext";
+import { useSignIn } from "../app/SignInContext";
 import { REVENUECAT_API_KEY, SHOW_ENTITIES } from "../config";
 import { ProjectList, ProjectView } from "./DashboardPage";
 import { KeysPage } from "./KeysPage";
@@ -615,6 +616,7 @@ function CreditStore({
   onRedeem(): void;
 }) {
   const { t } = useTranslation();
+  const { openSignIn } = useSignIn();
   const { consumablesApiClient } = getServices();
   const balanceState = useBalance();
   const productState = useConsumableProducts("");
@@ -632,7 +634,7 @@ function CreditStore({
     isPurchasing={purchaseState.isPurchasing}
     error={purchaseState.error?.message ?? balanceState.error?.message ?? productState.error?.message ?? null}
     onPurchase={purchase}
-    onLoginClick={() => {}}
+    onLoginClick={() => openSignIn()}
     labels={{
       title: '',
       currentBalanceLabel: 'Your balance',

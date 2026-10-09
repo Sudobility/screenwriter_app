@@ -1,8 +1,11 @@
 import { initializeApp } from "firebase/app";
 import {
+  createUserWithEmailAndPassword,
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
   type Auth,
@@ -12,20 +15,26 @@ import { DevAuthPort, type AuthPort, type AuthUser } from "@sudobility/screenwri
 import { DEV_AUTH, FIREBASE_CONFIG } from "../config";
 
 /**
- * This app's auth surface, matching music_app's `AuthBackend` shape (observe/getToken/signOut) but with
- * `signInGoogle`/`devSignIn` in place of `signInEmail`/`signUpEmail`/`signInGoogle` — there is no password concept
- * here at all (see CLAUDE.md's Dev auth flow section). `signInGoogle`/`devSignIn` return the resulting `AuthUser`
- * (not `Promise<void>`, unlike music_app's own shape) so `authBackendAsPort`'s `AuthPort.signIn` can return it
- * directly, with no race against `observe` having fired yet.
+ * This app's auth surface, matching music_app's `AuthBackend` shape (observe/getToken/signInEmail/signUpEmail/
+ * sendPasswordReset/signInGoogle/signOut — real Firebase email/password and Google), plus `devSignIn`, the
+ * email-only bypass offered only when `VITE_DEV_AUTH=1` (see CLAUDE.md's Auth section). The sign-in calls return
+ * the resulting `AuthUser` (not `Promise<void>`, unlike music_app's own shape) so `authBackendAsPort`'s
+ * `AuthPort.signIn` can return it directly, with no race against `observe` having fired yet.
  */
 export interface AuthBackend {
   observe(cb: (user: AuthUser | null) => void): () => void;
   getToken(forceRefresh?: boolean): Promise<string | null>;
+  signInEmail(email: string, password: string): Promise<AuthUser>;
+  signUpEmail(email: string, password: string): Promise<AuthUser>;
+  /** Sends Firebase's password-reset link to `email`. */
+  sendPasswordReset(email: string): Promise<void>;
   signInGoogle(): Promise<AuthUser>;
   devSignIn(email: string): Promise<AuthUser>;
   signOut(): Promise<void>;
   /** Whether Google sign-in is offered at all (VITE_FIREBASE_* configured). Static for the process lifetime. */
   readonly hasGoogle: boolean;
+  /** Whether Firebase email/password sign-in, sign-up and reset are offered (VITE_FIREBASE_* configured). */
+  readonly hasEmailPassword: boolean;
   /** Whether the dev email-only bypass is offered (VITE_DEV_AUTH=1). Static for the process lifetime. */
   readonly hasDevAuth: boolean;
 }
@@ -55,18 +64,38 @@ interface SubBackend {
   signOut(): Promise<void>;
 }
 
-function firebaseBackend(): (SubBackend & { signInGoogle(): Promise<AuthUser> }) | null {
+interface FirebaseSubBackend extends SubBackend {
+  signInEmail(email: string, password: string): Promise<AuthUser>;
+  signUpEmail(email: string, password: string): Promise<AuthUser>;
+  sendPasswordReset(email: string): Promise<void>;
+  signInGoogle(): Promise<AuthUser>;
+}
+
+function requireUser(user: User | null, what: string): AuthUser {
+  const out = toAuthUser(user);
+  if (!out) throw new Error(`${what} did not return a user`);
+  return out;
+}
+
+function firebaseBackend(): FirebaseSubBackend | null {
   if (!hasFirebaseConfig) return null;
   const app = initializeApp(FIREBASE_CONFIG);
   const auth = getAuth(app);
   return {
     observe: (cb) => onAuthStateChanged(auth, (user) => cb(toAuthUser(user))),
     getToken: (forceRefresh) => readFirebaseToken(auth, forceRefresh),
+    signInEmail: async (email, password) => {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      return requireUser(cred.user, "Email sign-in");
+    },
+    signUpEmail: async (email, password) => {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      return requireUser(cred.user, "Sign-up");
+    },
+    sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
     signInGoogle: async () => {
       const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-      const user = toAuthUser(cred.user);
-      if (!user) throw new Error("Google sign-in did not return a user");
-      return user;
+      return requireUser(cred.user, "Google sign-in");
     },
     signOut: () => firebaseSignOut(auth),
   };
@@ -90,9 +119,9 @@ function devBackend(): (SubBackend & { devSignIn(email: string): Promise<AuthUse
 }
 
 /**
- * Composes the Firebase and dev backends into one, so the login screen can offer both at once (this app's real
- * API already has a working `AI_TEST_MODE=1` dev bypass all e2e specs depend on — unlike music_app's env-flag e2e
- * shim, it isn't replaced here, just unified alongside real Google sign-in).
+ * Composes the Firebase (email/password + Google) and dev backends into one (this app's real API already has a
+ * working `AI_TEST_MODE=1` dev bypass all e2e specs depend on — unlike music_app's env-flag e2e shim, it isn't
+ * replaced here, just unified alongside real Firebase sign-in).
  *
  * Whichever backend last reported a signed-in user becomes "active"; `getToken`/`signOut` delegate to it.
  *
@@ -104,27 +133,27 @@ function devBackend(): (SubBackend & { devSignIn(email: string): Promise<AuthUse
  * comment documents, just for `loading`/`user` instead of a token read.
  */
 export function unifiedAuthBackend(): AuthBackend {
-  const google = firebaseBackend();
+  const firebase = firebaseBackend();
   const dev = devBackend();
 
   let active: SubBackend | null = null;
   let current: AuthUser | null = null;
-  let googleReady = google === null;
+  let firebaseReady = firebase === null;
   let devReady = dev === null;
   const listeners = new Set<(user: AuthUser | null) => void>();
 
   const emit = () => {
-    if (!googleReady || !devReady) return;
+    if (!firebaseReady || !devReady) return;
     for (const l of [...listeners]) l(current);
   };
 
-  if (google) {
-    google.observe((user) => {
-      googleReady = true;
+  if (firebase) {
+    firebase.observe((user) => {
+      firebaseReady = true;
       if (user) {
-        active = google;
+        active = firebase;
         current = user;
-      } else if (active === google) {
+      } else if (active === firebase) {
         active = null;
         current = null;
       }
@@ -146,17 +175,30 @@ export function unifiedAuthBackend(): AuthBackend {
   }
 
   return {
-    hasGoogle: google !== null,
+    hasGoogle: firebase !== null,
+    hasEmailPassword: firebase !== null,
     hasDevAuth: dev !== null,
     observe(cb) {
       listeners.add(cb);
-      if (googleReady && devReady) cb(current);
+      if (firebaseReady && devReady) cb(current);
       return () => listeners.delete(cb);
     },
     getToken: (forceRefresh) => (active ? active.getToken(forceRefresh) : Promise.resolve(null)),
+    signInEmail: (email, password) => {
+      if (!firebase) throw new Error("Email sign-in is not configured (set VITE_FIREBASE_* in .env)");
+      return firebase.signInEmail(email, password);
+    },
+    signUpEmail: (email, password) => {
+      if (!firebase) throw new Error("Email sign-up is not configured (set VITE_FIREBASE_* in .env)");
+      return firebase.signUpEmail(email, password);
+    },
+    sendPasswordReset: (email) => {
+      if (!firebase) throw new Error("Password reset is not configured (set VITE_FIREBASE_* in .env)");
+      return firebase.sendPasswordReset(email);
+    },
     signInGoogle: () => {
-      if (!google) throw new Error("Google sign-in is not configured (set VITE_FIREBASE_* in .env)");
-      return google.signInGoogle();
+      if (!firebase) throw new Error("Google sign-in is not configured (set VITE_FIREBASE_* in .env)");
+      return firebase.signInGoogle();
     },
     devSignIn: (email) => {
       if (!dev) throw new Error("Dev login is not enabled (set VITE_DEV_AUTH=1)");
@@ -181,10 +223,16 @@ export function authBackendAsPort(backend: AuthBackend): AuthPort {
     },
     signIn(input?: unknown): Promise<AuthUser> {
       if (typeof input === "string") return backend.devSignIn(input);
-      if (input && typeof input === "object" && (input as { provider?: unknown }).provider === "google") {
-        return backend.signInGoogle();
+      if (input && typeof input === "object") {
+        const o = input as { provider?: unknown; email?: unknown; password?: unknown };
+        if (o.provider === "google") return backend.signInGoogle();
+        if (typeof o.email === "string" && typeof o.password === "string") {
+          return backend.signInEmail(o.email, o.password);
+        }
       }
-      return Promise.reject(new Error("authBackendAsPort.signIn needs an email string or { provider: 'google' }"));
+      return Promise.reject(
+        new Error("authBackendAsPort.signIn needs a dev email string, { email, password } or { provider: 'google' }"),
+      );
     },
     signOut: () => backend.signOut(),
     getToken: (forceRefresh) => backend.getToken(forceRefresh),

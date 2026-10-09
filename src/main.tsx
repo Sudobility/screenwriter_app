@@ -7,6 +7,7 @@ import { ScreenwriterProvider } from "@sudobility/screenwriter_lib";
 import { App } from "./App";
 import { AuthProvider } from "./app/AuthContext";
 import { ErrorBoundary } from "./app/ErrorBoundary";
+import { SignInProvider } from "./app/SignInContext";
 import { createServices } from "./services";
 import "./i18n";
 import "./index.css";
@@ -22,9 +23,12 @@ createRoot(document.getElementById("root")!).render(
         <ScreenwriterClientProvider client={services.screenwriter.client}>
           <ScreenwriterProvider screenwriter={services.screenwriter}>
             <AuthProvider>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
+              {/* The one sign-in modal, opened over whatever page needs an account (see App.tsx / CLAUDE.md). */}
+              <SignInProvider>
+                <BrowserRouter>
+                  <App />
+                </BrowserRouter>
+              </SignInProvider>
             </AuthProvider>
           </ScreenwriterProvider>
         </ScreenwriterClientProvider>

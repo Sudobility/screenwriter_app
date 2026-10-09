@@ -8,7 +8,7 @@ async function login(page: Page) {
   await page.getByLabel("Dev login (email, no password)").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("x");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Projects", level: 1 })).toBeVisible();
 }
 
 test("trashing a document and a project each ask for confirmation", async ({ page }) => {

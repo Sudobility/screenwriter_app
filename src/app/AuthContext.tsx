@@ -15,8 +15,14 @@ export interface AuthContextValue {
   loading: boolean;
   /** Whether Google sign-in is offered (VITE_FIREBASE_* configured). */
   hasGoogle: boolean;
+  /** Whether Firebase email/password sign-in, sign-up and reset are offered (VITE_FIREBASE_* configured). */
+  hasEmailPassword: boolean;
   /** Whether the dev email-only bypass is offered (VITE_DEV_AUTH=1). */
   hasDevAuth: boolean;
+  signInEmail: (email: string, password: string) => Promise<void>;
+  signUpEmail: (email: string, password: string) => Promise<void>;
+  /** Sends a link to reset the password for an address. */
+  sendPasswordReset: (email: string) => Promise<void>;
   signInGoogle: () => Promise<void>;
   devSignIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -43,7 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       hasGoogle: auth.hasGoogle,
+      hasEmailPassword: auth.hasEmailPassword,
       hasDevAuth: auth.hasDevAuth,
+      signInEmail: async (email: string, password: string) => {
+        await auth.signInEmail(email, password);
+      },
+      signUpEmail: async (email: string, password: string) => {
+        await auth.signUpEmail(email, password);
+      },
+      sendPasswordReset: (email: string) => auth.sendPasswordReset(email),
       signInGoogle: async () => {
         await auth.signInGoogle();
       },

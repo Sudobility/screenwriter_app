@@ -6,7 +6,7 @@ import { translatedArray } from "../util/i18n-array";
 /**
  * Public "Privacy" page, built on `@sudobility/building_blocks`' `AppTextPage` — the same building block
  * `../sudojo_app`'s `PrivacyPage.tsx` uses, not this app's boilerplate copied as-is: content is adapted to
- * what this app actually does (Firebase Google sign-in plus the dev-only email bypass, AI review/polish
+ * what this app actually does (Firebase email/password and Google sign-in plus the dev-only email bypass, AI review/polish
  * processing of screenplay content, offline `IndexedDB` local storage, no subscriptions/billing — this app
  * has none, unlike `sudojo_app`). Reasonable placeholder legal content, not reviewed by counsel.
  */

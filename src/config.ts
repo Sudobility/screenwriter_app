@@ -9,7 +9,7 @@ export const REVENUECAT_API_KEY =
   import.meta.env.VITE_DEV_MODE === "true"
     ? (import.meta.env.VITE_REVENUECAT_API_KEY_SANDBOX as string | undefined)
     : (import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined);
-/** Dev login (email only) is available only when explicitly enabled; the API must run with AI_TEST_MODE=1. */
+/** Dev login (email only) replaces the email/password form only when explicitly enabled; the API must run with AI_TEST_MODE=1. */
 export const DEV_AUTH: boolean = import.meta.env.VITE_DEV_AUTH === "1";
 
 export const APP_NAME: string =
@@ -21,7 +21,7 @@ export const COMPANY_NAME: string =
   "Sudobility Inc.";
 export const SUPPORT_EMAIL: string = `support@${APP_DOMAIN}`;
 
-/** Firebase web config. Google sign-in is offered only when apiKey/projectId are both present (see auth/backend.ts). */
+/** Firebase web config. Email/password and Google sign-in are offered only when apiKey/projectId are both present (see auth/backend.ts). */
 export const FIREBASE_CONFIG = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,

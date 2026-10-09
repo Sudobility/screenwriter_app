@@ -33,16 +33,40 @@
   },
   "login": {
     "backTo": "Back to {{appName}}",
+    "signInToAccount": "Sign in to your account",
+    "createAccount": "Create your account",
+    "resetPassword": "Reset your password",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "orContinueWith": "Or continue with",
     "continueWithGoogle": "Continue with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "genericError": "Authentication failed",
+    "forgotPassword": "Forgot password?",
+    "resetPasswordHint": "Enter your email address and we'll send you a link to reset your password.",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "If an account uses that address, a link to reset its password is on its way. Check your email.",
+    "backToSignIn": "Back to sign in",
     "or": "or",
     "devEmailLabel": "Dev login (email, no password)",
     "signIn": "Sign in",
+    "signUp": "Sign up",
     "googleSignInFailed": "Google sign-in failed",
     "signInFailed": "Sign in failed",
     "notConfigured": {
       "lead": "Sign-in is not configured. Set",
       "or": "for the dev login, or configure",
-      "tail": "for Google sign-in."
+      "tail": "for email and Google sign-in."
+    },
+    "modal": {
+      "signInTitle": "Sign in",
+      "close": "Close"
+    },
+    "gate": {
+      "title": "You're signed out",
+      "body": "Sign in to see your projects and scripts.",
+      "button": "Sign in to continue"
     }
   },
   "dashboard": {
@@ -127,11 +151,26 @@
       }
     },
     "shortcuts": {
-      "styleShortcut": { "label": "Set element style", "keys": "Cmd/Ctrl + 1-9" },
-      "styleCycle": { "label": "Cycle element style", "keys": "Tab / Shift+Tab" },
-      "dualDialogue": { "label": "Toggle dual dialogue", "keys": "Ctrl/Cmd + Alt + D" },
-      "undo": { "label": "Undo", "keys": "Cmd/Ctrl + Z" },
-      "redo": { "label": "Redo", "keys": "Cmd/Ctrl + Shift + Z" }
+      "styleShortcut": {
+        "label": "Set element style",
+        "keys": "Cmd/Ctrl + 1-9"
+      },
+      "styleCycle": {
+        "label": "Cycle element style",
+        "keys": "Tab / Shift+Tab"
+      },
+      "dualDialogue": {
+        "label": "Toggle dual dialogue",
+        "keys": "Ctrl/Cmd + Alt + D"
+      },
+      "undo": {
+        "label": "Undo",
+        "keys": "Cmd/Ctrl + Z"
+      },
+      "redo": {
+        "label": "Redo",
+        "keys": "Cmd/Ctrl + Shift + Z"
+      }
     }
   },
   "resources": {
@@ -172,17 +211,30 @@
         "title": "Information we collect",
         "youProvide": {
           "title": "Information you provide",
-          "items": ["Account information (email address, via Google sign-in)", "The screenplays and projects you create", "Settings and preferences"]
+          "items": [
+            "Account information (email address, via email/password or Google sign-in)",
+            "The screenplays and projects you create",
+            "Settings and preferences"
+          ]
         },
         "automatic": {
           "title": "Information collected automatically",
-          "items": ["Device and browser information", "IP address", "Basic usage and error logs, to keep the app working"]
+          "items": [
+            "Device and browser information",
+            "IP address",
+            "Basic usage and error logs, to keep the app working"
+          ]
         }
       },
       "usage": {
         "title": "How we use your information",
         "description": "We use the information we collect to:",
-        "items": ["Provide and improve the editor and its features", "Sync your documents between your devices", "Respond to support requests", "Keep the service secure and working correctly"]
+        "items": [
+          "Provide and improve the editor and its features",
+          "Sync your documents between your devices",
+          "Respond to support requests",
+          "Keep the service secure and working correctly"
+        ]
       },
       "ai": {
         "title": "AI features",
@@ -195,7 +247,11 @@
       "sharing": {
         "title": "Information sharing",
         "description": "We do not sell your information. We may share it:",
-        "items": ["With service providers who help us run the app (hosting, AI processing)", "When required by law", "With your consent"]
+        "items": [
+          "With service providers who help us run the app (hosting, AI processing)",
+          "When required by law",
+          "With your consent"
+        ]
       },
       "retention": {
         "title": "Data retention",
@@ -204,7 +260,12 @@
       "rights": {
         "title": "Your rights",
         "description": "You have the right to:",
-        "items": ["Access the information we hold about you", "Correct inaccurate information", "Request deletion of your account and data", "Export your screenplays (Fountain, FDX or JSON) at any time"]
+        "items": [
+          "Access the information we hold about you",
+          "Correct inaccurate information",
+          "Request deletion of your account and data",
+          "Export your screenplays (Fountain, FDX or JSON) at any time"
+        ]
       },
       "children": {
         "title": "Children's privacy",
@@ -245,7 +306,11 @@
       "usage": {
         "title": "Acceptable use",
         "description": "You agree not to:",
-        "items": ["Use the service for anything unlawful", "Attempt to disrupt or gain unauthorized access to the service", "Infringe anyone else's intellectual property rights"]
+        "items": [
+          "Use the service for anything unlawful",
+          "Attempt to disrupt or gain unauthorized access to the service",
+          "Infringe anyone else's intellectual property rights"
+        ]
       },
       "ai": {
         "title": "AI features",

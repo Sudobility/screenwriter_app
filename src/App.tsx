@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { LanguageRedirect, LanguageValidator, ProtectedRoute as SharedProtectedRoute } from "@sudobility/components";
+import { LanguageRedirect, LanguageValidator } from "@sudobility/components";
 import { useAuth } from "./app/AuthContext";
+import { RequireSignIn } from "./components/shell/RequireSignIn";
 import { ScreenContainer } from "./components/shell/ScreenContainer";
 import { isLanguageSupported } from "./config/languages";
 import { useLang } from "./hooks/useLang";
@@ -23,17 +24,6 @@ function NotFoundPage() {
       <p>Page Not Found</p>
       <a href={`/${lang}`}>Go to Home</a>
     </main>
-  );
-}
-
-/** Thin app-specific wrapper around `@sudobility/components`' generic `ProtectedRoute`, fed from this app's own
- * `useAuth()` — auth is applied per-route, not by a tree-wide gate (music_app's convention). */
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  return (
-    <SharedProtectedRoute isAuthenticated={!!user} isLoading={loading} redirectPath="/:lang/login">
-      {children}
-    </SharedProtectedRoute>
   );
 }
 
@@ -83,28 +73,31 @@ export function App() {
           <Route path="contact" element={<ContactPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
+          {/* Pages that need an account are gated in place by RequireSignIn: signed out, the sign-in modal opens over
+              the page and the page renders once signed in — never a redirect to "login" (that route is only where
+              somebody navigates in order to sign in). */}
           <Route
             path="projects"
             element={
-              <ProtectedRoute>
+              <RequireSignIn>
                 <DashboardPage />
-              </ProtectedRoute>
+              </RequireSignIn>
             }
           />
           <Route
             path="p/:projectId"
             element={
-              <ProtectedRoute>
+              <RequireSignIn>
                 <DashboardPage />
-              </ProtectedRoute>
+              </RequireSignIn>
             }
           />
           <Route
             path="settings/keys"
             element={
-              <ProtectedRoute>
+              <RequireSignIn>
                 <LegacyKeysRedirect />
-              </ProtectedRoute>
+              </RequireSignIn>
             }
           />
           <Route path="404" element={<NotFoundPage />} />
@@ -112,9 +105,9 @@ export function App() {
         <Route
           path="d/:documentId"
           element={
-            <ProtectedRoute>
+            <RequireSignIn>
               <EditorPage />
-            </ProtectedRoute>
+            </RequireSignIn>
           }
         />
         <Route path="*" element={<CatchAll />} />
