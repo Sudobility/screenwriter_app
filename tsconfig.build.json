@@ -1,0 +1,9 @@
+{
+  // Production/deploy type-check (used by `bun run build`, e.g. Cloudflare Pages). Only `src` is
+  // checked: tests/ and e2e/ import sibling repos by relative path (../../writing_core/src/...,
+  // ../../screenwriter_lib/src/...) that only exist in a full local multi-repo checkout and are
+  // absent from a single-repo clone. The editor and `bun run typecheck` still use tsconfig.json,
+  // which covers tests/e2e where the siblings are present.
+  "extends": "./tsconfig.json",
+  "include": ["src"]
+}

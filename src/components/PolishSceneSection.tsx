@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import type { ScriptElement } from "@sudobility/screenwriter_types";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useAiActions } from "../hooks/useAiActions";

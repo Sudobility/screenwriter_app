@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -5,29 +6,34 @@ import { defineConfig } from "vitest/config";
 const p = (rel: string) => fileURLToPath(new URL(rel, import.meta.url));
 const stub = (name: string) => p(`./src/stubs/${name}.ts`);
 
-// Sibling repos resolve by path (no build step, no publishing). Mirrors tsconfig `paths`; keep in sync.
-// yjs/lib0 MUST point at writing_core's copy and react/react-dom/react-query/zustand MUST be one copy:
-// the siblings have their own node_modules, so `resolve.dedupe` pins them to this app's.
+// The co-developed sibling repos (screenwriter_lib/client/types, writing_ui/core) are ALSO published
+// to npm (package.json dependencies). Locally they are checked out next to this repo, so each alias
+// below points Vite at the sibling's live source — but ONLY when that sibling is actually present.
+// In a single-repo clone (e.g. Cloudflare Pages), the ../sibling dirs are absent, the alias is dropped,
+// and the import falls through to the published package in node_modules instead. Keep this list in sync
+// with tsconfig.json `paths` (tsc already falls back to node_modules when a path target is missing).
+// yjs/lib0 MUST be a single copy: locally they are pinned to writing_core's copy; without the sibling
+// they resolve from node_modules (writing_core's transitive dep) and `resolve.dedupe` keeps one copy.
+const siblingAlias = (name: string, rel: string) =>
+  existsSync(p(rel)) ? [{ find: new RegExp(`^@sudobility/${name}$`), replacement: p(rel) }] : [];
+const writingCoreNm = p("../writing_core/node_modules");
+const hasWritingCore = existsSync(writingCoreNm);
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: [
-      { find: /^@sudobility\/screenwriter_lib$/, replacement: p("../screenwriter_lib/src/index.ts") },
-      { find: /^@sudobility\/screenwriter_client$/, replacement: p("../screenwriter_client/src/index.ts") },
-      { find: /^@sudobility\/screenwriter_types$/, replacement: p("../screenwriter_types/src/index.ts") },
-      { find: /^@sudobility\/writing_ui$/, replacement: p("../writing_ui/src/index.ts") },
-      { find: /^@sudobility\/writing_core$/, replacement: p("../writing_core/src/index.ts") },
-      { find: /^@sudobility\/writing_formats\/fountain-classify$/, replacement: p("../writing_formats/src/fountain/classify.ts") },
-      // `MasterDetailLayout`/`MasterListItem` are in mail_box_components' source (@sudobility/components'
-      // real repo) but not yet in the published dist this app otherwise depends on for everything else —
-      // a narrow, single-file alias, not a whole-package one (too high a blast radius for a package this
-      // pervasive). No safe npm fallback exists yet (nothing publishes this component at all); acceptable
-      // since this app has no CI of its own and always runs with this sibling checked out.
-      { find: /^@sudobility\/components\/master-detail-layout$/, replacement: p("../mail_box_components/src/layout/MasterDetailLayout.tsx") },
-      // The Select whose menu opens upward at the bottom of the window: fixed in the source, not in a published build yet.
-      { find: /^@sudobility\/components\/select$/, replacement: p("../mail_box_components/src/ui/select.tsx") },
-      { find: /^yjs$/, replacement: p("../writing_core/node_modules/yjs/dist/yjs.mjs") },
-      { find: /^lib0\/(.*)$/, replacement: p("../writing_core/node_modules/lib0/") + "$1" },
+      ...siblingAlias("screenwriter_lib", "../screenwriter_lib/src/index.ts"),
+      ...siblingAlias("screenwriter_client", "../screenwriter_client/src/index.ts"),
+      ...siblingAlias("screenwriter_types", "../screenwriter_types/src/index.ts"),
+      ...siblingAlias("writing_ui", "../writing_ui/src/index.ts"),
+      ...siblingAlias("writing_core", "../writing_core/src/index.ts"),
+      ...(hasWritingCore
+        ? [
+            { find: /^yjs$/, replacement: p("../writing_core/node_modules/yjs/dist/yjs.mjs") },
+            { find: /^lib0\/(.*)$/, replacement: p("../writing_core/node_modules/lib0/") + "$1" },
+          ]
+        : []),
       // building_blocks' optional peer deps this app doesn't install for real (the sudobility "stubs system" —
       // see ~/projects/music_app's vite.config.ts/CLAUDE.md for the precedent).
       { find: /^@sudobility\/subscription-components$/, replacement: stub("subscription-components") },

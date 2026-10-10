@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import {
   AI_ACTION_LIMITS,
   countWords,

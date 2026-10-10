@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useAi, useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAcceptAiConsent, useAiConsent } from "@sudobility/screenwriter_client";
 import type { AiNote, CoverageReport, SceneSummaryStatus, Suggestion } from "@sudobility/screenwriter_types";

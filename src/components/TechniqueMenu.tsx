@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { getSelectionStore, useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { insertTechnique, placeholdersIn, techniqueById, TECHNIQUES } from "../util/techniques";
 

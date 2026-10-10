@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
-import { MasterListItem } from "@sudobility/components/master-detail-layout";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
+import { MasterListItem } from "@sudobility/components";
 import { ENTITY_KINDS, type EntityKind, type EntityView } from "@sudobility/writing_core";
 import { defaultSpellingPolicy, Navigator, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";

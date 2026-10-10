@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { MasterDetailLayout } from "@sudobility/components/master-detail-layout";
+import { MasterDetailLayout } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { ElementStylePicker, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";

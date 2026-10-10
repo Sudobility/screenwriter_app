@@ -15,7 +15,7 @@ import {
   KeyIcon,
 } from "@heroicons/react/24/outline";
 import { MasterDetailLayout, MasterListItem } from "@sudobility/components";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
