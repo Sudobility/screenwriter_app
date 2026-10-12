@@ -25,7 +25,7 @@ export function AiNotices({ ai, showCredits = false, showTestBanner = true }: { 
         <div role="alertdialog" aria-label="AI consent" data-testid="ai-consent" className="border border-neutral-300 rounded p-3 bg-white text-sm space-y-2">
           <p className="font-medium">Use AI on your writing?</p>
           <p className="text-xs text-neutral-600">
-            To do this, the text you choose (a description, a story, or lines and scenes from your script) is sent to an AI provider, which returns the result.
+            To do this, the text or image you choose (a description, selected visual look, story, or script excerpt) is sent to an AI provider, which returns the result.
             Nothing is applied to your script until you accept it.
           </p>
           <div className="flex gap-2">

@@ -19,6 +19,7 @@ import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
 import { EditorSidebar } from "../components/EditorSidebar";
+import { StoryboardDetail } from "../components/StoryboardDetail";
 import { EntityDetailView } from "../components/EntityDetailView";
 
 type View = "edit" | "pages" | "cards";
@@ -61,7 +62,9 @@ function Editor({ documentId }: { documentId: string }) {
   // selected entity has no stages / isn't a character.
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [selectedStoryboardSceneId, setSelectedStoryboardSceneId] = useState<string | null>(null);
   const selectEntity = (entityId: string | null, stageId: string | null = null) => {
+    setSelectedStoryboardSceneId(null);
     setSelectedEntityId(entityId);
     setSelectedStageId(entityId ? stageId : null);
   };
@@ -167,7 +170,7 @@ function Editor({ documentId }: { documentId: string }) {
   // right (page count, Title page, Page setup). It stays visible while the sidebar's Catalog selection replaces
   // the content area with `EntityDetailView`: the script-only tools grey out (none of them act on an entity),
   // choosing a view returns to the script, and the panel buttons keep working (their panels sit beside the content).
-  const scriptActive = !selectedEntityId;
+  const scriptActive = !selectedEntityId && !selectedStoryboardSceneId;
 
   return (
     <div className="h-full flex flex-col print-flow">
@@ -314,15 +317,21 @@ function Editor({ documentId }: { documentId: string }) {
                 selectedStageId={selectedStageId}
                 onSelectEntity={selectEntity}
                 onJumpToScene={jumpTo}
+                selectedStoryboardSceneId={selectedStoryboardSceneId}
+                onSelectStoryboard={sceneId => { setSelectedEntityId(null); setSelectedStageId(null); setSelectedStoryboardSceneId(sceneId); }}
               />
             }
             // No width cap: the script editor/pages content has never had one, and 1024px (the
             // component's own default) would newly constrain it on wide screens.
             detailMaxWidth={0}
             detailContent={
-              selectedEntityId ? (
+              selectedStoryboardSceneId && projectId ? (
+                <StoryboardDetail host={host} documentId={documentId} projectId={projectId} sceneId={selectedStoryboardSceneId} />
+              ) : selectedEntityId ? (
                 <EntityDetailView
                   host={host}
+                  documentId={documentId}
+                  projectId={projectId ?? ""}
                   entityId={selectedEntityId}
                   stageId={selectedStageId}
                   onJumpTo={jumpTo}

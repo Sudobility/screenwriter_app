@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLang } from "../hooks/useLang";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { ImportScript } from "../components/ImportScript";
+import { ProjectStyleSettings } from "../components/ProjectStyleSettings";
 import { UserDashboardPage } from "./UserDashboardPage";
 
 const btn =
@@ -210,6 +211,7 @@ export function ProjectView({ projectId }: { projectId: string }) {
   const [trashing, setTrashing] = useState<{ id: string; name: string } | null>(
     null,
   );
+  const [showSettings, setShowSettings] = useState(false);
 
   // The real breadcrumbs system (building_blocks' AppBreadcrumbs, via ScreenContainer's BreadcrumbContext),
   // not a hand-rolled "Projects / name" line — matches music_app's own per-page useSetBreadcrumbs usage.
@@ -217,6 +219,10 @@ export function ProjectView({ projectId }: { projectId: string }) {
     { label: t("dashboard.projects"), href: `/${lang}/projects` },
     { label: project?.name ?? projectId, current: true },
   ]);
+
+  if (showSettings) {
+    return <ProjectStyleSettings projectId={projectId} onClose={() => setShowSettings(false)} />;
+  }
 
   return (
     <section>
@@ -226,6 +232,12 @@ export function ProjectView({ projectId }: { projectId: string }) {
             ? t("dashboard.trashedDocuments")
             : t("dashboard.documents")}
         </h2>
+        <button
+          className={btn}
+          onClick={() => setShowSettings(true)}
+        >
+          Project settings
+        </button>
         <button
           className={`${btn} ml-auto`}
           onClick={() => void load({ trashed: !showingTrash })}

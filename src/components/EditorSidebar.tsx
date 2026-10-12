@@ -10,7 +10,7 @@ import { getStages, stageLabel } from "../util/character-skeleton";
 import { addSubplot, ensureStoryEntity, findStoryEntity, getSubplots, isStoryEntity } from "../util/story-info";
 import { addNote, isNote, listNotes } from "../util/notes";
 
-const DEFAULT_EXPANDED_KINDS: readonly EntityKind[] = ["character", "location"];
+const DEFAULT_EXPANDED_KINDS: readonly EntityKind[] = ["character", "location", "wardrobe", "makeupHair", "vehicle", "setDressing"];
 const btn = "border border-neutral-300 rounded px-2 py-1 text-xs bg-white hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-white";
 
 /**
@@ -47,12 +47,16 @@ export function EditorSidebar({
   selectedStageId,
   onSelectEntity,
   onJumpToScene,
+  onSelectStoryboard,
+  selectedStoryboardSceneId,
 }: {
   host: ScriptEditorHost;
   selectedEntityId: string | null;
   selectedStageId: string | null;
   onSelectEntity(entityId: string, stageId?: string | null): void;
   onJumpToScene(elementId: string): void;
+  onSelectStoryboard(sceneId: string): void;
+  selectedStoryboardSceneId: string | null;
 }) {
   useModelTick(host);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(DEFAULT_EXPANDED_KINDS));
@@ -153,6 +157,17 @@ export function EditorSidebar({
           </span>
         </button>
         {structureOpen && <Navigator host={host} onJumpTo={onJumpToScene} />}
+      </section>
+
+      <section className="border-t border-neutral-200 mt-2 pt-2" data-testid="storyboards-navigation">
+        <button type="button" className="w-full px-3 py-1 text-left text-xs font-semibold uppercase text-neutral-500" onClick={() => toggle("__storyboards__")}>Storyboards {expanded.has("__storyboards__") ? "▸" : "▾"}</button>
+        {!expanded.has("__storyboards__") && host.model.scenes().map((scene, index) => <MasterListItem
+          key={String(scene.id)}
+          label={`${index + 1}. ${scene.headingText || "Untitled scene"}`}
+          isSelected={selectedStoryboardSceneId === String(scene.id)}
+          onClick={() => onSelectStoryboard(String(scene.id))}
+          className="pl-5"
+        />)}
       </section>
 
       <section className="border-t border-neutral-200 mt-2 pt-2" data-testid="catalog-tree" data-open={catalogOpen}>

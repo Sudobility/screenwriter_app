@@ -20,6 +20,13 @@ import { isNote } from "../util/notes";
 import { hasParagraphs, printableFor, printDoc } from "../util/print-item";
 import { GenerateSkeletonBox } from "./GenerateSkeletonBox";
 import { PolishDialogueSection } from "./PolishDialogueSection";
+import { CharacterSheetSection } from "./CharacterSheetSection";
+import { LocationSheetSection } from "./LocationSheetSection";
+import { PropSheetSection } from "./PropSheetSection";
+import { ProductionImagesSection, type ProductionImage, type ProductionKind } from "./ProductionImagesSection";
+import type { CharacterVisualState } from "@sudobility/screenwriter_types";
+import type { LocationVisualState } from "@sudobility/screenwriter_types";
+import type { PropVisualState } from "@sudobility/screenwriter_types";
 import {
   addSubplot,
   deleteSubplot,
@@ -114,11 +121,15 @@ export function EntityDetailView({
   onSelectStage,
   onDeleted,
   scriptTitle,
+  documentId,
+  projectId,
 }: {
   host: ScriptEditorHost;
   entityId: string;
   /** The script's title, shown under the title of a printed item. */
   scriptTitle?: string;
+  documentId: string;
+  projectId: string;
   /** A specific life stage of this (character) entity, or `null` for the character itself. */
   stageId: string | null;
   onJumpTo(elementId: string): void;
@@ -299,6 +310,8 @@ export function EntityDetailView({
 
   const isCharacter = entity.kind === "character";
   const isLocation = entity.kind === "location";
+  const isProp = entity.kind === "prop";
+  const productionKind = (["wardrobe", "makeupHair", "vehicle", "setDressing"] as const).find(kind => kind === entity.kind) as ProductionKind | undefined;
   const stages = isCharacter ? getStages(entity) : [];
   const stage = stageId ? stages.find(s => s.id === stageId) : undefined;
   if (stageId && !stage) {
@@ -572,6 +585,37 @@ export function EntityDetailView({
         </>
       )}
 
+      {isCharacter && <CharacterSheetSection
+        key={entity.id}
+        documentId={documentId}
+        characterId={entity.id}
+        value={(entity.fields.characterSheet as CharacterVisualState | undefined) ?? null}
+        onChange={value => run("entity.update", { entityId: entity.id, patch: { fields: { characterSheet: value } } })}
+      />}
+      {isLocation && <LocationSheetSection
+        key={entity.id}
+        documentId={documentId}
+        locationId={entity.id}
+        locationName={entity.name}
+        value={(entity.fields.locationSheet as LocationVisualState | undefined) ?? null}
+        onChange={value => run("entity.update", { entityId: entity.id, patch: { fields: { locationSheet: value } } })}
+      />}
+      {isProp && <PropSheetSection
+        key={entity.id}
+        documentId={documentId}
+        propId={entity.id}
+        value={(entity.fields.propSheet as PropVisualState | undefined) ?? null}
+        onChange={value => run("entity.update", { entityId: entity.id, patch: { fields: { propSheet: value } } })}
+      />}
+      {productionKind && <ProductionImagesSection
+        documentId={documentId}
+        projectId={projectId}
+        kind={productionKind}
+        subjectId={entity.id}
+        images={Array.isArray(entity.fields.productionImages) ? entity.fields.productionImages as ProductionImage[] : []}
+        onChange={value => run("entity.update", { entityId: entity.id, patch: { fields: { productionImages: value } } })}
+        characters={host.model.entities({ kind: "character" }).map(character => ({ id: character.id, name: character.name }))}
+      />}
       {isCharacter && <PolishDialogueSection host={host} entity={entity} />}
 
       <div>
