@@ -8,6 +8,7 @@ import { CharacterSkeletonEditor } from "./CharacterSkeletonEditor";
 import {
   addAge,
   deleteStage,
+  describeCharacterForImage,
   getOwnSkeleton,
   getStages,
   setOwnSkeleton,
@@ -330,10 +331,10 @@ export function EntityDetailView({
   const aliasesEditor = (
     <div>
       <h4 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Aliases</h4>
-      <ul className="space-y-1">
+      <ul className="space-y-1" data-testid="entity-aliases">
         {entity.aliases.map(a => (
           <li key={a} className="flex items-center gap-2 text-sm">
-            <span className="flex-1">{a}</span>
+            <span className="flex-1" data-alias={a}>{a}</span>
             <button className={`${btn} text-xs`} onClick={() => run("entity.removeAlias", { entityId: entity.id, alias: a })}>
               Remove
             </button>
@@ -589,6 +590,7 @@ export function EntityDetailView({
         key={entity.id}
         documentId={documentId}
         characterId={entity.id}
+        characterInfo={describeCharacterForImage(entity)}
         value={(entity.fields.characterSheet as CharacterVisualState | undefined) ?? null}
         onChange={value => run("entity.update", { entityId: entity.id, patch: { fields: { characterSheet: value } } })}
       />}

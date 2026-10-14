@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { MasterDetailLayout } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
-import { ElementStylePicker, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
+import { ElementStylePicker, getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
@@ -15,6 +15,8 @@ import { FixFormattingButton } from "../components/FixFormattingButton";
 import { TechniqueMenu } from "../components/TechniqueMenu";
 import { SceneOmitToggle } from "../components/SceneOmitToggle";
 import { PageSetupPanel } from "../components/PageSetupPanel";
+import { FindReplaceBar } from "../components/FindReplaceBar";
+import { createProviders } from "../util/search/providers";
 import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
@@ -55,6 +57,7 @@ function Editor({ documentId }: { documentId: string }) {
   const [view, setViewRaw] = useState<View>("edit");
   const [printPending, setPrintPending] = useState(false);
   const [caret, setCaret] = useState<PlainPos | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
   // The sidebar's Catalog selection: when set, `MasterDetailLayout`'s detail area shows that entity
   // (`EntityDetailView`) instead of the script editor — a real master/detail relationship, not a toggle.
   // `selectedStageId` additionally picks one of a `character`-kind entity's life stages (see
@@ -86,6 +89,43 @@ function Editor({ documentId }: { documentId: string }) {
   };
   // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
   const layout = useLayout(host);
+
+  // Project-wide Find & Replace: each surface (title page, script, Catalog entities) is one provider that knows
+  // how to navigate to, highlight and replace its own matches.
+  const showScript = useCallback(() => {
+    setSelectedStoryboardSceneId(null);
+    setSelectedEntityId(null);
+    setSelectedStageId(null);
+    setViewRaw("edit");
+  }, []);
+  const showEntity = useCallback((entityId: string, stageOrKey: string | null) => {
+    setSelectedStoryboardSceneId(null);
+    setSelectedEntityId(entityId);
+    setSelectedStageId(stageOrKey);
+  }, []);
+  const showStoryboard = useCallback((sceneId: string) => {
+    setSelectedEntityId(null);
+    setSelectedStageId(null);
+    setSelectedStoryboardSceneId(sceneId);
+  }, []);
+  const openTitlePanel = useCallback(() => setPanel("title"), []);
+  const findNav = useMemo(() => ({ showScript, showEntity, showStoryboard, openTitlePanel }), [showScript, showEntity, showStoryboard, openTitlePanel]);
+  const searchProviders = useMemo(() => (host ? createProviders(host, findNav) : []), [host, findNav]);
+
+  // Cmd/Ctrl+F opens the find bar (overriding the browser's own find). It does not change the current view or
+  // selection — the first Find Next navigates to wherever the match is. While already open, the bar itself
+  // handles Cmd/Ctrl+F (refocus) and Cmd/Ctrl+G / F3 (step), so this only opens it.
+  const findOpenRef = useRef(false);
+  findOpenRef.current = findOpen;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.key.toLowerCase() !== "f" || findOpenRef.current) return;
+      e.preventDefault();
+      setFindOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Dev/e2e seam (like writing_ui's `__wuiDebug`): lets a test script the session, e.g. seed a long document.
   useEffect(() => {
@@ -279,6 +319,17 @@ function Editor({ documentId }: { documentId: string }) {
           {host && view === "edit" && <SceneOmitToggle host={host} />}
           {host && view === "edit" && <FixFormattingButton host={host} />}
           {host && view === "edit" && <TechniqueMenu host={host} onInserted={jumpTo} />}
+          {host && view === "edit" && (
+            <button
+              onClick={() => setFindOpen(o => !o)}
+              aria-pressed={findOpen}
+              data-testid="find-button"
+              title="Find & replace (⌘F)"
+              className={`border border-neutral-300 rounded px-3 py-1 text-sm ${findOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+            >
+              Find
+            </button>
+          )}
           {view === "pages" && (
             <button onClick={() => setPrintPending(true)} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
               Print / Save as PDF
@@ -307,7 +358,7 @@ function Editor({ documentId }: { documentId: string }) {
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 flex print-flow" data-testid="editor-split">
+      <div className="relative flex-1 min-h-0 flex print-flow" data-testid="editor-split">
         {host && (
           <MasterDetailLayout
             masterContent={
@@ -384,6 +435,16 @@ function Editor({ documentId }: { documentId: string }) {
           />
         )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
+        {host && findOpen && (
+          <FindReplaceBar
+            host={host}
+            providers={searchProviders}
+            onClose={() => {
+              setFindOpen(false);
+              getSelectionStore(host).focusEditor?.();
+            }}
+          />
+        )}
       </div>
     </div>
   );

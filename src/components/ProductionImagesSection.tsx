@@ -84,7 +84,7 @@ export function ProductionImagesSection({ documentId, projectId, kind, subjectId
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {visible.map(image => <div key={image.id} className="rounded border border-neutral-200 p-2">
         {urls[image.id] && <img src={urls[image.id]} alt={image.description} className="w-full rounded" />}
-        <p className="mt-2 text-sm">{image.description}</p>
+        <p className="mt-2 text-sm" data-image-id={image.id}>{image.description}</p>
         <button type="button" className="mt-2 text-sm text-red-700 disabled:opacity-40" disabled={busy} onClick={() => void remove(image.id)}>Delete image</button>
       </div>)}
     </div>

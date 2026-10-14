@@ -194,3 +194,24 @@ export function skeletonForAi(skeleton: Skeleton): { age: string } & Record<stri
   for (const [k, v] of Object.entries(skeleton)) if (typeof v === "string" && v.trim()) out[k] = v.trim();
   return { ...out, age: out.age ?? "unspecified" };
 }
+
+/**
+ * Everything known about a character as one labelled string, for the image-generation prompt: the name and
+ * every filled-in skeleton field (in worksheet order). A staged character has no own skeleton, so its first
+ * life stage stands in. The caller appends the writer's free-text appearance notes and caps the total length,
+ * so image generation works from the character sheet alone even when the appearance box is empty.
+ */
+export function describeCharacterForImage(entity: EntityView): string {
+  const own = getOwnSkeleton(entity);
+  const skeleton = Object.keys(own).length > 0 ? own : getStages(entity)[0]?.skeleton ?? {};
+  const parts: string[] = [];
+  const name = entity.name?.trim();
+  if (name) parts.push(`Name: ${name}`);
+  for (const section of Object.values(SKELETON_SECTIONS)) {
+    for (const field of section.fields) {
+      const value = skeleton[field.key]?.trim();
+      if (value) parts.push(`${field.label}: ${value}`);
+    }
+  }
+  return parts.join("\n");
+}

@@ -23,7 +23,9 @@ export function PropSheetSection({ documentId, propId, value, onChange }: {
   const [sheetUrl, setSheetUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => { setDescription(state.description); }, [propId]);
+  // Reseed on entity switch and when the stored description changes (e.g. a Find & Replace), so an external edit
+  // shows here and a later "Generate" cannot overwrite it with a stale value.
+  useEffect(() => { setDescription(state.description); }, [propId, state.description]);
   useEffect(() => {
     if (!state.looksImageId) { setTiles([]); return; }
     setTiles([]);
@@ -65,7 +67,7 @@ export function PropSheetSection({ documentId, propId, value, onChange }: {
   return <section className="space-y-3 rounded-lg border border-neutral-200 p-4" data-testid="prop-sheet-section">
     <div><h3 className="font-semibold">AI prop sheet</h3><p className="text-sm text-neutral-600">Describe the look, choose one of 16 alternatives, then generate eight views around the prop.</p></div>
     <label className="block text-sm">Prop appearance
-      <textarea className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Shape, material, color, wear, scale, and other visual details" />
+      <textarea data-testid="prop-appearance" className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Shape, material, color, wear, scale, and other visual details" />
     </label>
     <button className={button} disabled={ai.busy || ai.mode !== "live" || description.trim().length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
     {tiles.length === 16 && <div className="grid grid-cols-4 gap-2" role="group" aria-label="Prop looks">

@@ -23,9 +23,11 @@ export function cropLooks(bitmap: ImageBitmap): string[] {
   });
 }
 
-export function CharacterSheetSection({ documentId, characterId, value, onChange }: {
+export function CharacterSheetSection({ documentId, characterId, characterInfo, value, onChange }: {
   documentId: string;
   characterId: string;
+  /** Everything else known about the character (name + skeleton), so looks can be generated without appearance notes. */
+  characterInfo: string;
   value: CharacterVisualState | null;
   onChange(value: CharacterVisualState): void;
 }) {
@@ -37,7 +39,14 @@ export function CharacterSheetSection({ documentId, characterId, value, onChange
   const [sheetUrl, setSheetUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => { setDescription(state.description); }, [characterId]);
+  // The full prompt sent to the image model: the character's name and skeleton, plus any free-text
+  // appearance notes the writer typed. Capped to the API's 2000-character limit. Non-empty whenever the
+  // character has a name or any skeleton field, so "Generate 16 looks" works without appearance notes.
+  const composed = [characterInfo, description].map(s => s.trim()).filter(Boolean).join("\n\n").slice(0, 2000).trim();
+
+  // Reseed from the model on entity switch and whenever the stored description changes (e.g. a Find & Replace),
+  // so an external edit shows here and a later "Generate" cannot overwrite it with a stale value.
+  useEffect(() => { setDescription(state.description); }, [characterId, state.description]);
   useEffect(() => {
     if (!state.looksImageId) { setTiles([]); return; }
     setTiles([]);
@@ -59,17 +68,16 @@ export function CharacterSheetSection({ documentId, characterId, value, onChange
   }, [sw, documentId, characterId, state.sheetImageId]);
 
   const generateLooks = async () => {
-    const text = description.trim();
-    if (text.length < 3) return;
+    if (composed.length < 3) return;
     setLoadError(null);
-    const result = await ai.run(client => client.generateCharacterLooks(documentId, characterId, { description: text }).then(asAction<CharacterImageResult>));
-    if (result) onChange({ description: text, looksImageId: result.result.id, selectedLook: null, sheetImageId: null });
+    const result = await ai.run(client => client.generateCharacterLooks(documentId, characterId, { description: composed }).then(asAction<CharacterImageResult>));
+    if (result) onChange({ description: description.trim(), looksImageId: result.result.id, selectedLook: null, sheetImageId: null });
   };
   const generateSheet = async () => {
-    if (state.selectedLook === null || !tiles[state.selectedLook]) return;
+    if (state.selectedLook === null || !tiles[state.selectedLook] || composed.length < 3) return;
     setLoadError(null);
     const result = await ai.run(client => client.generateCharacterSheet(documentId, characterId, {
-      description: state.description,
+      description: composed,
       selectedLook: state.selectedLook!,
       referenceImage: tiles[state.selectedLook!]!,
     }).then(asAction<CharacterImageResult>));
@@ -77,11 +85,11 @@ export function CharacterSheetSection({ documentId, characterId, value, onChange
   };
 
   return <section className="space-y-3 rounded-lg border border-neutral-200 p-4" data-testid="character-sheet-section">
-    <div><h3 className="font-semibold">AI character sheet</h3><p className="text-sm text-neutral-600">Describe the look, choose one of 16 alternatives, then generate eight views around the character.</p></div>
-    <label className="block text-sm">Character appearance
-      <textarea className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Appearance, clothing, age, mood, and other visual details" />
+    <div><h3 className="font-semibold">AI character sheet</h3><p className="text-sm text-neutral-600">Generate 16 looks from the character sheet, choose one, then generate eight views around the character. Appearance notes below are optional — they refine the generated looks.</p></div>
+    <label className="block text-sm">Character appearance (optional)
+      <textarea data-testid="character-appearance" className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Extra visual details to refine the looks: clothing, mood, lighting, and so on" />
     </label>
-    <button className={button} disabled={ai.busy || ai.mode !== "live" || description.trim().length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
+    <button className={button} disabled={ai.busy || ai.mode !== "live" || composed.length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
     {tiles.length === 16 && <div className="grid grid-cols-4 gap-2" role="group" aria-label="Character looks">
       {tiles.map((src, index) => <button key={index} type="button" className={`overflow-hidden rounded border-2 ${state.selectedLook === index ? "border-blue-600" : "border-transparent"}`} aria-label={`Choose look ${index + 1}`} aria-pressed={state.selectedLook === index} onClick={() => onChange({ ...state, selectedLook: index, sheetImageId: null })}><img src={src} alt={`Character look ${index + 1}`} className="w-full aspect-square object-cover" /></button>)}
     </div>}
