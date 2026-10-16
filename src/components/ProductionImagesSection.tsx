@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useProject } from "@sudobility/screenwriter_client";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import type { ProductionImageKind, ProductionImageRecord } from "@sudobility/screenwriter_types";
+import { ImageUploadButton } from "./ImageUploadButton";
 
 export type ProductionKind = ProductionImageKind;
 export type ProductionImage = ProductionImageRecord;
@@ -80,7 +81,19 @@ export function ProductionImagesSection({ documentId, projectId, kind, subjectId
     <label className="block text-sm">Describe the image
       <textarea className="mt-1 block w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={event => setDescription(event.target.value)} placeholder="Appearance, colors, materials, mood, and details" />
     </label>
-    <button type="button" className="rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-40" disabled={!styleId || busy || description.trim().length < 3 || (needsCharacter && !characterId)} onClick={() => void generate()}>{busy ? "Working…" : "Create image"}</button>
+    <div className="flex flex-wrap items-center gap-2">
+      <button type="button" className="rounded border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-40" disabled={!styleId || busy || description.trim().length < 3 || (needsCharacter && !characterId)} onClick={() => void generate()}>{busy ? "Working…" : "Create image"}</button>
+      <ImageUploadButton
+        label="Upload an image"
+        disabled={!styleId || busy}
+        onUpload={async dataUrl => {
+          const character = characters.find(item => item.id === characterId);
+          const result = await sw.createProductionImages(documentId, kind, subjectId).upload(dataUrl);
+          onChange([...images, { id: result.id, description: description.trim(), styleId: result.styleId, ...(character ? { characterId: character.id } : {}) }]);
+          setDescription("");
+        }}
+      />
+    </div>
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {visible.map(image => <div key={image.id} className="rounded border border-neutral-200 p-2">
         {urls[image.id] && <img src={urls[image.id]} alt={image.description} className="w-full rounded" />}

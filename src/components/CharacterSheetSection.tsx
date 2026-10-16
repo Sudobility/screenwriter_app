@@ -3,6 +3,7 @@ import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import type { CharacterImageResult, CharacterVisualState } from "@sudobility/screenwriter_types";
 import { useAiActions } from "../hooks/useAiActions";
 import { AiNotices } from "./AiNotices";
+import { ImageUploadButton } from "./ImageUploadButton";
 
 const empty: CharacterVisualState = { description: "", looksImageId: null, selectedLook: null, sheetImageId: null };
 const button = "rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-40";
@@ -89,7 +90,13 @@ export function CharacterSheetSection({ documentId, characterId, characterInfo, 
     <label className="block text-sm">Character appearance (optional)
       <textarea data-testid="character-appearance" className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Extra visual details to refine the looks: clothing, mood, lighting, and so on" />
     </label>
-    <button className={button} disabled={ai.busy || ai.mode !== "live" || composed.length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
+    <div className="flex flex-wrap items-center gap-2">
+      <button className={button} disabled={ai.busy || ai.mode !== "live" || composed.length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
+      <ImageUploadButton
+        label={state.sheetImageId ? "Replace with an uploaded sheet" : "Upload a character sheet"}
+        onUpload={async dataUrl => { const r = await sw.createCharacterImages(documentId, characterId).upload("sheet", dataUrl); onChange({ ...state, sheetImageId: r.id }); }}
+      />
+    </div>
     {tiles.length === 16 && <div className="grid grid-cols-4 gap-2" role="group" aria-label="Character looks">
       {tiles.map((src, index) => <button key={index} type="button" className={`overflow-hidden rounded border-2 ${state.selectedLook === index ? "border-blue-600" : "border-transparent"}`} aria-label={`Choose look ${index + 1}`} aria-pressed={state.selectedLook === index} onClick={() => onChange({ ...state, selectedLook: index, sheetImageId: null })}><img src={src} alt={`Character look ${index + 1}`} className="w-full aspect-square object-cover" /></button>)}
     </div>}

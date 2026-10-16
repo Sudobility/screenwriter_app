@@ -3,6 +3,7 @@ import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import type { PropImageResult, PropVisualState } from "@sudobility/screenwriter_types";
 import { useAiActions } from "../hooks/useAiActions";
 import { AiNotices } from "./AiNotices";
+import { ImageUploadButton } from "./ImageUploadButton";
 import { cropLooks } from "./CharacterSheetSection";
 
 const empty: PropVisualState = { description: "", looksImageId: null, selectedLook: null, sheetImageId: null };
@@ -69,7 +70,13 @@ export function PropSheetSection({ documentId, propId, value, onChange }: {
     <label className="block text-sm">Prop appearance
       <textarea data-testid="prop-appearance" className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Shape, material, color, wear, scale, and other visual details" />
     </label>
-    <button className={button} disabled={ai.busy || ai.mode !== "live" || description.trim().length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
+    <div className="flex flex-wrap items-center gap-2">
+      <button className={button} disabled={ai.busy || ai.mode !== "live" || description.trim().length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 looks" : "Generate 16 looks"}</button>
+      <ImageUploadButton
+        label={state.sheetImageId ? "Replace with an uploaded sheet" : "Upload a prop sheet"}
+        onUpload={async dataUrl => { const r = await sw.createPropImages(documentId, propId).upload("sheet", dataUrl); onChange({ ...state, sheetImageId: r.id }); }}
+      />
+    </div>
     {tiles.length === 16 && <div className="grid grid-cols-4 gap-2" role="group" aria-label="Prop looks">
       {tiles.map((src, index) => <button key={index} type="button" className={`overflow-hidden rounded border-2 ${state.selectedLook === index ? "border-blue-600" : "border-transparent"}`} aria-label={`Choose look ${index + 1}`} aria-pressed={state.selectedLook === index} onClick={() => onChange({ ...state, selectedLook: index, sheetImageId: null })}><img src={src} alt={`Prop look ${index + 1}`} className="w-full aspect-square object-cover" /></button>)}
     </div>}

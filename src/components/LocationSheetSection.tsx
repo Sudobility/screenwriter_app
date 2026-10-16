@@ -3,6 +3,7 @@ import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import { LOCATION_IMAGE_TIMES, type LocationImageTime, type LocationLooksResult, type LocationTimesResult, type LocationVisualState } from "@sudobility/screenwriter_types";
 import { useAiActions } from "../hooks/useAiActions";
 import { AiNotices } from "./AiNotices";
+import { ImageUploadButton } from "./ImageUploadButton";
 import { cropLooks } from "./CharacterSheetSection";
 
 const empty: LocationVisualState = { description: "", looksImageId: null, selectedLook: null, timeImageIds: {} };
@@ -81,6 +82,18 @@ export function LocationSheetSection({ documentId, locationId, locationName, val
       <textarea data-testid="location-appearance" className="mt-1 w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Architecture, setting, era, materials, mood, and other visual details" />
     </label>
     <button className={button} disabled={ai.busy || ai.mode !== "live" || description.trim().length < 3} onClick={() => void generateLooks()}>{ai.busy ? "Generating…" : state.looksImageId ? "Regenerate 16 locations" : "Generate 16 locations"}</button>
+    <div className="space-y-1">
+      <p className="text-sm text-neutral-600">Or upload your own image for each time of day:</p>
+      <div className="flex flex-wrap gap-2">
+        {LOCATION_IMAGE_TIMES.map(time => (
+          <ImageUploadButton
+            key={time}
+            label={`Upload ${time}`}
+            onUpload={async dataUrl => { const r = await sw.createLocationImages(documentId, locationId).upload(time, dataUrl); onChange({ ...state, timeImageIds: { ...state.timeImageIds, [time]: r.id } }); }}
+          />
+        ))}
+      </div>
+    </div>
     {tiles.length === 16 && <div className="grid grid-cols-4 gap-2" role="group" aria-label="Location designs">
       {tiles.map((src, index) => <button key={index} type="button" className={`overflow-hidden rounded border-2 ${state.selectedLook === index ? "border-blue-600" : "border-transparent"}`} aria-label={`Choose location ${index + 1}`} aria-pressed={state.selectedLook === index} onClick={() => onChange({ ...state, selectedLook: index, timeImageIds: {} })}><img src={src} alt={`Location design ${index + 1}`} className="w-full aspect-square object-cover" /></button>)}
     </div>}
