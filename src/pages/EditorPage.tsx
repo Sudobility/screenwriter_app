@@ -10,6 +10,7 @@ import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
 import { AiPanel } from "../components/AiPanel";
+import { CommentsPanel } from "../components/CommentsPanel";
 import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { FixFormattingButton } from "../components/FixFormattingButton";
 import { TechniqueMenu } from "../components/TechniqueMenu";
@@ -51,8 +52,8 @@ function Editor({ documentId }: { documentId: string }) {
   const [title, setTitle] = useState("");
   // One right-hand panel at a time (Title page/Page setup/Revisions/AI/Snapshots — unrelated to the
   // sidebar's own master/detail selection below, which owns the main content area instead).
-  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | null>(null);
-  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions") => setPanel(cur => (cur === p ? null : p));
+  const [panel, setPanel] = useState<"snapshots" | "ai" | "title" | "setup" | "revisions" | "comments" | null>(null);
+  const togglePanel = (p: "snapshots" | "ai" | "title" | "setup" | "revisions" | "comments") => setPanel(cur => (cur === p ? null : p));
   const [rebased, setRebased] = useState<RebasedEvent | null>(null);
   const [view, setViewRaw] = useState<View>("edit");
   const [printPending, setPrintPending] = useState(false);
@@ -271,6 +272,14 @@ function Editor({ documentId }: { documentId: string }) {
           AI
         </button>
         <button
+          onClick={() => togglePanel("comments")}
+          aria-pressed={panel === "comments"}
+          data-testid="comments-button"
+          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "comments" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+        >
+          Comments
+        </button>
+        <button
           onClick={() => togglePanel("snapshots")}
           aria-pressed={panel === "snapshots"}
           className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "snapshots" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
@@ -394,7 +403,7 @@ function Editor({ documentId }: { documentId: string }) {
                 <>
                   {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
                   {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
-                  {view === "edit" && <ScriptEditor host={host} initialCaret={caret} />}
+                  {view === "edit" && <ScriptEditor host={host} initialCaret={caret} onOpenComments={() => setPanel("comments")} />}
                   {view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
                   {view === "pages" && (
                     <PageView
@@ -435,6 +444,7 @@ function Editor({ documentId }: { documentId: string }) {
           />
         )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
+        {panel === "comments" && host && <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
         {host && findOpen && (
           <FindReplaceBar
             host={host}
