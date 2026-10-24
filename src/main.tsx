@@ -4,7 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ScreenwriterClientProvider } from "@sudobility/screenwriter_client";
 import { ScreenwriterProvider } from "@sudobility/screenwriter_lib";
+import { SEOHead, SEOHeadProvider } from "@sudobility/seo_lib";
 import { App } from "./App";
+import { seoHeadConfig } from "./seoHead";
 import { AuthProvider } from "./app/AuthContext";
 import { ErrorBoundary } from "./app/ErrorBoundary";
 import { SignInProvider } from "./app/SignInContext";
@@ -26,7 +28,12 @@ createRoot(document.getElementById("root")!).render(
               {/* The one sign-in modal, opened over whatever page needs an account (see App.tsx / CLAUDE.md). */}
               <SignInProvider>
                 <BrowserRouter>
-                  <App />
+                  {/* One root-level SEOHead emits the per-route <link rel="canonical"> + meta that
+                      scripts/prerender.mjs waits for; pages may still render their own SEOHead to override. */}
+                  <SEOHeadProvider config={seoHeadConfig}>
+                    <SEOHead title={seoHeadConfig.appName} description={seoHeadConfig.appName} />
+                    <App />
+                  </SEOHeadProvider>
                 </BrowserRouter>
               </SignInProvider>
             </AuthProvider>
