@@ -4,7 +4,7 @@
  * namespace `app`; translations are fetched at runtime, never bundled, so adding a language later is dropping in
  * a directory, not a rebuild.
  */
-import i18n from "i18next";
+import i18n, { type InitOptions } from "i18next";
 import Backend from "i18next-http-backend";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
@@ -37,6 +37,6 @@ void i18n
     load: "currentOnly",
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
-  });
+  } as InitOptions);
 
 export default i18n;
