@@ -50,8 +50,14 @@ test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to s
   await expect(page.getByTestId("editor-sidebar")).toBeVisible();
   const charGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="character"]');
   const locationGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="location"]');
+  // The top-level nav is a vertical icon rail; each kind's list shows under its own icon, one at a time. Refresh
+  // (re-harvest) lives in the Characters/Locations list header. The initial harvest already ran (on mount, before
+  // this text existed); Refresh re-scans.
+  await page.getByTestId("rail-character").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   await expect(charGroup.getByText("1", { exact: true })).toBeVisible();
+  await expect(charGroup.getByText("QUINN", { exact: true })).toBeVisible();
+  await page.getByTestId("rail-location").click();
   await expect(locationGroup.getByText("1", { exact: true })).toBeVisible();
 
   // The editing bar (style picker etc.) only makes sense with the script editor on screen.
@@ -59,6 +65,7 @@ test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to s
 
   // Selecting an entity is a real master/detail selection: the sidebar stays visible, and the script
   // editor is replaced by that entity's detail.
+  await page.getByTestId("rail-character").click();
   await charGroup.getByText("QUINN", { exact: true }).click();
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await expect(page.getByTestId("entity-name")).toHaveValue("QUINN");
@@ -75,7 +82,8 @@ test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to s
   await expect(page.getByTestId("script-editor")).toBeVisible();
   await expect(page.getByTestId("editing-bar")).toBeVisible();
 
-  // A kind nothing ever harvests: only exists once created by hand, via "+ Add other kind".
+  // A kind nothing ever harvests: only exists once created by hand, via the rail's "+ More" item.
+  await page.getByTestId("rail-more").click();
   await expect(page.getByText("+ Add other kind")).toBeVisible();
   await page.getByText("+ Add other kind").click();
   await page.getByTestId("other-kind-select").click();
@@ -97,6 +105,7 @@ test("character skeleton: structured fields, optional-field picker, and life sta
   await seedScene(page);
 
   const charGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="character"]');
+  await page.getByTestId("rail-character").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   await charGroup.getByText("QUINN", { exact: true }).click();
   await expect(page.getByTestId("entity-detail")).toBeVisible();
@@ -171,6 +180,7 @@ test("location: Interior/Exterior setting, no Aliases", async ({ page }) => {
   await createDoc(page, "Location doc");
   await seedScene(page);
 
+  await page.getByTestId("rail-location").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   const locationGroup = page.locator('[data-testid="catalog-kind-group"][data-kind="location"]');
   await locationGroup.getByText("archive", { exact: true }).click();
@@ -198,7 +208,7 @@ test("Catalog: built-in Story items (Plot with a main plot and subplots, Theme, 
   await login(page);
   await createDoc(page, "Story doc");
 
-  await page.getByText("Story", { exact: true }).click();
+  await page.getByTestId("rail-story").click();
   await page.getByText("Theme", { exact: true }).click();
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await page.getByTestId("story-field-theme").fill("Redemption");

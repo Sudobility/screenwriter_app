@@ -69,6 +69,7 @@ test.describe("with clipboard access", () => {
     await login(page);
     await createDoc(page, "Paste characters");
     await seedScenes(page);
+    await page.getByTestId("rail-character").click();
     await page.getByRole("button", { name: "Refresh" }).click();
     const group = page.locator('[data-testid="catalog-kind-group"][data-kind="character"]');
     await group.getByText("QUINN", { exact: true }).click();
@@ -136,8 +137,8 @@ test.describe("with clipboard access", () => {
     expect(story.attributes["story.plotMain"]).toBe("A keeper finds a door in the rock.");
     expect((story.attributes["story.subplots"] as any[]).map(s => s.name)).toEqual(["The debt", "The priest"]);
     // The Catalog's Story group shows the new subplots without a reload.
+    await page.getByTestId("rail-story").click();
     const storyGroup = page.getByTestId("catalog-story-group");
-    await storyGroup.getByText("Story", { exact: true }).click();
     if (!(await storyGroup.getByText("The debt", { exact: true }).isVisible())) await storyGroup.getByRole("button", { name: "▸" }).first().click();
     await expect(storyGroup.getByText("The debt", { exact: true })).toBeVisible();
     await expect(storyGroup.getByText("The priest", { exact: true })).toBeVisible();

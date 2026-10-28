@@ -39,10 +39,11 @@ export function createSynopsisProvider(host: ScriptEditorHost): SearchProvider {
       afterMount(() => {
         const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-scene-id]"));
         if (rows.length === 0) {
-          // The Script Structure section is collapsed — open it once, then keep polling for the rows.
+          // The Navigator (Script Structure) lives under the sidebar's "Scenes" rail item — select it once so the
+          // scene rows mount, then keep polling for them.
           if (!openedStructure) {
             openedStructure = true;
-            document.querySelector<HTMLElement>('[data-testid="structure-toggle"]')?.click();
+            document.querySelector<HTMLElement>('[data-testid="rail-scenes"]')?.click();
           }
           return false;
         }

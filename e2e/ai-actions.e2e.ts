@@ -43,6 +43,7 @@ test("character: generate a skeleton from a description, asks for consent once, 
   await login(page);
   await createDoc(page, "Skeleton AI");
   await seedScene(page);
+  await page.getByTestId("rail-character").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   await page.locator('[data-testid="catalog-kind-group"][data-kind="character"]').getByText("QUINN", { exact: true }).click();
 
@@ -76,6 +77,7 @@ test("character: polish dialogue with the skeleton, review the diff, apply", asy
   await login(page);
   await createDoc(page, "Dialogue AI");
   await seedScene(page);
+  await page.getByTestId("rail-character").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   await page.locator('[data-testid="catalog-kind-group"][data-kind="character"]').getByText("QUINN", { exact: true }).click();
 
@@ -118,6 +120,7 @@ test("scene: polish with the characters' skeletons, compare, replace", async ({ 
   await login(page);
   await createDoc(page, "Scene AI");
   await seedScene(page);
+  await page.getByTestId("rail-character").click();
   await page.getByRole("button", { name: "Refresh" }).click();
   await expect(page.locator('[data-testid="catalog-kind-group"][data-kind="character"]').getByText("QUINN", { exact: true })).toBeVisible();
 

@@ -377,6 +377,7 @@ function Editor({ documentId }: { documentId: string }) {
                 selectedStageId={selectedStageId}
                 onSelectEntity={selectEntity}
                 onJumpToScene={jumpTo}
+                onShowScript={showScript}
                 selectedStoryboardSceneId={selectedStoryboardSceneId}
                 onSelectStoryboard={sceneId => { setSelectedEntityId(null); setSelectedStageId(null); setSelectedStoryboardSceneId(sceneId); }}
               />
