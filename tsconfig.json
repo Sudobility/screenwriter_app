@@ -31,8 +31,8 @@
       "zustand": ["./node_modules/zustand"],
       "zustand/*": ["./node_modules/zustand/*"],
       "@tanstack/react-query": ["./node_modules/@tanstack/react-query"],
-      "@sudobility/subscription-components": ["./src/stubs/subscription-components.ts"],
-      "@sudobility/devops-components": ["./src/stubs/devops-components.ts"],
+      "@sudobility/components/subscription": ["./src/stubs/subscription-components.ts"],
+      "@sudobility/components/devops": ["./src/stubs/devops-components.ts"],
       "@sudobility/subscription_lib": ["./src/stubs/subscription_lib.ts"]
     }
   },

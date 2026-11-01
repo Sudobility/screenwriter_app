@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "private": true,
   "type": "module",
   "description": "Fadewright web app (Vite + React): dev login, dashboard, script editor, snapshots",
@@ -24,15 +24,14 @@
   "dependencies": {
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
-    "@sudobility/auth-components": "^1.0.12",
     "@sudobility/auth_lib": "^0.0.121",
-    "@sudobility/building_blocks": "^0.0.344",
-    "@sudobility/components": "^5.3.47",
+    "@sudobility/building_blocks": "^0.0.346",
+    "@sudobility/components": "^5.3.50",
     "@sudobility/consumables_client": "^0.0.38",
     "@sudobility/consumables_pages": "^0.0.70",
     "@sudobility/design": "^1.1.66",
     "@sudobility/di": "^1.5.82",
-    "@sudobility/di_web": "^0.1.265",
+    "@sudobility/di_web": "^0.1.267",
     "@sudobility/entity_client": "^0.0.57",
     "@sudobility/screenwriter_client": "^0.1.20",
     "@sudobility/screenwriter_lib": "^0.1.19",
@@ -76,5 +75,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Sudobility/screenwriter_app.git"
+  },
+  "peerDependencies": {
+    "@sudobility/components": "^5.3.50"
   }
 }

@@ -1,4 +1,4 @@
-// Stub for @sudobility/subscription-components - not used by this app.
+// Stub for @sudobility/components/subscription - not used by this app.
 import React from "react";
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

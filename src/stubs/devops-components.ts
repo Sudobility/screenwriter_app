@@ -1,4 +1,4 @@
-// Stub for @sudobility/devops-components - not used by this app (the "sudobility stubs system" pattern, see
+// Stub for @sudobility/components/devops - not used by this app (the "sudobility stubs system" pattern, see
 // ~/projects/music_app's src/stubs/ and vite.config.ts for the precedent this follows).
 import React from "react";
 

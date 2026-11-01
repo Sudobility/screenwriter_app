@@ -1,12 +1,12 @@
 import type { AuthActionProps } from "@sudobility/building_blocks";
-import { Avatar } from "@sudobility/auth-components";
+import { Avatar } from "@sudobility/components/auth";
 import { Button, Dropdown } from "@sudobility/components";
 import { useAuth } from "../../app/AuthContext";
 
 /**
  * Fed to `building_blocks`' topbar as its `AuthActionComponent` — that component is injected as a prop rather
  * than hard-imported so `building_blocks` has no hard dependency on any specific auth provider (its own doc
- * comment). This app has its own auth context (not `@sudobility/auth-components`' own Firebase-config-driven
+ * comment). This app has its own auth context (not `@sudobility/components/auth`' own Firebase-config-driven
  * `AuthProvider`), so this adapter bridges the two, matching music_app's own `AuthActionAdapter.tsx`: reads this
  * app's `useAuth()`, renders `auth-components`' presentational `Avatar` (a `user` prop, no context needed) inside
  * `components`' `Dropdown`.
