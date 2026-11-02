@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "private": true,
   "type": "module",
   "description": "Fadewright web app (Vite + React): dev login, dashboard, script editor, snapshots",
@@ -24,20 +24,20 @@
   "dependencies": {
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
-    "@sudobility/auth_lib": "^0.0.122",
-    "@sudobility/building_blocks": "^0.0.352",
-    "@sudobility/components": "^5.3.53",
-    "@sudobility/consumables_client": "^0.0.39",
-    "@sudobility/consumables_pages": "^0.0.71",
-    "@sudobility/design": "^1.1.66",
-    "@sudobility/di": "^1.5.83",
-    "@sudobility/di_web": "^0.1.270",
-    "@sudobility/entity_client": "^0.0.57",
-    "@sudobility/screenwriter_client": "^0.1.20",
-    "@sudobility/screenwriter_lib": "^0.1.19",
-    "@sudobility/screenwriter_types": "^0.1.15",
-    "@sudobility/seo_lib": "^0.0.49",
-    "@sudobility/types": "^1.9.76",
+    "@sudobility/auth_lib": "^0.0.123",
+    "@sudobility/building_blocks": "^0.0.353",
+    "@sudobility/components": "^5.3.54",
+    "@sudobility/consumables_client": "^0.0.40",
+    "@sudobility/consumables_pages": "^0.0.72",
+    "@sudobility/design": "^1.1.68",
+    "@sudobility/di": "^1.5.84",
+    "@sudobility/di_web": "^0.1.271",
+    "@sudobility/entity_client": "^0.0.58",
+    "@sudobility/screenwriter_client": "^0.1.21",
+    "@sudobility/screenwriter_lib": "^0.1.20",
+    "@sudobility/screenwriter_types": "^0.1.16",
+    "@sudobility/seo_lib": "^0.0.51",
+    "@sudobility/types": "^1.9.78",
     "@sudobility/writing_core": "^0.1.6",
     "@sudobility/writing_ui": "^0.1.12",
     "@tanstack/react-query": "~5.104.5",
@@ -77,6 +77,6 @@
     "url": "https://github.com/Sudobility/screenwriter_app.git"
   },
   "peerDependencies": {
-    "@sudobility/components": "^5.3.53"
+    "@sudobility/components": "^5.3.54"
   }
 }
