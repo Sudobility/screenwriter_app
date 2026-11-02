@@ -2,7 +2,7 @@ import { configureTheme } from "@sudobility/design";
 import { generateThemeCSS, retroTheme } from "@sudobility/design/themes";
 import { createFetchNetworkClient } from "@sudobility/screenwriter_client";
 import { ConsumablesApiClient, initializeConsumables } from "@sudobility/consumables_client";
-import { configureConsumablesWebAdapter, createConsumablesWebAdapter } from "@sudobility/consumables_client/adapter/web";
+import { configureConsumablesWebAdapter, createConsumablesWebAdapter } from "@sudobility/consumables_pages";
 import type { NetworkClient, NetworkRequestOptions, NetworkResponse } from "@sudobility/types";
 import {
   createScreenwriter,

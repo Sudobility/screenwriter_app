@@ -34,12 +34,7 @@ import {
   useCancelInvitation,
   queryKeys,
 } from "@sudobility/screenwriter_client";
-import {
-  refreshConsumablesBalance,
-  useBalance,
-  useConsumableProducts,
-  usePurchaseCredits,
-} from "@sudobility/consumables_client";
+import { refreshConsumablesBalance } from "@sudobility/consumables_client";
 import {
   CreditStorePage,
   CreditHistoryPage,
@@ -48,10 +43,11 @@ import {
 } from "@sudobility/consumables_pages";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAuth } from "../app/AuthContext";
-import { useSignIn } from "../app/SignInContext";
-import { REVENUECAT_API_KEY, SHOW_ENTITIES } from "../config";
+import { SHOW_ENTITIES } from "../config";
 import { ProjectList, ProjectView } from "./DashboardPage";
 import { KeysPage } from "./KeysPage";
+import { useCreditStore } from "../features/credits/useCreditStore";
+import { CreditBadge } from "../features/credits/CreditBadge";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { useSetPageConfig } from "../hooks/usePageConfig";
 import { useLang } from "../hooks/useLang";
@@ -250,11 +246,7 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
       )}
     />
   ) : section === "credits" ? (
-    <CreditStore
-      entityId={entityId}
-      userId={user?.uid ?? ""}
-      onRedeem={() => choose("redeem")}
-    />
+    <CreditStore />
   ) : section === "history" ? (
     <CreditHistory onPurchase={() => choose("credits")} />
   ) : section === "redeem" ? (
@@ -606,60 +598,36 @@ function InvitationsView({
     </main>
   );
 }
-function CreditStore({
-  entityId,
-  userId,
-  onRedeem,
-}: {
-  entityId: string;
-  userId: string;
-  onRedeem(): void;
-}) {
-  const { t } = useTranslation();
-  const { openSignIn } = useSignIn();
-  const { consumablesApiClient } = getServices();
-  const balanceState = useBalance();
-  const productState = useConsumableProducts("");
-  const purchaseState = usePurchaseCredits();
-  async function purchase(packageId: string) {
-    const selected = productState.packages.find(pkg => pkg.packageId === packageId);
-    if (!selected?.offeringId) throw new Error('This credit package is no longer available.');
-    await purchaseState.purchase(selected.storePackageId ?? selected.packageId, selected.offeringId);
-  }
-  return <CreditStorePage
-    isAuthenticated={Boolean(userId)}
-    balance={balanceState.balance}
-    packages={productState.packages}
-    isLoading={balanceState.isLoading || productState.isLoading}
-    isPurchasing={purchaseState.isPurchasing}
-    error={purchaseState.error?.message ?? balanceState.error?.message ?? productState.error?.message ?? null}
-    onPurchase={purchase}
-    onLoginClick={() => openSignIn()}
-    labels={{
-      title: '',
-      currentBalanceLabel: 'Your balance',
-      creditsUnit: 'credits',
-      purchaseButton: 'Buy',
-      purchasingButton: 'Purchasing…',
-      noProducts: REVENUECAT_API_KEY ? 'No RevenueCat offerings are available.' : 'Set VITE_REVENUECAT_API_KEY to show purchases.',
-      errorTitle: 'Credit store error',
-      loginRequired: 'Sign in to purchase credits.',
-    }}
-    formatters={{ formatCredits: value => value.toLocaleString(), getPackageDescription: () => 'Credits for AI writing.' }}
-  />;
+function CreditStore() {
+  // Data, copy and callbacks come from the shared hook, so the store page and
+  // the paywall modal cannot drift apart. The dashboard section supplies its
+  // own heading, so the store's own title is suppressed.
+  const props = useCreditStore();
+  return <CreditStorePage {...props} labels={{ ...props.labels, title: "" }} />;
 }
 
 function CreditHistory({ onPurchase }: { onPurchase(): void }) {
+  const { t } = useTranslation();
   const formatDate = (value: string) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
   };
+  const sourceLabels: Record<string, string> = {
+    web: t("history.sourceWeb", "Web"),
+    apple: t("history.sourceApple", "Apple"),
+    google: t("history.sourceGoogle", "Google"),
+    free: t("history.sourceFree", "Free"),
+  };
   return <main className="mx-auto max-w-4xl space-y-5">
-    <h1 className="flex items-center text-2xl font-semibold">Credit history<button className={`${primary} ml-auto`} onClick={onPurchase}>Purchase credits</button></h1>
+    <h1 className="flex items-center gap-3 text-2xl font-semibold">
+      {t("credits.historyTitle", "Credit history")}
+      <CreditBadge />
+      <button className={`${primary} ml-auto`} onClick={onPurchase}>{t("credits.purchaseCredits", "Purchase credits")}</button>
+    </h1>
     <CreditHistoryPage
-      purchaseLabels={{ title: 'Purchases', columnDate: 'Date', columnCredits: 'Credits', columnSource: 'Source', columnProduct: 'Product', columnAmount: 'Amount', noRecords: 'No purchases yet.', loadMore: 'Load more' }}
-      purchaseFormatters={{ formatDate, formatAmount: (cents, currency) => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100), formatSource: source => source }}
-      usageLabels={{ title: 'Usage', columnDate: 'Date', columnFilename: 'Activity', columnCredits: 'Credits', noRecords: 'No usage yet.', loadMore: 'Load more' }}
+      purchaseLabels={{ title: t("history.purchasesTitle", "Purchases"), columnDate: t("history.date", "Date"), columnCredits: t("credits.title", "Credits"), columnSource: t("history.source", "Source"), columnProduct: t("history.package", "Product"), columnAmount: t("history.amount", "Amount"), noRecords: t("history.noPurchases", "No purchases yet."), loadMore: t("history.loadMore", "Load more") }}
+      purchaseFormatters={{ formatDate, formatAmount: (cents, currency) => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100), formatSource: source => sourceLabels[source] ?? source }}
+      usageLabels={{ title: t("history.usageTitle", "Usage"), columnDate: t("history.date", "Date"), columnFilename: t("history.generation", "Activity"), columnCredits: t("credits.title", "Credits"), noRecords: t("history.noUsage", "No usage yet."), loadMore: t("history.loadMore", "Load more") }}
       usageFormatters={{ formatDate }}
     />
   </main>;

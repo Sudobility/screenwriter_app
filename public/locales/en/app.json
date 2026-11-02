@@ -1,6 +1,7 @@
 {
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "closeDialog": "Close"
   },
   "nav": {
     "docs": "Docs",
@@ -335,5 +336,39 @@
         "websiteLabel": "Website:"
       }
     }
+  },
+  "credits": {
+    "title": "Credits",
+    "balance": "Your balance",
+    "unit": "credits",
+    "buy": "Buy",
+    "buying": "Purchasing…",
+    "noPackages": "No credit packages are available right now.",
+    "noPackagesNoKey": "Set VITE_REVENUECAT_API_KEY to show purchases.",
+    "errorTitle": "Credit store error",
+    "loginRequired": "Sign in to purchase credits.",
+    "loginButton": "Sign in",
+    "packageDescription": "Credits for AI writing.",
+    "historyTitle": "Credit history",
+    "purchaseCredits": "Purchase credits",
+    "remaining": "{{count}} credits",
+    "outOfCreditsTitle": "Out of credits",
+    "outOfCreditsBody": "You need more credits to run this. Nothing was charged."
+  },
+  "history": {
+    "date": "Date",
+    "source": "Source",
+    "package": "Product",
+    "amount": "Amount",
+    "purchasesTitle": "Purchases",
+    "usageTitle": "Usage",
+    "generation": "Activity",
+    "noPurchases": "No purchases yet.",
+    "noUsage": "No usage yet.",
+    "loadMore": "Load more",
+    "sourceWeb": "Web",
+    "sourceApple": "Apple",
+    "sourceGoogle": "Google",
+    "sourceFree": "Free"
   }
 }

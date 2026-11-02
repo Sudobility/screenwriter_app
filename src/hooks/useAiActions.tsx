@@ -9,6 +9,7 @@ import {
 } from "@sudobility/screenwriter_client";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import type { AiActionResponse } from "@sudobility/screenwriter_types";
+import { useCreditPaywall } from "../features/credits/CreditPaywall";
 
 const MESSAGES: Record<string, string> = {
   INSUFFICIENT_CREDITS: "You don't have enough credits for this. Nothing was charged.",
@@ -59,6 +60,7 @@ export function useAiActions(): AiActions {
   const consent = useAiConsent();
   const accept = useAcceptAiConsent();
   const balance = useCreditsBalance();
+  const { openPaywall } = useCreditPaywall();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [needsConsent, setNeedsConsent] = useState(false);
@@ -85,6 +87,10 @@ export function useAiActions(): AiActions {
               setNeedsConsent(true);
               return;
             }
+            // The one refusal with an obvious remedy: open the store to buy
+            // more, rather than only reporting it. The error is still set so
+            // the calling surface can show its message too.
+            if (err.code === "INSUFFICIENT_CREDITS") openPaywall();
             setError(err);
             resolve(null);
           } finally {
@@ -98,7 +104,7 @@ export function useAiActions(): AiActions {
         }
         void go();
       }),
-    [sw, consented, balance]
+    [sw, consented, balance, openPaywall]
   );
 
   const acceptConsent = useCallback(async () => {

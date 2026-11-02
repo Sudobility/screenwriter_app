@@ -10,6 +10,7 @@ import { seoHeadConfig } from "./seoHead";
 import { AuthProvider } from "./app/AuthContext";
 import { ErrorBoundary } from "./app/ErrorBoundary";
 import { SignInProvider } from "./app/SignInContext";
+import { CreditPaywallProvider } from "./features/credits/CreditPaywall";
 import { createServices } from "./services";
 import "./i18n";
 import "./index.css";
@@ -27,14 +28,18 @@ createRoot(document.getElementById("root")!).render(
             <AuthProvider>
               {/* The one sign-in modal, opened over whatever page needs an account (see App.tsx / CLAUDE.md). */}
               <SignInProvider>
-                <BrowserRouter>
-                  {/* One root-level SEOHead emits the per-route <link rel="canonical"> + meta that
-                      scripts/prerender.mjs waits for; pages may still render their own SEOHead to override. */}
-                  <SEOHeadProvider config={seoHeadConfig}>
-                    <SEOHead title={seoHeadConfig.appName} description={seoHeadConfig.appName} />
-                    <App />
-                  </SEOHeadProvider>
-                </BrowserRouter>
+                {/* The one out-of-credits paywall, opened by useAiActions when a
+                    job is refused for want of credits (see features/credits). */}
+                <CreditPaywallProvider>
+                  <BrowserRouter>
+                    {/* One root-level SEOHead emits the per-route <link rel="canonical"> + meta that
+                        scripts/prerender.mjs waits for; pages may still render their own SEOHead to override. */}
+                    <SEOHeadProvider config={seoHeadConfig}>
+                      <SEOHead title={seoHeadConfig.appName} description={seoHeadConfig.appName} />
+                      <App />
+                    </SEOHeadProvider>
+                  </BrowserRouter>
+                </CreditPaywallProvider>
               </SignInProvider>
             </AuthProvider>
           </ScreenwriterProvider>
