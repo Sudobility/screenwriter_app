@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "private": true,
   "type": "module",
   "description": "Fadewright web app (Vite + React): dev login, dashboard, script editor, snapshots",
@@ -25,7 +25,7 @@
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
     "@sudobility/auth_lib": "^0.0.127",
-    "@sudobility/building_blocks": "^0.0.362",
+    "@sudobility/building_blocks": "^0.0.363",
     "@sudobility/components": "^5.3.60",
     "@sudobility/consumables_client": "^0.0.40",
     "@sudobility/consumables_pages": "^0.0.72",
