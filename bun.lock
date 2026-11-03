@@ -7,14 +7,14 @@
       "dependencies": {
         "@heroicons/react": "~2.2.0",
         "@revenuecat/purchases-js": "~1.73.1",
-        "@sudobility/auth_lib": "^0.0.126",
-        "@sudobility/building_blocks": "^0.0.360",
-        "@sudobility/components": "^5.3.58",
+        "@sudobility/auth_lib": "^0.0.127",
+        "@sudobility/building_blocks": "^0.0.362",
+        "@sudobility/components": "^5.3.60",
         "@sudobility/consumables_client": "^0.0.40",
         "@sudobility/consumables_pages": "^0.0.72",
         "@sudobility/design": "^1.1.68",
         "@sudobility/di": "^1.5.85",
-        "@sudobility/di_web": "^0.1.275",
+        "@sudobility/di_web": "^0.1.277",
         "@sudobility/entity_client": "^0.0.58",
         "@sudobility/screenwriter_client": "^0.1.21",
         "@sudobility/screenwriter_lib": "^0.1.20",
@@ -56,7 +56,7 @@
         "vitest": "~4.1.12",
       },
       "peerDependencies": {
-        "@sudobility/components": "^5.3.58",
+        "@sudobility/components": "^5.3.60",
       },
     },
   },
@@ -491,11 +491,11 @@
 
     "@standard-schema/utils": ["@standard-schema/utils@0.3.0", "", {}, "sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g=="],
 
-    "@sudobility/auth_lib": ["@sudobility/auth_lib@0.0.126", "https://npm.pkg.github.com/download/@sudobility/auth_lib/0.0.126/600e91372da6e294f978f7072d9161b557ad1bbd", { "peerDependencies": { "@react-native-firebase/app": ">=18.0.0", "@react-native-firebase/auth": ">=18.0.0", "@sudobility/di": "^1.5.85", "@sudobility/types": "^1.9.78", "@tanstack/react-query": "^5.0.0", "firebase": "^12.7.0", "react": "^18.0.0 || ^19.0.0" } }, "sha512-4xHYmdAGrhEpC6S8vOWrVoj6WXI0Z5ZNOMs+LhB04+d3C6VTiNspWVPjFUP4HqAxiRt0NCy4CxL40wKYjpLa8g=="],
+    "@sudobility/auth_lib": ["@sudobility/auth_lib@0.0.127", "https://npm.pkg.github.com/download/@sudobility/auth_lib/0.0.127/6413981227340e995c0e009fa61a92133f8a5088", { "peerDependencies": { "@react-native-firebase/app": ">=18.0.0", "@react-native-firebase/auth": ">=18.0.0", "@sudobility/di": "^1.5.85", "@sudobility/types": "^1.9.78", "@tanstack/react-query": "^5.0.0", "firebase": "^12.7.0", "react": "^18.0.0 || ^19.0.0" } }, "sha512-nDo0WnBNew64dOgZGjakAVvl+/im7DxjZ8M9d7HqAj1lTdt9u85zvDwCfNnRja9AG/DZ8bonvWKEs7z4H6efUQ=="],
 
-    "@sudobility/building_blocks": ["@sudobility/building_blocks@0.0.360", "https://npm.pkg.github.com/download/@sudobility/building_blocks/0.0.360/e51215ae2abe73606e06a44a1770bd753f729e98", { "peerDependencies": { "@heroicons/react": "^2.0.0", "@sudobility/components": "^5.3.58", "@sudobility/design": "^1.1.68", "@tanstack/react-query": "^5.0.0", "class-variance-authority": "^0.7.0", "clsx": "^2.0.0", "firebase": "^11.0.0 || ^12.0.0", "i18next": "^23.0.0 || ^24.0.0 || ^25.0.0", "i18next-browser-languagedetector": "^8.0.0", "i18next-http-backend": "^3.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-helmet-async": "^2.0.0", "react-i18next": "^14.0.0 || ^15.0.0 || ^16.0.0", "react-router-dom": "^6.0.0 || ^7.0.0", "tailwind-merge": "^2.0.0 || ^3.0.0" } }, "sha512-4CwLI1Rti3Dg70bnA0tQgOXuM1/v46mUTqiCIcHc0zackbkq948/U+Fx8mKW1qiGD+DXBAM+aAPSKJSv/OErPg=="],
+    "@sudobility/building_blocks": ["@sudobility/building_blocks@0.0.362", "https://npm.pkg.github.com/download/@sudobility/building_blocks/0.0.362/bdf0fcb8534c98139fb4a4e02dc2cb4bfa4f0001", { "peerDependencies": { "@heroicons/react": "^2.0.0", "@sudobility/components": "^5.3.60", "@sudobility/design": "^1.1.68", "@tanstack/react-query": "^5.0.0", "class-variance-authority": "^0.7.0", "clsx": "^2.0.0", "firebase": "^11.0.0 || ^12.0.0", "i18next": "^23.0.0 || ^24.0.0 || ^25.0.0", "i18next-browser-languagedetector": "^8.0.0", "i18next-http-backend": "^3.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-helmet-async": "^2.0.0", "react-i18next": "^14.0.0 || ^15.0.0 || ^16.0.0", "react-router-dom": "^6.0.0 || ^7.0.0", "tailwind-merge": "^2.0.0 || ^3.0.0" } }, "sha512-umSV+BKGRVali9ny/B5VxcN9/fxUjZH5KnLrYrc+X0Y4iWI4LB95K+JdixR8SeMMsFbK6OuskiVhg6EnWJ6MqQ=="],
 
-    "@sudobility/components": ["@sudobility/components@5.3.58", "https://npm.pkg.github.com/download/@sudobility/components/5.3.58/7133d3a60067f77268d61dc7c9f2a5c70e32fa77", { "optionalDependencies": { "@rollup/rollup-linux-x64-gnu": "4.52.5", "@rollup/rollup-linux-x64-musl": "4.52.5" }, "peerDependencies": { "@heroicons/react": ">=2.0.0", "@radix-ui/react-alert-dialog": ">=1.0.0", "@radix-ui/react-dialog": ">=1.0.0", "@radix-ui/react-label": ">=2.0.0", "@radix-ui/react-select": ">=2.0.0", "@radix-ui/react-slot": ">=1.0.0", "@radix-ui/react-switch": ">=1.0.0", "@radix-ui/react-tabs": ">=1.0.0", "@revenuecat/purchases-js": "^1.0.0", "@sudobility/design": "^1.1.68", "@sudobility/di": "^1.5.85", "@sudobility/subscription_lib": "^0.0.63", "@sudobility/types": "^1.9.78", "class-variance-authority": ">=0.7.0", "clsx": ">=2.0.0", "firebase": "^12.0.0", "i18next": ">=23.0.0", "react": ">=18.0.0", "react-dom": ">=18.0.0", "react-i18next": ">=14.0.0", "react-router-dom": ">=6.0.0", "recharts": "^3.0.0", "tailwind-merge": ">=2.0.0", "web-vitals": ">=3.0.0" } }, "sha512-Crh1QzOyz4UHZ7MhUD+CChyMMldb/sSdoRLdmvJOlbgkZoZ6mMhv8Vsgp1h0bvMqXjCMPoVVYP9DQz3c4vE0IQ=="],
+    "@sudobility/components": ["@sudobility/components@5.3.60", "https://npm.pkg.github.com/download/@sudobility/components/5.3.60/fc8a68f9b9950555a9ffe19181b5a4fadd332635", { "optionalDependencies": { "@rollup/rollup-linux-x64-gnu": "4.52.5", "@rollup/rollup-linux-x64-musl": "4.52.5" }, "peerDependencies": { "@heroicons/react": ">=2.0.0", "@radix-ui/react-alert-dialog": ">=1.0.0", "@radix-ui/react-dialog": ">=1.0.0", "@radix-ui/react-label": ">=2.0.0", "@radix-ui/react-select": ">=2.0.0", "@radix-ui/react-slot": ">=1.0.0", "@radix-ui/react-switch": ">=1.0.0", "@radix-ui/react-tabs": ">=1.0.0", "@revenuecat/purchases-js": "^1.0.0", "@sudobility/design": "^1.1.68", "@sudobility/di": "^1.5.85", "@sudobility/subscription_lib": "^0.0.64", "@sudobility/types": "^1.9.78", "class-variance-authority": ">=0.7.0", "clsx": ">=2.0.0", "firebase": "^12.0.0", "i18next": ">=23.0.0", "react": ">=18.0.0", "react-dom": ">=18.0.0", "react-i18next": ">=14.0.0", "react-router-dom": ">=6.0.0", "recharts": "^3.0.0", "tailwind-merge": ">=2.0.0", "web-vitals": ">=3.0.0" } }, "sha512-16PT4uu0IvoWvFHu7O8nzsMd3cII8yY9v1RF8iK6kx4oDJib1Pe6G2nojxHrrbomuQcr6kNe03MFqiJnbPcxkQ=="],
 
     "@sudobility/consumables_client": ["@sudobility/consumables_client@0.0.40", "https://npm.pkg.github.com/download/@sudobility/consumables_client/0.0.40/1a9cd76dce31592fc240f061c3f2cd97a86281af", { "peerDependencies": { "@sudobility/types": "^1.9.78", "react": "^18.0.0 || ^19.0.0" } }, "sha512-Vdgha4Z779o3AVqtK0RruL8Dh3NHFmcX2XeiMGD/0Zaje/BIB4pJXH6zQLHYRECkQ0OBKDRg3KO6mp6gGl3BDQ=="],
 
@@ -505,7 +505,7 @@
 
     "@sudobility/di": ["@sudobility/di@1.5.85", "https://npm.pkg.github.com/download/@sudobility/di/1.5.85/5914303c5376ee0a158b08bdff2955fe3392b4c0", { "peerDependencies": { "@notifee/react-native": ">=7.0.0", "@react-native-async-storage/async-storage": ">=1.19.0", "@react-native-community/netinfo": ">=9.0.0", "@react-native-firebase/analytics": ">=18.0.0", "@react-native-firebase/app": ">=18.0.0", "@react-native-firebase/messaging": ">=18.0.0", "@sudobility/types": "^1.9.78", "firebase": ">=11.0.0", "react": ">=18.0.0", "react-native": ">=0.70.0" } }, "sha512-SsRL5t8G2/Kck8bnZUz1H1XIKFDBeM3dK1w0UoaBZqHnxTHrSbVectxQYgF6zskzlPeA6GlKHYd8tB7YB0MFxA=="],
 
-    "@sudobility/di_web": ["@sudobility/di_web@0.1.275", "https://npm.pkg.github.com/download/@sudobility/di_web/0.1.275/bd9f4ac33fa5cb847671b4afa2177dc5021955fc", { "peerDependencies": { "@sudobility/components": "^5.3.58", "@sudobility/di": "^1.5.85", "@sudobility/types": "^1.9.78", "react": "^18.0.0 || ^19.0.0", "vite": "^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-VW1zkCB8x5WNDyQqU9D7W/P0ftjf1AA6CNchmHtMRpf/ObN8K3/51bqvXtSQAwrcdE5cqOfROJ4U+brIQYZPnA=="],
+    "@sudobility/di_web": ["@sudobility/di_web@0.1.277", "https://npm.pkg.github.com/download/@sudobility/di_web/0.1.277/412d065823e24bd94ca773a2c5ca8770555285a6", { "peerDependencies": { "@sudobility/components": "^5.3.60", "@sudobility/di": "^1.5.85", "@sudobility/types": "^1.9.78", "react": "^18.0.0 || ^19.0.0", "vite": "^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-X+rQL8nkIFSNhTrCRCb2Mz0IBb0ItHczVk3d34q5kbKzc9Nm9S3pUYz/hWD3SEkxynfOCNEUDZtYqaibouBebA=="],
 
     "@sudobility/entity_client": ["@sudobility/entity_client@0.0.58", "https://npm.pkg.github.com/download/@sudobility/entity_client/0.0.58/65499b8356010d6a5a657ef9f97f3f85fe00a9c8", { "peerDependencies": { "@sudobility/types": "^1.9.78", "@tanstack/react-query": "^5.0.0", "react": "^18.0.0 || ^19.0.0" } }, "sha512-7QSCJHv0DSZQieKMcP6V3SYYT5S6xtHwp94L05d9QoVBsihi4JFNpOBY94IA0gh9vtEAZTwHHVsXWGNDXGf91A=="],
 

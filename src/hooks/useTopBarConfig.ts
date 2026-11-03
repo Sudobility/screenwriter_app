@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { AuthMenuItem, TopBarConfig } from "@sudobility/building_blocks";
-import { AuthActionAdapter } from "../components/layout/AuthActionAdapter";
+import { AuthAction } from "../components/auth/AuthAction";
 import { LinkWrapper } from "../components/layout/LinkWrapper";
 import { APP_NAME } from "../config";
 import { useLang } from "./useLang";
@@ -44,7 +44,7 @@ export function useTopBarConfig(): TopBarConfig {
       authenticatedMenuItems,
       hideLanguageSelector: true,
       LinkComponent: LinkWrapper,
-      AuthActionComponent: AuthActionAdapter,
+      AuthActionComponent: AuthAction,
       onLoginClick: () => navigate(`/${lang}/login`),
       sticky: true,
     }),
