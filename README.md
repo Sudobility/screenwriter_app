@@ -2,7 +2,7 @@
 
 ViaInk web app: sign in (Firebase email/password or Google; dev login with `VITE_DEV_AUTH=1`), manage projects and documents, write in the script editor, save snapshots, go back to one or fork it into a new document.
 
-Private, local-packages phase. It expects its sibling repos next to it in `~/projects`: `screenwriter_api`, `screenwriter_lib`, `screenwriter_client`, `screenwriter_types`, `writing_ui`, `writing_core` (each with `bun install` done).
+Private repo. The frontend `@sudobility/*` libraries (`screenwriter_lib`/`client`/`types`, `writing_ui`, `writing_core`) are published packages (installed from GitHub Packages — see `.npmrc`); when their sibling repos are checked out next to this one in `~/projects`, `vite.config.ts`/`tsconfig.json` alias the imports to the siblings' live source instead, otherwise the build falls back to the published package. The backend, `screenwriter_api`, has no npm fallback — you need that sibling repo checked out and running to use the app.
 
 ## Run it
 
