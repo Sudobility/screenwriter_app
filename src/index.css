@@ -24,16 +24,15 @@ body { background: #f6f6f4; color: #1a1a1a; }
 
 /* A Catalog item printed on its own (util/print-item.ts): a plain document, never on screen. */
 .print-doc { display: none; }
-@page doc { size: letter; margin: 1in; }
+/* The @page rule (letter, 1in margins) and hiding the app in print are emitted by
+   printDetached from @sudobility/printing (util/print-item.ts); index.css only
+   styles the printed document itself. */
 @media print {
-  body.printing-doc > #root,
-  body.printing-doc > .print-sheets { display: none !important; }
   /* The font family and size are the script's own, set on the element (util/print-item.ts `scriptFont`): every
      size below is relative to it, and nothing here names a font. One size throughout, as in a script: a title is
      bold and in capitals, not bigger. */
   .print-doc {
     display: block;
-    page: doc;
     line-height: 1.4;
     color: #000;
   }

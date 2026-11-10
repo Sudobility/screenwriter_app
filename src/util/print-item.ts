@@ -4,6 +4,8 @@ import { getOwnSkeleton, getStages, SKELETON_SECTIONS, stageLabel, type Skeleton
 import { kindLabel } from "./entity-kind-labels";
 import { isNote } from "./notes";
 import { getPlotMain, getSubplots, getSynopsis, getTagline, getTheme, isStoryEntity } from "./story-info";
+import { pageGeometry } from "@sudobility/printing_core";
+import { printDetached } from "@sudobility/printing";
 
 /**
  * Printing what the writer wrote in the Catalog (per an explicit user requirement: whatever is entered as a
@@ -161,17 +163,22 @@ export function renderPrintDoc(doc: PrintDoc, document_: Document = document): H
   return root;
 }
 
-/** Print a document on its own: it goes under <body>, the app is hidden in print, and it is taken away afterwards. */
+/**
+ * Print a document on its own: printDetached mounts it under <body>, hides the
+ * app in print, prints, and takes it away afterwards — settling on `afterprint`
+ * or the print media query leaving, so a PDF saved without a dialog is cleaned
+ * up too (the old afterprint-only handler leaked the node there).
+ *
+ * The `printing-doc` body class stays: EditorPage's print handler reads it to
+ * know this is a Catalog item, not the script, and so not also render the sheets.
+ */
 export function printDoc(doc: PrintDoc): void {
-  document.querySelectorAll(".print-doc").forEach(n => n.remove());
   const node = renderPrintDoc(doc);
-  document.body.append(node);
   document.body.classList.add("printing-doc");
-  const done = () => {
-    window.removeEventListener("afterprint", done);
-    node.remove();
-    document.body.classList.remove("printing-doc");
-  };
-  window.addEventListener("afterprint", done);
-  window.print();
+  void printDetached({
+    // Letter, 1in margins — the one place the printed document's page is set.
+    geometry: pageGeometry("letter", "portrait", 25.4),
+    mount: host => host.append(node),
+    hideSelector: "#root, .print-sheets",
+  }).finally(() => document.body.classList.remove("printing-doc"));
 }
