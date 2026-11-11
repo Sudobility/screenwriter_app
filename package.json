@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.43",
+  "version": "0.1.44",
   "private": true,
   "type": "module",
   "description": "ViaInk web app (Vite + React): sign-in, dashboard, screenplay editor, snapshots",
@@ -24,22 +24,22 @@
   "dependencies": {
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
-    "@sudobility/auth_lib": "^0.0.129",
-    "@sudobility/building_blocks": "^0.0.374",
-    "@sudobility/components": "^5.3.67",
-    "@sudobility/consumables_client": "^0.0.41",
-    "@sudobility/consumables_pages": "^0.0.75",
+    "@sudobility/auth_lib": "^0.0.130",
+    "@sudobility/building_blocks": "^0.0.375",
+    "@sudobility/components": "^5.3.68",
+    "@sudobility/consumables_client": "^0.0.42",
+    "@sudobility/consumables_pages": "^0.0.76",
     "@sudobility/design": "^1.1.71",
-    "@sudobility/di": "^1.5.86",
-    "@sudobility/di_web": "^0.1.284",
-    "@sudobility/entity_client": "^0.0.59",
+    "@sudobility/di": "^1.5.87",
+    "@sudobility/di_web": "^0.1.285",
+    "@sudobility/entity_client": "^0.0.60",
     "@sudobility/printing": "^0.1.0",
     "@sudobility/printing_core": "^0.1.0",
-    "@sudobility/screenwriter_client": "^0.1.22",
-    "@sudobility/screenwriter_lib": "^0.1.21",
-    "@sudobility/screenwriter_types": "^0.1.18",
+    "@sudobility/screenwriter_client": "^0.1.23",
+    "@sudobility/screenwriter_lib": "^0.1.22",
+    "@sudobility/screenwriter_types": "^0.1.19",
     "@sudobility/seo_lib": "^0.0.52",
-    "@sudobility/types": "^1.9.79",
+    "@sudobility/types": "^1.10.1",
     "@sudobility/writing_core": "^0.1.7",
     "@sudobility/writing_ui": "^0.1.14",
     "@tanstack/react-query": "~5.104.5",
@@ -79,6 +79,6 @@
     "url": "https://github.com/Sudobility/screenwriter_app.git"
   },
   "peerDependencies": {
-    "@sudobility/components": "^5.3.67"
+    "@sudobility/components": "^5.3.68"
   }
 }
