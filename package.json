@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.44",
+  "version": "0.1.45",
   "private": true,
   "type": "module",
   "description": "ViaInk web app (Vite + React): sign-in, dashboard, screenplay editor, snapshots",
@@ -25,13 +25,13 @@
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
     "@sudobility/auth_lib": "^0.0.130",
-    "@sudobility/building_blocks": "^0.0.375",
-    "@sudobility/components": "^5.3.68",
+    "@sudobility/building_blocks": "^0.0.376",
+    "@sudobility/components": "^5.3.69",
     "@sudobility/consumables_client": "^0.0.42",
     "@sudobility/consumables_pages": "^0.0.76",
     "@sudobility/design": "^1.1.71",
     "@sudobility/di": "^1.5.87",
-    "@sudobility/di_web": "^0.1.285",
+    "@sudobility/di_web": "^0.1.286",
     "@sudobility/entity_client": "^0.0.60",
     "@sudobility/printing": "^0.1.0",
     "@sudobility/printing_core": "^0.1.0",
@@ -79,6 +79,6 @@
     "url": "https://github.com/Sudobility/screenwriter_app.git"
   },
   "peerDependencies": {
-    "@sudobility/components": "^5.3.68"
+    "@sudobility/components": "^5.3.69"
   }
 }
