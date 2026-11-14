@@ -40,7 +40,21 @@ export default defineConfig({
       { find: /^@sudobility\/devops-components$/, replacement: stub("devops-components") },
       { find: /^@sudobility\/subscription_lib$/, replacement: stub("subscription_lib") },
     ],
-    dedupe: ["yjs", "lib0", "react", "react-dom", "@tanstack/react-query", "zustand"],
+    dedupe: [
+      "yjs",
+      "lib0",
+      "react",
+      "react-dom",
+      "@tanstack/react-query",
+      "zustand",
+      // building_blocks is bun-linked (a symlink) in local dev; without these
+      // its own imports resolve into the sibling's node_modules (a 2nd copy).
+      "@sudobility/building_blocks",
+      "@sudobility/components",
+      "@sudobility/di_web",
+      "@sudobility/di",
+      "@sudobility/types",
+    ],
   },
   build: {
     rollupOptions: {

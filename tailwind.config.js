@@ -10,7 +10,7 @@ export default {
     "./index.html",
     "./src/**/*.{ts,tsx}",
     "./node_modules/@sudobility/components/**/*.{js,jsx,ts,tsx}",
-    "./node_modules/@sudobility/building_blocks/**/*.{js,jsx,ts,tsx}",
+    "./node_modules/@sudobility/building_blocks/dist/**/*.{js,jsx}",
     "./node_modules/@sudobility/design/**/*.{js,jsx,ts,tsx}",
     "./node_modules/@sudobility/auth-components/**/*.{js,jsx,ts,tsx}",
   ],
