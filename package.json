@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.46",
+  "version": "0.1.47",
   "private": true,
   "type": "module",
   "description": "ViaInk web app (Vite + React): sign-in, dashboard, screenplay editor, snapshots",
@@ -24,24 +24,24 @@
   "dependencies": {
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
-    "@sudobility/auth_lib": "^0.0.130",
-    "@sudobility/building_blocks": "^0.0.378",
-    "@sudobility/components": "^5.3.69",
-    "@sudobility/consumables_client": "^0.0.42",
-    "@sudobility/consumables_pages": "^0.0.76",
-    "@sudobility/design": "^1.1.71",
-    "@sudobility/di": "^1.5.87",
-    "@sudobility/di_web": "^0.1.286",
-    "@sudobility/entity_client": "^0.0.60",
-    "@sudobility/printing": "^0.1.0",
-    "@sudobility/printing_core": "^0.1.0",
-    "@sudobility/screenwriter_client": "^0.1.23",
-    "@sudobility/screenwriter_lib": "^0.1.22",
-    "@sudobility/screenwriter_types": "^0.1.19",
-    "@sudobility/seo_lib": "^0.0.52",
-    "@sudobility/types": "^1.10.1",
-    "@sudobility/writing_core": "^0.1.7",
-    "@sudobility/writing_ui": "^0.1.14",
+    "@sudobility/auth_lib": "^0.0.131",
+    "@sudobility/building_blocks": "^0.0.379",
+    "@sudobility/components": "^5.3.70",
+    "@sudobility/consumables_client": "^0.0.43",
+    "@sudobility/consumables_pages": "^0.0.77",
+    "@sudobility/design": "^1.1.72",
+    "@sudobility/di": "^1.5.88",
+    "@sudobility/di_web": "^0.1.287",
+    "@sudobility/entity_client": "^0.0.61",
+    "@sudobility/printing": "^0.1.1",
+    "@sudobility/printing_core": "^0.1.1",
+    "@sudobility/screenwriter_client": "^0.1.24",
+    "@sudobility/screenwriter_lib": "^0.1.23",
+    "@sudobility/screenwriter_types": "^0.1.21",
+    "@sudobility/seo_lib": "^0.0.53",
+    "@sudobility/types": "^1.10.2",
+    "@sudobility/writing_core": "^0.1.8",
+    "@sudobility/writing_ui": "^0.1.16",
     "@tanstack/react-query": "~5.104.5",
     "class-variance-authority": "~0.7.1",
     "clsx": "~2.1.1",
@@ -79,6 +79,6 @@
     "url": "https://github.com/Sudobility/screenwriter_app.git"
   },
   "peerDependencies": {
-    "@sudobility/components": "^5.3.69"
+    "@sudobility/components": "^5.3.70"
   }
 }

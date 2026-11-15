@@ -74,7 +74,7 @@ if [ -f "$LOCAL_SCRIPT" ]; then
 else
     PUSH_SCRIPT=$(mktemp)
     trap "rm -f $PUSH_SCRIPT" EXIT
-    if ! curl -fsSL "https://raw.githubusercontent.com/johnqh/workflows/main/scripts/push_projects.sh" -o "$PUSH_SCRIPT"; then
+    if ! curl -fsSL "https://raw.githubusercontent.com/Sudobility/workflows/main/scripts/push_projects.sh" -o "$PUSH_SCRIPT"; then
         echo "Error: Failed to download push_projects.sh from GitHub"
         exit 1
     fi
