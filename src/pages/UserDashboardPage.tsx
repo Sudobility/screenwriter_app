@@ -83,7 +83,7 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
   const { user } = useAuth();
   const me = useMe();
   const workspaceQuery = useManagedEntities({ enabled: SHOW_ENTITIES });
-  const entities = workspaceQuery.data?.items ?? [];
+  const entities = workspaceQuery.data?.data ?? [];
   const screenwriter = useScreenwriter();
   const qc = useQueryClient();
   const [entityId, setEntityId] = useState(() =>
@@ -472,7 +472,7 @@ function MembersView({
       )}
       {notice && <p role="status">{notice}</p>}
       <ul className="divide-y divide-neutral-200 rounded border">
-        {members.data?.items.map((m) => (
+        {members.data?.data?.map((m) => (
           <li
             key={m.userId}
             className="flex flex-wrap items-center gap-3 px-4 py-3"
@@ -541,9 +541,9 @@ function InvitationsView({
       <h1 className="text-2xl font-semibold">Invitations</h1>
       <section>
         <h2 className="mb-2 text-lg font-medium">Workspace invitations</h2>
-        {workspace.data?.items.length ? (
+        {workspace.data?.data?.length ? (
           <ul className="divide-y rounded border">
-            {workspace.data.items.map((i) => (
+            {workspace.data.data.map((i) => (
               <li key={i.id} className="flex flex-wrap items-center gap-3 p-3">
                 <span className="flex-1">
                   {i.email} · {i.role} · {i.status}

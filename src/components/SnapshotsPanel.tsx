@@ -30,7 +30,7 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
     try {
       const [snaps, vers] = await Promise.all([session.listSnapshots({ includeAutomatic: true }), session.listVersions()]);
       setList(snaps);
-      setVersions(vers.items.filter(isVersionPoint));
+      setVersions((vers.data ?? []).filter(isVersionPoint));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
