@@ -35,7 +35,7 @@ export function ProjectStyleSettings({
   const selectedStyleId = (project.data as (typeof project.data & { visualStyleId?: string | null }) | undefined)?.visualStyleId ?? null;
   const group = groups.find((item) => item.id === groupId);
   const selectedStyle = groups.flatMap((item) => item.styles).find((item) => item.id === selectedStyleId);
-  const canEdit = ["owner", "admin", "writer"].includes(project.data?.role ?? "");
+  const canEdit = ["owner", "manager"].includes(project.data?.role ?? "");
 
   useEffect(() => {
     const controller = new AbortController();

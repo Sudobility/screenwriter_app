@@ -234,14 +234,14 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
   ) : section === "members" && SHOW_ENTITIES ? (
     <MembersView
       entityId={entityId}
-      canManage={["owner", "admin"].includes(
+      canManage={["owner", "manager"].includes(
         entities.find((w) => w.id === entityId)?.role ?? "",
       )}
     />
   ) : section === "invitations" && SHOW_ENTITIES ? (
     <InvitationsView
       entityId={entityId}
-      canManage={["owner", "admin"].includes(
+      canManage={["owner", "manager"].includes(
         entities.find((w) => w.id === entityId)?.role ?? "",
       )}
     />
@@ -394,8 +394,8 @@ function WorkspacesView({
           </li>
         ))}
       </ul>
-      {selected?.kind === "team" &&
-        ["owner", "admin"].includes(selected.role) && (
+      {selected?.kind === "organization" &&
+        ["owner", "manager"].includes(selected.role) && (
           <section className="rounded border p-5">
             <h2 className="text-lg font-medium">Workspace settings</h2>
             <form
@@ -442,7 +442,7 @@ function MembersView({
     try {
       await invite.mutateAsync({
         target: { type: "entity", id: entityId },
-        body: { email, role: "writer" },
+        body: { email, role: "member" },
       });
       setEmail("");
       setNotice("Invitation sent.");
@@ -487,7 +487,7 @@ function MembersView({
                   onValueChange={(role) =>
                     void updateRole.mutateAsync({
                       uid: m.userId,
-                      role: role as "admin" | "writer" | "commenter" | "viewer",
+                      role: role as "manager" | "member",
                     })
                   }
                 >
@@ -495,10 +495,8 @@ function MembersView({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="writer">Writer</SelectItem>
-                    <SelectItem value="commenter">Commenter</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
                   </SelectContent>
                 </Select>
                 <button
