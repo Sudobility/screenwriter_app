@@ -3,13 +3,21 @@ import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useAi, useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useAcceptAiConsent, useAiConsent } from "@sudobility/screenwriter_client";
-import type { AiNote, CoverageReport, SceneSummaryStatus, Suggestion } from "@sudobility/screenwriter_types";
+import { REVIEW_KINDS, type AiNote, type CoverageReport, type ReviewKind, type SceneSummaryStatus, type Suggestion } from "@sudobility/screenwriter_types";
 import { checkSceneReview } from "../util/review-scope";
 import { useModelTick } from "../util/use-model-tick";
 import { WordDiff as Diff } from "./WordDiff";
 import { GenerateScriptSection } from "./GenerateScriptSection";
 import { PolishSceneSection } from "./PolishSceneSection";
 import { SmartPasteSection } from "./SmartPasteSection";
+import { LoglineSynopsisSection } from "./LoglineSynopsisSection";
+import { TensionCurveSection } from "./TensionCurveSection";
+import { ScriptBreakdownSection } from "./ScriptBreakdownSection";
+import { RevisionSummarySection } from "./RevisionSummarySection";
+import { AssistantSection } from "./AssistantSection";
+import { AgentActSection } from "./AgentActSection";
+import { ToneSection } from "./ToneSection";
+import { AlternatesSection } from "./AlternatesSection";
 import { NoteFixes } from "./NoteFixes";
 
 const btn = "border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100 disabled:opacity-50";
@@ -225,6 +233,12 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
   const canReview = !sceneScope || (!!scene && sceneCheck.allowed);
   const startReview = () => void (sceneScope && scene ? ai.startReview(undefined, { sceneIds: [scene.id], storySoFar: true }) : ai.startReview());
 
+  // Focused reviews (character, pacing, visual, continuity, loose-end, …): write findings straight into
+  // the document as pending comments for the writer to triage in the Comments panel.
+  const [reviewKind, setReviewKind] = useState<ReviewKind>("character");
+  const [focusScene, setFocusScene] = useState(false);
+  const startFocused = () => void ai.startFocusedReview(reviewKind, focusScene && scene ? { sceneIds: [scene.id] } : undefined);
+
   const job = ai.job;
   const running = job?.status === "queued" || job?.status === "running";
   const activeTask = running ? job?.task : null;
@@ -347,6 +361,78 @@ export function AiPanel({ documentId, host, onJumpTo, onClose }: Props) {
             {activeTask === "coverage" && <Progress ai={ai} />}
             {job?.task === "coverage" && job.status === "cancelled" && <p className="text-xs text-neutral-500">Review cancelled.</p>}
             {ai.report && <ReportView report={ai.report} createdAt={ai.reportCreatedAt} host={host} onJumpTo={onJumpTo} />}
+          </section>
+
+          <section className="space-y-2" data-testid="ai-focused-review-section">
+            <h3 className="text-xs font-semibold uppercase text-neutral-500">Focused review</h3>
+            <p className="text-xs text-neutral-600">A targeted pass that files its findings as pending comments to triage in the Comments panel.</p>
+            <label className="flex flex-col text-xs text-neutral-500 gap-1">
+              Review kind
+              <Select value={reviewKind} onValueChange={v => setReviewKind(v as ReviewKind)} disabled={ai.busy}>
+                <SelectTrigger aria-label="Review kind" data-testid="ai-review-kind" className="w-full bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {REVIEW_KINDS.map(k => (
+                    <SelectItem key={k} value={k} data-testid={`ai-review-kind-${k}`}>
+                      {k.charAt(0).toUpperCase() + k.slice(1).replace("-", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+            {scene && (
+              <label className="flex items-center gap-1 text-xs text-neutral-600">
+                <input type="checkbox" checked={focusScene} onChange={e => setFocusScene(e.target.checked)} disabled={ai.busy} /> Only the current scene
+              </label>
+            )}
+            <button className={primary} disabled={ai.busy || !usable} onClick={startFocused} data-testid="ai-focused-review-button">
+              Run {reviewKind.replace("-", " ")} review
+            </button>
+            {activeTask === "review" && <Progress ai={ai} />}
+            {job?.task === "review" && job.status === "cancelled" && <p className="text-xs text-neutral-500">Review cancelled.</p>}
+            {ai.reviewResult && (
+              <div className="rounded border border-neutral-200 bg-white p-2 text-xs" data-testid="ai-focused-review-result">
+                <p className="font-medium">
+                  {ai.reviewResult.count === 0
+                    ? "No issues found — nothing to comment on."
+                    : `Added ${ai.reviewResult.count} comment${ai.reviewResult.count === 1 ? "" : "s"} (${ai.reviewResult.reviewKind}). Open the Comments panel to triage them.`}
+                </p>
+                {ai.reviewResult.summary && <p className="mt-1 whitespace-pre-wrap text-neutral-600">{ai.reviewResult.summary}</p>}
+                {ai.reviewResult.verdict && <p className="mt-1 text-neutral-500">Verdict: {ai.reviewResult.verdict}{ai.reviewResult.verdictRationale ? ` — ${ai.reviewResult.verdictRationale}` : ""}</p>}
+              </div>
+            )}
+          </section>
+
+          <LoglineSynopsisSection host={host} />
+
+          <TensionCurveSection host={host} onJumpTo={onJumpTo} />
+
+          <ScriptBreakdownSection host={host} onJumpTo={onJumpTo} />
+
+          <RevisionSummarySection documentId={documentId} host={host} />
+
+          <AssistantSection host={host} onJumpTo={onJumpTo} />
+
+          <AgentActSection host={host} onJumpTo={onJumpTo} />
+
+          <ToneSection host={host} sceneId={scene?.id} onJumpTo={onJumpTo} />
+
+          <AlternatesSection host={host} onJumpTo={onJumpTo} />
+
+          <section className="space-y-2" data-testid="ai-trim-section">
+            <h3 className="text-xs font-semibold uppercase text-neutral-500">Trim for length</h3>
+            <p className="text-xs text-neutral-600">Shorter versions of lines across the whole script, to cut page count. Review and accept each below, like polish.</p>
+            <button
+              className={primary}
+              data-testid="ai-trim-button"
+              disabled={ai.busy || !usable}
+              onClick={() => void ai.startTrim(scene ? { sceneIds: [scene.id] } : undefined)}
+            >
+              {activeTask === "trim" ? "Trimming…" : scene ? "Trim the current scene" : "Trim the script"}
+            </button>
+            {activeTask === "trim" && <Progress ai={ai} />}
+            {job?.task === "trim" && job.status === "cancelled" && <p className="text-xs text-neutral-500">Trim cancelled.</p>}
           </section>
 
           <section className="space-y-2" data-testid="ai-polish-section">

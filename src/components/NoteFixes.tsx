@@ -18,7 +18,7 @@ const TYPE_LABEL = { action: "Action", character: "Character", parenthetical: "P
  * the script (undoable) and takes the editor there. Nothing changes until Accept. A `format` note also offers the
  * (non-AI) one-click formatting fix, since that is usually what such a note is about.
  */
-export function NoteFixes({ host, note, sceneId, onJumpTo }: { host: ScriptEditorHost; note: AiNote; sceneId?: string; onJumpTo(id: string): void }) {
+export function NoteFixes({ host, note, sceneId, onJumpTo, onApplied }: { host: ScriptEditorHost; note: AiNote; sceneId?: string; onJumpTo(id: string): void; onApplied?: () => void }) {
   const ai = useAiActions();
   const [ctx, setCtx] = useState<NoteFixContext | null>(null);
   const [fixes, setFixes] = useState<NoteFixSuggestion[] | null>(null);
@@ -57,6 +57,7 @@ export function NoteFixes({ host, note, sceneId, onJumpTo }: { host: ScriptEdito
     setAccepted(true);
     setMessage(`Applied: ${fix.summary} You can undo this from the editor.`);
     if (r.firstId) onJumpTo(r.firstId);
+    onApplied?.();
   };
 
   return (

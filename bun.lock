@@ -18,13 +18,13 @@
         "@sudobility/entity_client": "^0.0.63",
         "@sudobility/printing": "^0.1.2",
         "@sudobility/printing_core": "^0.1.1",
-        "@sudobility/screenwriter_client": "^0.1.27",
-        "@sudobility/screenwriter_lib": "^0.1.26",
-        "@sudobility/screenwriter_types": "^0.1.24",
+        "@sudobility/screenwriter_client": "^0.1.28",
+        "@sudobility/screenwriter_lib": "^0.1.27",
+        "@sudobility/screenwriter_types": "^0.1.25",
         "@sudobility/seo_lib": "^0.0.53",
         "@sudobility/types": "^1.11.2",
-        "@sudobility/writing_core": "^0.1.8",
-        "@sudobility/writing_ui": "^0.1.16",
+        "@sudobility/writing_core": "^0.1.9",
+        "@sudobility/writing_ui": "^0.1.17",
         "@tanstack/react-query": "~5.104.5",
         "class-variance-authority": "~0.7.1",
         "clsx": "~2.1.1",
@@ -511,21 +511,21 @@
 
     "@sudobility/printing_core": ["@sudobility/printing_core@0.1.1", "https://npm.pkg.github.com/download/@sudobility/printing_core/0.1.1/07325cb431c32a730503240a82e90171eff4c5a9", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0" } }, "sha512-DdaVXnOOETxjjFdr87KAcsN48dpjp9dbBOLqJHrC26JQJC9cKhiGCSl+6bjTubiVLScqlTIISTAj2qr6MpBPog=="],
 
-    "@sudobility/screenwriter_client": ["@sudobility/screenwriter_client@0.1.27", "https://npm.pkg.github.com/download/@sudobility/screenwriter_client/0.1.27/061669bd70263c7708470c9be06c4ff7bb130a49", { "dependencies": { "@sudobility/screenwriter_types": "^0.1.24", "@sudobility/writing_core": "^0.1.8", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-IE7Bc5GWAColeSVW3zltZ7KZzIT0PLGlZCd0GCqJy40kTmRMyqHrlUMq8do7gWo4rViok01h+rvyX4qaNrnFFA=="],
+    "@sudobility/screenwriter_client": ["@sudobility/screenwriter_client@0.1.28", "https://npm.pkg.github.com/download/@sudobility/screenwriter_client/0.1.28/2a17bcfd8bac0bb5744cc0766416ce31c09c4fa3", { "dependencies": { "@sudobility/screenwriter_types": "^0.1.25", "@sudobility/writing_core": "^0.1.9", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-NWr4JMa20GtTZfKJtcDxd72rSn1Ljw1qWiIstCopxjDiX9nK7ljki77p6zqhZPTkfP9xN06auG8L0jY8fR9wVg=="],
 
-    "@sudobility/screenwriter_lib": ["@sudobility/screenwriter_lib@0.1.26", "https://npm.pkg.github.com/download/@sudobility/screenwriter_lib/0.1.26/20dd27290c7e22d72e277f8a27d52bc1bd9e560e", { "dependencies": { "@sudobility/screenwriter_client": "^0.1.27", "@sudobility/screenwriter_types": "^0.1.24", "@sudobility/writing_core": "^0.1.8", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0", "zustand": ">=5.0.0" } }, "sha512-Sty0fJMiqKW5CgTOqxfLpIuezT5spO6lM65rmfNQQLUO2hkYdChcKpE+5o6fGKL/1b19/GhLdhb44f4JeCNjzQ=="],
+    "@sudobility/screenwriter_lib": ["@sudobility/screenwriter_lib@0.1.27", "https://npm.pkg.github.com/download/@sudobility/screenwriter_lib/0.1.27/481f98fbafe244589a0b77b1e0240c12093e4ff4", { "dependencies": { "@sudobility/screenwriter_client": "^0.1.27", "@sudobility/screenwriter_types": "^0.1.25", "@sudobility/writing_core": "^0.1.9", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0", "zustand": ">=5.0.0" } }, "sha512-+gUmIOVKjXBWlzf8N01R1LCzoa3h7g/zfoHne/EExGTBaQZQWZyESW4aL+vYqUPfse3mkmtE0DlZuvFxgBylXw=="],
 
-    "@sudobility/screenwriter_types": ["@sudobility/screenwriter_types@0.1.24", "https://npm.pkg.github.com/download/@sudobility/screenwriter_types/0.1.24/4b691d5207e3acabfdf9a22d182c0fc163638374", { "dependencies": { "@sudobility/types": "^1.11.2", "@sudobility/writing_core": "^0.1.8", "lib0": "0.2.117", "zod": "~4.6.5" } }, "sha512-GOttkVa21znnLBo+1yTZdF/EKpFzYNGTEczbZ2pq+4Y1aGIniawMHTg6u0TPYWwju367EoELX72jvX3mY+st1w=="],
+    "@sudobility/screenwriter_types": ["@sudobility/screenwriter_types@0.1.25", "https://npm.pkg.github.com/download/@sudobility/screenwriter_types/0.1.25/b4310c30459247f7a492229f4391f04cf4e9602e", { "dependencies": { "@sudobility/types": "^1.11.2", "@sudobility/writing_core": "^0.1.9", "lib0": "0.2.117", "zod": "~4.6.5" } }, "sha512-9Gx8SrL8P4w5KvJuTPr6zsjmj4xdMxwRg6w+AS4YSpO6EDGgePNqhEokTVFd4NzM8Hu5sIY6rZmcynrycmgHgQ=="],
 
     "@sudobility/seo_lib": ["@sudobility/seo_lib@0.0.53", "https://npm.pkg.github.com/download/@sudobility/seo_lib/0.0.53/6999c5a7a032f1f6418493ee260348df8bc809b5", { "peerDependencies": { "i18next": ">=23.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-helmet-async": ">=2.0.0", "react-i18next": ">=14.0.0", "react-router-dom": ">=6.0.0" } }, "sha512-XmZNallu40DybfyW7RgbXrZxIpnBAIlRVekYX18/NYRaxOKFU3n4j/1PMGQv4FplrlD8PPalKDZY55tp1owsoQ=="],
 
     "@sudobility/types": ["@sudobility/types@1.11.2", "https://npm.pkg.github.com/download/@sudobility/types/1.11.2/d6d0b1809eaca31ef737646032cc431111b58a49", {}, "sha512-gg+bPtcOGNETDt9oNdjcn7R22EfFWmRxMOhj0ADwulBJ9tJ4NaMaXkrTtkWF+figSDZqmD9a9kodgOHseq8gsQ=="],
 
-    "@sudobility/writing_core": ["@sudobility/writing_core@0.1.8", "https://npm.pkg.github.com/download/@sudobility/writing_core/0.1.8/626892372616ad12fef5feb003824a56878c767e", { "dependencies": { "@noble/hashes": "~2.4.0", "harfbuzzjs": "1.6.1", "yjs": "~13.6.32", "zod": "~4.6.5" } }, "sha512-qK1bOgqrOkj1kPLG2NI+4tcJqbVkAOca+RxxdRwvbAoLElS6Q5LP7kIVcaj4okaJzPL4TATHAqnOhJ0JJdvyvw=="],
+    "@sudobility/writing_core": ["@sudobility/writing_core@0.1.9", "https://npm.pkg.github.com/download/@sudobility/writing_core/0.1.9/4df1897291b5c3168533802b949e109a4514f0b9", { "dependencies": { "@noble/hashes": "~2.4.0", "harfbuzzjs": "1.6.1", "yjs": "~13.6.32", "zod": "~4.6.5" } }, "sha512-WZVi9lQs6g7UFAvuH2C8JOKZDI8S4EUYYAxmwj2HtZVlt2bMw3adrp0q0Rr0HwQtwao0o93k3jw/QW1S+pc81w=="],
 
-    "@sudobility/writing_formats": ["@sudobility/writing_formats@0.1.10", "https://npm.pkg.github.com/download/@sudobility/writing_formats/0.1.10/acea93208271ac84d04b03a67dcba19a865a83fa", { "dependencies": { "@sudobility/writing_core": "^0.1.8", "fast-xml-parser": "~5.11.1", "fflate": "~0.8.3" } }, "sha512-8hDQnaPkixbt/Isv9sbVtLkUuiVL6QgHD6MG3Pe+083/YCQybfzDNRmT4dIzzJClRZl+9AuYHgnr5mbsxsy2/A=="],
+    "@sudobility/writing_formats": ["@sudobility/writing_formats@0.1.11", "https://npm.pkg.github.com/download/@sudobility/writing_formats/0.1.11/b7818c37d901bba1ca56a06c6a79614ab1fb78ec", { "dependencies": { "@sudobility/writing_core": "^0.1.9", "fast-xml-parser": "~5.11.1", "fflate": "~0.8.3" } }, "sha512-/QnLiNF0HLTX5Q/q/SuR0ApJUC0HqwEb/Z47+iIUYhxQXqcvsSRdfFHh6Z6FOEo+lWWlnwxFm8Y9YiStVmTW8g=="],
 
-    "@sudobility/writing_ui": ["@sudobility/writing_ui@0.1.16", "https://npm.pkg.github.com/download/@sudobility/writing_ui/0.1.16/79807cd786210b3b73b278c17080712604abdb3c", { "dependencies": { "@sudobility/writing_core": "^0.1.8", "@sudobility/writing_formats": "^0.1.10" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-ABBCMESj2qdeQOPvdKYC2OZmH0hX0E1aY5hbiryflfscO2Z2XNGIZ8z5bCVG0pIKSbzHKs58FxeHxusZ8pra9Q=="],
+    "@sudobility/writing_ui": ["@sudobility/writing_ui@0.1.17", "https://npm.pkg.github.com/download/@sudobility/writing_ui/0.1.17/bffb3b18a512fdb333c7b0dc8900d52f47442054", { "dependencies": { "@sudobility/writing_core": "^0.1.9", "@sudobility/writing_formats": "^0.1.11" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-6iSJPkZEtmFQ+7fWHPY2we9AKz0o8Zs2nR4uPhqVNkm46vYZNqK1VCTj3Mm0x922ymLfHIi+dn7ruJlRdpvF5Q=="],
 
     "@tanstack/query-core": ["@tanstack/query-core@5.104.5", "", {}, "sha512-Q94gI8Opd+CbdVNOdj8ZCyV8WqLYitrDq1t96Xc8WZT6lY0r5iRnJLXYDxMex7EEf2v+mXvn4FcjaBKSxXZQ9A=="],
 

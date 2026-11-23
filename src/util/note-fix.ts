@@ -25,7 +25,7 @@ export interface NoteFixContext {
 }
 
 /** The scene a note is about: its first anchor's. Null when the note points at no scene, or the scene is gone or has nothing to edit. */
-export function noteFixContext(host: ScriptEditorHost, note: Pick<AiNote, "title" | "body" | "category" | "anchors">, fallbackSceneId?: string): NoteFixContext | null {
+export function noteFixContext(host: ScriptEditorHost, note: Pick<AiNote, "title" | "body" | "category" | "anchors"> & { suggestion?: string | null }, fallbackSceneId?: string): NoteFixContext | null {
   const sceneId = note.anchors[0]?.sceneId ?? fallbackSceneId;
   if (!sceneId) return null;
   const scene = host.model.scene(sceneId as ElementId);
@@ -50,7 +50,12 @@ export function noteFixContext(host: ScriptEditorHost, note: Pick<AiNote, "title
     sceneId: String(scene.id),
     seen,
     request: {
-      note: { title: note.title.slice(0, AI_ACTION_LIMITS.noteTitleMax), body: note.body.slice(0, AI_ACTION_LIMITS.noteBodyMax), category: note.category },
+      note: {
+        title: note.title.slice(0, AI_ACTION_LIMITS.noteTitleMax),
+        body: note.body.slice(0, AI_ACTION_LIMITS.noteBodyMax),
+        category: note.category,
+        ...(note.suggestion ? { suggestion: note.suggestion.slice(0, AI_ACTION_LIMITS.noteBodyMax) } : {}),
+      },
       scene: { ...(heading ? { heading } : {}), elements },
       ...(focusIds.length ? { focusIds } : {}),
     },

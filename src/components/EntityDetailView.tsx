@@ -25,7 +25,9 @@ import { CharacterSheetSection } from "./CharacterSheetSection";
 import { LocationSheetSection } from "./LocationSheetSection";
 import { PropSheetSection } from "./PropSheetSection";
 import { ProductionImagesSection, type ProductionImage, type ProductionKind } from "./ProductionImagesSection";
-import type { CharacterVisualState } from "@sudobility/screenwriter_types";
+import type { CharacterVisualState, VoiceProfile } from "@sudobility/screenwriter_types";
+import { VoiceProfileBox } from "./VoiceProfileBox";
+import { CharacterInterviewBox } from "./CharacterInterviewBox";
 import type { LocationVisualState } from "@sudobility/screenwriter_types";
 import type { PropVisualState } from "@sudobility/screenwriter_types";
 import {
@@ -586,6 +588,21 @@ export function EntityDetailView({
         </>
       )}
 
+      {isCharacter && <VoiceProfileBox
+        key={`${entity.id}-voice`}
+        host={host}
+        name={entity.name}
+        aliases={entity.aliases}
+        value={(entity.attributes?.voiceProfile as VoiceProfile | undefined) ?? null}
+        onChange={value => run("entity.update", { entityId: entity.id, patch: { attributes: { voiceProfile: value } } })}
+      />}
+      {isCharacter && <CharacterInterviewBox
+        key={`${entity.id}-interview`}
+        host={host}
+        name={entity.name}
+        aliases={entity.aliases}
+        profile={(entity.attributes?.voiceProfile as VoiceProfile | undefined) ?? null}
+      />}
       {isCharacter && <CharacterSheetSection
         key={entity.id}
         documentId={documentId}

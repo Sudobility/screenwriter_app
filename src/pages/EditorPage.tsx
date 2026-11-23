@@ -6,6 +6,7 @@ import { MasterDetailLayout } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { ElementStylePicker, getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
+import { useMembers } from "@sudobility/screenwriter_client";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
@@ -49,6 +50,18 @@ function Editor({ documentId }: { documentId: string }) {
   const lang = useLang();
   const { session, ready, error, syncStatus } = useDocumentSession(documentId);
   const host = useMemo(() => (session ? sessionToHost(session) : null), [session]);
+  // Only the writer (owner/manager) triages comments; members add/reply only. Author names come from the
+  // workspace members so comments show people, not uids.
+  const sessionRole = session?.detail?.role;
+  const canTriageComments = sessionRole === "owner" || sessionRole === "manager";
+  const membersQuery = useMembers(session?.detail?.entityId ?? undefined);
+  const commentAuthorName = useCallback(
+    (uid: string) => {
+      const m = membersQuery.data?.data?.find((x) => x.userId === uid);
+      return m?.displayName ?? m?.email ?? uid;
+    },
+    [membersQuery.data],
+  );
   const [title, setTitle] = useState("");
   // One right-hand panel at a time (Title page/Page setup/Revisions/AI/Snapshots — unrelated to the
   // sidebar's own master/detail selection below, which owns the main content area instead).
@@ -445,7 +458,7 @@ function Editor({ documentId }: { documentId: string }) {
           />
         )}
         {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
-        {panel === "comments" && host && <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
+        {panel === "comments" && host && <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} canTriage={canTriageComments} authorName={commentAuthorName} />}
         {host && findOpen && (
           <FindReplaceBar
             host={host}
