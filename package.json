@@ -1,6 +1,6 @@
 {
   "name": "screenwriter_app",
-  "version": "0.1.53",
+  "version": "0.1.54",
   "private": true,
   "type": "module",
   "description": "ViaInk web app (Vite + React): sign-in, dashboard, screenplay editor, snapshots",
@@ -25,7 +25,7 @@
     "@heroicons/react": "~2.2.0",
     "@revenuecat/purchases-js": "~1.73.1",
     "@sudobility/auth_lib": "^0.0.134",
-    "@sudobility/building_blocks": "^0.0.387",
+    "@sudobility/building_blocks": "^0.0.388",
     "@sudobility/components": "^5.3.76",
     "@sudobility/consumables_client": "^0.0.45",
     "@sudobility/consumables_pages": "^0.0.80",
