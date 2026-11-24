@@ -217,10 +217,11 @@ test("a parenthetical gets its parentheses; a second speech straight away gets (
   await line(page, "ANKER").click();
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  await page.getByLabel("Element style").selectOption({ label: /Parenthetical/ } as never).catch(async () => {
-    const value = await page.getByLabel("Element style").locator("option", { hasText: "Parenthetical" }).getAttribute("value");
-    await page.getByLabel("Element style").selectOption(value!);
-  });
+  // The style picker is the design-system Select (a button-triggered dropdown): open it, then pick
+  // the Parenthetical option. On close it hands the keyboard back to the editor, so the type below
+  // lands in the script.
+  await page.getByLabel("Element style").click();
+  await page.getByRole("option", { name: /Parenthetical/ }).click();
   await expect.poll(async () => (await rows(page))[5]).toEqual(["st_parenthetical", "()"]);
   await page.keyboard.type("dryly"); // the caret is between the parentheses, the keyboard is in the script
   await expect.poll(async () => (await rows(page))[5]).toEqual(["st_parenthetical", "(dryly)"]);

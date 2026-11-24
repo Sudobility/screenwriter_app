@@ -4,7 +4,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { MasterDetailLayout } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
-import { ElementStylePicker, getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
+import { getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
+import { StylePicker } from "../components/StylePicker";
+import { SlidePanel } from "@sudobility/building_blocks";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { useMembers } from "@sudobility/screenwriter_client";
 import { DEV_AUTH } from "../config";
@@ -226,6 +228,32 @@ function Editor({ documentId }: { documentId: string }) {
   // choosing a view returns to the script, and the panel buttons keep working (their panels sit beside the content).
   const scriptActive = !selectedEntityId && !selectedStoryboardSceneId;
 
+  // The one active right-hand panel (snapshots / title / setup / revisions / AI / comments), or
+  // null when none is open. Rendered inside a sliding drawer so showing/hiding it animates.
+  const panelNode =
+    panel === "snapshots" && session ? (
+      <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
+    ) : panel === "title" && host ? (
+      <TitlePagePanel host={host} onClose={() => setPanel(null)} />
+    ) : panel === "setup" && host ? (
+      <PageSetupPanel host={host} onClose={() => setPanel(null)} />
+    ) : panel === "revisions" && host ? (
+      <RevisionsPanel
+        host={host}
+        layout={layout.layout}
+        onClose={() => setPanel(null)}
+        onGoToPage={index => {
+          setCaret(null);
+          setViewRaw("pages");
+          setGoPage({ index });
+        }}
+      />
+    ) : panel === "ai" && host ? (
+      <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />
+    ) : panel === "comments" && host ? (
+      <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} canTriage={canTriageComments} authorName={commentAuthorName} />
+    ) : null;
+
   return (
     <div className="h-full flex flex-col print-flow">
       {printable &&
@@ -336,7 +364,7 @@ function Editor({ documentId }: { documentId: string }) {
         </div>
         {/* The script-only tools grey out (and stop taking input) while a Catalog item replaces the script in the content area. */}
         <div className={`flex items-center gap-3 flex-wrap ${scriptActive ? "" : "opacity-40 pointer-events-none"}`} inert={!scriptActive}>
-          {host && view === "edit" && <ElementStylePicker host={host} className="border border-neutral-300 rounded px-2 py-1 text-sm" />}
+          {host && view === "edit" && <StylePicker host={host} />}
           {host && view === "edit" && <DualDialogueToggle host={host} />}
           {host && view === "edit" && <SceneOmitToggle host={host} />}
           {host && view === "edit" && <FixFormattingButton host={host} />}
@@ -380,7 +408,7 @@ function Editor({ documentId }: { documentId: string }) {
         </button>
       </div>
 
-      <div className="relative flex-1 min-h-0 flex print-flow" data-testid="editor-split">
+      <div className="relative flex-1 min-h-0 flex overflow-hidden print-flow" data-testid="editor-split">
         {host && (
           <MasterDetailLayout
             masterContent={
@@ -440,25 +468,10 @@ function Editor({ documentId }: { documentId: string }) {
             {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
           </main>
         )}
-        {panel === "snapshots" && session && (
-          <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
-        )}
-        {panel === "title" && host && <TitlePagePanel host={host} onClose={() => setPanel(null)} />}
-        {panel === "setup" && host && <PageSetupPanel host={host} onClose={() => setPanel(null)} />}
-        {panel === "revisions" && host && (
-          <RevisionsPanel
-            host={host}
-            layout={layout.layout}
-            onClose={() => setPanel(null)}
-            onGoToPage={index => {
-              setCaret(null);
-              setViewRaw("pages");
-              setGoPage({ index });
-            }}
-          />
-        )}
-        {panel === "ai" && host && <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />}
-        {panel === "comments" && host && <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} canTriage={canTriageComments} authorName={commentAuthorName} />}
+        {/* The active right-hand panel, in a drawer that slides it in/out from the right edge. */}
+        <SlidePanel open={panelNode !== null} slideFrom="right" className="absolute inset-y-0 right-0 z-20">
+          {panelNode}
+        </SlidePanel>
         {host && findOpen && (
           <FindReplaceBar
             host={host}

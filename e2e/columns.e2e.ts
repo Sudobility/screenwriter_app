@@ -82,9 +82,14 @@ test("columns: AV two-column, BBC name-beside-dialogue and graphic novel panels"
     { style: "st_dialogue", text: "Glad to be here." },
   ]);
 
-  // The style picker in the Edit view says which styles are column 1 / column 2.
+  // The style picker in the Edit view says which styles are column 1 / column 2. It is the
+  // design-system Select (a button-triggered dropdown), and it is enabled only with a selection —
+  // so put the caret in a line, then open it and read the option labels.
   await page.getByTestId("view-edit").click();
-  const options = await page.getByTestId("style-picker").locator("option").allTextContents();
+  await page.getByTestId("script-editor").getByText("Wide shot of floor.").click();
+  await page.getByTestId("style-picker").click();
+  const options = await page.getByRole("option").allTextContents();
+  await page.keyboard.press("Escape");
   expect(options.some(o => /Action.*column 1/.test(o))).toBe(true);
   expect(options.some(o => /Dialogue.*column 2/.test(o))).toBe(true);
 
