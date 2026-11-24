@@ -30,6 +30,7 @@ test("AI writes a logline, synopsis and treatment from the script", async ({ pag
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(email), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-logline").click();
   const section = page.getByTestId("ai-logline-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-logline-button").click();
@@ -66,6 +67,7 @@ test("AI plots a tension curve across the scenes", async ({ page }) => {
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(e2), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-tension").click();
   const section = page.getByTestId("ai-tension-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-tension-button").click();
@@ -99,6 +101,7 @@ test("AI breaks the script down into production elements by scene", async ({ pag
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(e3), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-breakdown").click();
   const section = page.getByTestId("ai-breakdown-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-breakdown-button").click();

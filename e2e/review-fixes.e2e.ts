@@ -81,6 +81,7 @@ test("Review notes: suggest fixes, preview them, accept one with a click", async
   await synced(page);
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-review").click();
   await page.getByTestId("ai-review-button").click();
   await page.getByTestId("ai-panel-consent-accept").click();
   await page.getByTestId("ai-review-button").click();
@@ -114,6 +115,7 @@ test("Polish suggestions: a checkbox only where there is a choice; decided ones 
   await synced(page);
   await page.locator(".wui-el", { hasText: "You think his wife" }).click();
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-polish").click();
   await page.getByTestId("ai-polish-button").click();
   await page.getByTestId("ai-panel-consent-accept").click();
   await page.getByTestId("ai-polish-button").click();
@@ -147,6 +149,7 @@ test("Polish suggestions: a checkbox only where there is a choice; decided ones 
   await page.reload();
   await expect(page.getByTestId("script-editor")).toBeVisible();
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-polish").click();
   await expect(page.getByTestId("ai-polish-button")).toBeVisible();
   await expect(page.getByTestId("ai-suggestions")).toHaveCount(0);
 });
@@ -173,6 +176,7 @@ test("Review scope: the current scene can be reviewed once the scenes before it 
   await synced(page);
   await page.locator(".wui-el", { hasText: "Rain on the roof." }).click(); // the third scene
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-review").click();
 
   // No summaries yet: the current scene is not offered, and the panel says what is missing and what to do.
   const note = page.getByTestId("ai-review-scope-note");

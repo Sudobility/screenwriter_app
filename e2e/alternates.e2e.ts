@@ -33,6 +33,7 @@ test("line alternates offers rewrites and replaces the line with the chosen one"
   // Caret on the dialogue line → that line is the target.
   await page.getByTestId("script-editor").getByText("It has outlasted better storms than you.").click();
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-alternates").click();
   const section = page.getByTestId("ai-alternates-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-alternates-button").click();

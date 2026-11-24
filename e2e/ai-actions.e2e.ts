@@ -98,6 +98,7 @@ test("script: generate from a story, preview, insert into an empty document", as
   await login(page);
   await createDoc(page, "Script AI");
   await page.getByRole("button", { name: "AI", exact: true }).click();
+  await page.getByTestId("ai-action-generate").click();
 
   await page.getByTestId("ai-story").fill("A lighthouse keeper finds a door in the rock and opens it.");
   await page.getByTestId("ai-story-title").fill("The Door");
@@ -126,6 +127,7 @@ test("scene: polish with the characters' skeletons, compare, replace", async ({ 
 
   await page.locator(".wui-el", { hasText: "It's all still here." }).click(); // puts the caret in the scene
   await page.getByRole("button", { name: "AI", exact: true }).click();
+  await page.getByTestId("ai-action-polish-scene").click();
   await expect(page.getByTestId("ai-scene-characters")).toContainText("QUINN");
   await expect(page.getByTestId("ai-scene-characters")).toContainText("no skeleton yet");
 

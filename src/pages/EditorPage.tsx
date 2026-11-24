@@ -12,7 +12,7 @@ import { useMembers } from "@sudobility/screenwriter_client";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
-import { AiPanel } from "../components/AiPanel";
+import { AiWizard } from "../components/ai/AiWizard";
 import { CommentsPanel } from "../components/CommentsPanel";
 import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { FixFormattingButton } from "../components/FixFormattingButton";
@@ -248,8 +248,6 @@ function Editor({ documentId }: { documentId: string }) {
           setGoPage({ index });
         }}
       />
-    ) : panel === "ai" && host ? (
-      <AiPanel documentId={documentId} host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} />
     ) : panel === "comments" && host ? (
       <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} canTriage={canTriageComments} authorName={commentAuthorName} />
     ) : null;
@@ -472,6 +470,8 @@ function Editor({ documentId }: { documentId: string }) {
         <SlidePanel open={panelNode !== null} slideFrom="right" className="absolute inset-y-0 right-0 z-20">
           {panelNode}
         </SlidePanel>
+        {/* The AI panel is a wizard (its own responsive drawer: full-screen on mobile, side panel on desktop). */}
+        {host && <AiWizard documentId={documentId} host={host} onJumpTo={jumpTo} open={panel === "ai"} onClose={() => setPanel(null)} />}
         {host && findOpen && (
           <FindReplaceBar
             host={host}

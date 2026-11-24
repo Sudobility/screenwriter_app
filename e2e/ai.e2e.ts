@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { devUidForEmail } from "../../screenwriter_lib/src/auth/dev-auth";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const API = `http://localhost:${Number(process.env.E2E_API_PORT ?? 18042)}`;
 const API2_PORT = Number(process.env.E2E_API2_PORT ?? 18043);
 const email = `e2e-ai-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -83,6 +83,7 @@ test("AI panel: test-mode banner, coverage review, polish suggestions, accept, s
 
   // ---- review the whole script
   await line("Something happens in scene 1.").click();
+  await page.getByTestId("ai-action-review").click();
   await page.getByTestId("ai-review-button").click();
   // First use: the API needs the user's AI consent; the panel asks (not a generic error), then the writer presses Review again.
   await expect(page.getByTestId("ai-panel-consent")).toBeVisible();
@@ -109,9 +110,12 @@ test("AI panel: test-mode banner, coverage review, polish suggestions, accept, s
   await page.reload();
   await expect(page.getByTestId("script-editor")).toBeVisible();
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-review").click();
   await expect(page.getByTestId("ai-report-summary")).toContainText("fixture summary");
 
   // ---- polish the current scene (scene 1): before/after diff
+  await panel.getByRole("button", { name: "Back" }).click(); // back to the action list
+  await page.getByTestId("ai-action-polish").click();
   await line("Something happens in scene 1.").click();
   await expect(page.getByTestId("ai-polish-scope")).toContainText(H[0]!);
   await page.getByTestId("ai-polish-button").click();

@@ -30,6 +30,7 @@ test("the assistant answers a question about the script and cites a scene", asyn
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(email), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-assistant").click();
   const section = page.getByTestId("ai-assistant-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-assistant-input").fill("Who cleans the lamp?");

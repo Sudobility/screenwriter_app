@@ -41,6 +41,7 @@ test("AI summarizes what changed since a snapshot", async ({ page }) => {
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(email), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-revision").click();
   const section = page.getByTestId("ai-revision-section");
   await expect(section).toBeVisible();
   await expect(section.getByTestId("ai-revision-snapshot")).toBeVisible();

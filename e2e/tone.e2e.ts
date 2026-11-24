@@ -35,6 +35,7 @@ test("tonal pass previews and applies a scene rewrite", async ({ page }) => {
   // Put the caret in the scene so the tonal pass has a current scene.
   await page.getByTestId("script-editor").getByText("Lovely weather for it.").click();
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-tone").click();
   const section = page.getByTestId("ai-tone-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-tone-select").selectOption("darker");

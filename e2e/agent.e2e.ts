@@ -34,6 +34,7 @@ test("agent-act proposes operations the writer applies one by one", async ({ pag
   await page.request.post(`${API}/api/v1/me/ai-consents`, { headers: authFor(email), data: { version: 1 } });
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-agent").click();
   const section = page.getByTestId("ai-agent-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-agent-input").fill("Flag the opening's pacing and rename Quinn.");

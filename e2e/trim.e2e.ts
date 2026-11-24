@@ -29,6 +29,7 @@ test("trim proposes shorter lines as accept/reject suggestions", async ({ page }
   await synced(page);
 
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-trim").click();
   const section = page.getByTestId("ai-trim-section");
   await expect(section).toBeVisible();
   await section.getByTestId("ai-trim-button").click();

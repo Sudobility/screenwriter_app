@@ -80,6 +80,7 @@ test.describe("with clipboard access", () => {
     await physical.getByTestId("skeleton-field-age").press("Tab");
 
     await page.getByRole("button", { name: "AI", exact: true }).click();
+    await page.getByTestId("ai-action-smart-paste").click();
     await copy(page, "Quinn, 61, an archivist who trusts paper more than people\nMara Lind, 34, a night nurse aka Mouse\nMara Lind at 9: afraid of the dark");
     await choose(page, "Characters");
     await expect(page.getByTestId("smart-paste-words")).toContainText("26 words, plain text");
@@ -123,6 +124,7 @@ test.describe("with clipboard access", () => {
     await login(page);
     await createDoc(page, "Paste plots");
     await page.getByRole("button", { name: "AI", exact: true }).click();
+    await page.getByTestId("ai-action-smart-paste").click();
 
     await copy(page, "Plot: A keeper finds a door in the rock.\n\nSubplot The debt: Ilse owes her brother-in-law.\n\nSubplot The priest: He writes to the ministry.");
     await choose(page, "Plots");
@@ -167,6 +169,7 @@ test.describe("with clipboard access", () => {
     await seedScenes(page);
     await page.locator(".wui-el", { hasText: "It's all still here." }).click(); // the caret is in the first scene
     await page.getByRole("button", { name: "AI", exact: true }).click();
+    await page.getByTestId("ai-action-smart-paste").click();
 
     await copyHtml(
       page,
@@ -208,6 +211,7 @@ test.describe("with clipboard access", () => {
     await login(page);
     await createDoc(page, "Paste story");
     await page.getByRole("button", { name: "AI", exact: true }).click();
+    await page.getByTestId("ai-action-smart-paste").click();
 
     await copy(page, "A lighthouse keeper finds a door in the rock and opens it.");
     await choose(page, "Story");
@@ -232,6 +236,7 @@ test("without clipboard access the text can be pasted into a box instead", async
   await login(page);
   await createDoc(page, "Paste box");
   await page.getByRole("button", { name: "AI", exact: true }).click();
+  await page.getByTestId("ai-action-smart-paste").click();
   await choose(page, "Plots");
   await expect(page.getByTestId("smart-paste-clip-error")).toBeVisible();
   await expect(page.getByTestId("smart-paste-run")).toBeDisabled();

@@ -86,6 +86,7 @@ test("a focused AI review files its findings as pending comments", async ({ page
 
   // Run a focused (character) review from the AI panel; the fixture returns comments.
   await page.getByTestId("ai-button").click();
+  await page.getByTestId("ai-action-focused-review").click();
   await expect(page.getByTestId("ai-focused-review-section")).toBeVisible();
   await page.getByTestId("ai-review-kind").click();
   await page.getByTestId("ai-review-kind-character").click();
