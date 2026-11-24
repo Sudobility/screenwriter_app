@@ -27,6 +27,8 @@ export function AlternatesSection({ host, onJumpTo }: { host: ScriptEditorHost; 
       return;
     }
     const scene = host.model.sceneOf(targetId as ElementId);
+    // Reuses note-fix.ts for its scene-element snapshot + `seen` staleness map. No AI note exists here,
+    // so the note is synthetic; category/body/title are unused on this path. Keep the placeholder.
     const ctx = noteFixContext(host, { title: "Alternates", body: "Line alternates", category: "pacing", anchors: [] }, scene ? String(scene.id) : undefined);
     if (!ctx || !ctx.seen.has(targetId)) {
       setMsg("Put the caret on an action, dialogue or similar line.");

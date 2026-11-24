@@ -22,6 +22,9 @@ export function ToneSection({ host, sceneId, onJumpTo }: { host: ScriptEditorHos
   const run = async () => {
     setState(null);
     setApplied(null);
+    // We reuse note-fix.ts (built for comment fixes) to diff/apply/staleness-guard per-element edits.
+    // There is no AI note here, so we pass a synthetic note — category/body/title are unused by the
+    // fix machinery for this path; it only needs the shape. Do not "clean up" this placeholder.
     const ctx = noteFixContext(host, { title: "Tone", body: "Tone pass", category: "pacing", anchors: [] }, sceneId);
     if (!ctx) {
       setApplied("Put the caret in a scene with lines to retone first.");
