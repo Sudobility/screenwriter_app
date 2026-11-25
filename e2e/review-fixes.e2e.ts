@@ -58,7 +58,7 @@ test("Fix formatting: capitals, empty lines and stray spaces fixed with one clic
 
   // The editor shows capitals whatever was typed: this is why the writer could not see the problem.
   await expect(page.locator(".wui-el", { hasText: "adam's office" })).toHaveCSS("text-transform", "uppercase");
-  await expect(fix).toHaveText("Fix formatting (5)");
+  await expect(fix).toHaveAttribute("aria-label", "Fix formatting (5)"); // icon button; the count is in the label + a badge
   await fix.click();
   await expect(page.getByTestId("fix-formatting-done")).toHaveText("3 headings or cues put in capitals, 1 empty line removed, 1 line trimmed.");
   expect(await bodyTexts(page)).toEqual([
@@ -70,7 +70,7 @@ test("Fix formatting: capitals, empty lines and stray spaces fixed with one clic
     "He has been dead for eleven years.",
   ]);
   await expect(fix).toBeDisabled();
-  await expect(fix).toHaveText("Fix formatting");
+  await expect(fix).toHaveAttribute("aria-label", "Fix formatting");
   await synced(page);
 });
 

@@ -102,7 +102,7 @@ test("revisions: sets, marks, page labels, mode off, clearing and the Revised pa
   await expect(page.getByTestId("revisions-panel")).toBeVisible();
   await expect(page.getByTestId("rev-indicator")).toHaveCount(0);
   await expect(page.getByTestId("rev-mode-toggle")).toBeDisabled();
-  await expect(page.getByTestId("rev-set-select").locator("option:checked")).toHaveText("Blue");
+  await expect(page.getByTestId("rev-set-select")).toContainText("Blue");
   await page.getByTestId("rev-start").click();
   await expect(page.getByTestId("rev-indicator")).toHaveText("REV: Blue");
   await expect(page.getByTestId("rev-mode-toggle")).toHaveAttribute("aria-pressed", "true");

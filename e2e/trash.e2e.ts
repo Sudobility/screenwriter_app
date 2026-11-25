@@ -43,7 +43,7 @@ test("trashing a document and a project each ask for confirmation", async ({ pag
   await expect(page.getByTestId("document-row").filter({ hasText: "Doomed doc" })).toHaveCount(0);
 
   // The same for a project.
-  await page.getByRole("link", { name: "Projects", exact: true }).click();
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Projects", exact: true }).click();
   const prow = page.getByTestId("project-row").filter({ hasText: "Trash project" });
   await expect(prow).toHaveCount(1);
   await prow.getByRole("button", { name: "Trash", exact: true }).click();

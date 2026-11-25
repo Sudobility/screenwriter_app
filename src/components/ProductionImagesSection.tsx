@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useProject } from "@sudobility/screenwriter_client";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
@@ -18,6 +19,7 @@ export function ProductionImagesSection({ documentId, projectId, kind, subjectId
   characters?: { id: string; name: string }[];
   initialDescription?: string;
 }) {
+  const { lang } = useParams();
   const project = useProject(projectId);
   const sw = useScreenwriter();
   const styleId = (project.data as (typeof project.data & { visualStyleId?: string | null }) | undefined)?.visualStyleId ?? null;
@@ -72,7 +74,14 @@ export function ProductionImagesSection({ documentId, projectId, kind, subjectId
 
   return <section className="space-y-3 rounded-lg border border-neutral-200 p-4" data-testid={`${kind}-images`}>
     <h3 className="font-semibold">{titles[kind]}</h3>
-    {!styleId && <p className="text-sm text-amber-700">Choose a project image style before generating images.</p>}
+    {!styleId && (
+      <p className="text-sm text-amber-700">
+        <Link to={`/${lang}/p/${projectId}?settings=1`} className="font-medium underline underline-offset-2">
+          Choose a project image style
+        </Link>{" "}
+        before generating images.
+      </p>
+    )}
     {needsCharacter && <label className="block text-sm">Character
       <Select value={characterId || undefined} onValueChange={setCharacterId}>
         <SelectTrigger aria-label="Character" className="mt-1 block w-full bg-white">

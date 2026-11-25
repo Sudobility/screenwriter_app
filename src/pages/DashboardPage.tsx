@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   DOCUMENT_KINDS,
@@ -10,10 +10,12 @@ import {
   useProjects,
   useTemplates,
 } from "@sudobility/screenwriter_lib";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { FormModal } from "@sudobility/components";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
+import { dashboardCrumb, homeCrumb, projectsCrumb } from "../util/breadcrumbs";
 import { ImportScript } from "../components/ImportScript";
 import { ProjectStyleSettings } from "../components/ProjectStyleSettings";
 import { UserDashboardPage } from "./UserDashboardPage";
@@ -211,17 +213,33 @@ export function ProjectView({ projectId }: { projectId: string }) {
   const [trashing, setTrashing] = useState<{ id: string; name: string } | null>(
     null,
   );
-  const [showSettings, setShowSettings] = useState(false);
+  // Open straight on the settings view when linked with ?settings=1 (e.g. from the editor's image panels,
+  // where a storyboard/entity needs the project image style set before it can generate).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showSettings, setShowSettings] = useState(searchParams.get("settings") === "1");
 
   // The real breadcrumbs system (building_blocks' AppBreadcrumbs, via ScreenContainer's BreadcrumbContext),
   // not a hand-rolled "Projects / name" line — matches music_app's own per-page useSetBreadcrumbs usage.
   useSetBreadcrumbs([
-    { label: t("dashboard.projects"), href: `/${lang}/projects` },
+    homeCrumb(lang, t("nav.home", "Home")),
+    dashboardCrumb(lang, t("dashboard.title", "Dashboard")),
+    projectsCrumb(lang, t("dashboard.projects", "Projects")),
     { label: project?.name ?? projectId, current: true },
   ]);
 
   if (showSettings) {
-    return <ProjectStyleSettings projectId={projectId} onClose={() => setShowSettings(false)} />;
+    return (
+      <ProjectStyleSettings
+        projectId={projectId}
+        onClose={() => {
+          setShowSettings(false);
+          if (searchParams.has("settings")) {
+            searchParams.delete("settings");
+            setSearchParams(searchParams, { replace: true });
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -233,13 +251,15 @@ export function ProjectView({ projectId }: { projectId: string }) {
             : t("dashboard.documents")}
         </h2>
         <button
-          className={btn}
+          className="ml-auto inline-flex items-center gap-1.5 rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-neutral-100"
           onClick={() => setShowSettings(true)}
+          data-testid="project-settings-button"
         >
+          <Cog6ToothIcon className="h-4 w-4" aria-hidden="true" />
           Project settings
         </button>
         <button
-          className={`${btn} ml-auto`}
+          className={btn}
           onClick={() => void load({ trashed: !showingTrash })}
         >
           {showingTrash

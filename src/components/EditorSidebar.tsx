@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tooltip } from "@sudobility/components";
 import { MasterListItem } from "@sudobility/components";
 import { ENTITY_KINDS, type EntityKind, type EntityView } from "@sudobility/writing_core";
 import { defaultSpellingPolicy, Navigator, type ScriptEditorHost } from "@sudobility/writing_ui";
@@ -15,6 +15,7 @@ import { sceneCountOf } from "../util/entity-scene-count";
 import { getStages, stageLabel } from "../util/character-skeleton";
 import { addSubplot, ensureStoryEntity, findStoryEntity, getSubplots, isStoryEntity } from "../util/story-info";
 import { addNote, isNote, listNotes } from "../util/notes";
+import { clearLegacyStoryboards, storyboardList } from "../util/storyboards";
 
 type IconCmp = ComponentType<{ className?: string }>;
 type SpecialSection = "scenes" | "storyboards" | "story" | "notes" | "more";
@@ -95,12 +96,14 @@ export function EditorSidebar({
   useEffect(() => {
     host.execute([{ id: "entity.rebuild", params: {} }], { kind: "local-command" });
     ensureStoryEntity(host);
+    clearLegacyStoryboards(host); // drop the obsolete project-style-bound `fields.storyboards` on open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [host]);
 
   // The built-in "Story" record and Notes render in their own sections, never as normal (misc) Catalog rows.
   const all = host.model.entities().filter(e => !isStoryEntity(e) && !isNote(e));
   const notes = listNotes(host);
+  const storyboards = storyboardList(host);
   const sceneCount = host.model.scenes().length;
   const storyEntity = findStoryEntity(host);
   const subplots = storyEntity ? getSubplots(storyEntity) : [];
@@ -182,7 +185,24 @@ export function EditorSidebar({
       setOtherKind("");
       setOtherName("");
     }
-    if (key === "scenes") onShowScript();
+    // Refresh the detail pane to match the new section, instead of leaving the previous script/item there.
+    // The Scenes section is the script; every other section opens its first item (if any) so the detail
+    // reflects the section the writer just switched to.
+    if (key === "scenes") {
+      onShowScript();
+    } else if (key === "storyboards") {
+      // Open the first existing storyboard (if any); otherwise the section shows its "none yet" empty state.
+      const first = storyboards[0];
+      if (first) onSelectStoryboard(first.sceneId);
+    } else if (key === "notes") {
+      if (notes[0]) onSelectEntity(notes[0].id, null);
+    } else if (key !== "more" && key !== "story") {
+      // Catalog kinds (character/location/…): open the first entity so the detail reflects the section.
+      // Story is left out on purpose — its detail is per-field (Plot/Theme/…), opened from the sidebar list;
+      // auto-opening the whole story entity would duplicate those field labels in the detail.
+      const first = byKind.get(key)?.[0];
+      if (first) onSelectEntity(first.id, null);
+    }
   };
 
   const railItems: { key: Section; label: string; Icon: IconCmp; count?: number }[] = [
@@ -194,26 +214,26 @@ export function EditorSidebar({
   ];
 
   const railButton = (key: Section, label: string, Icon: IconCmp, count?: number) => (
-    <button
-      key={key}
-      type="button"
-      title={label}
-      aria-label={label}
-      aria-pressed={active === key}
-      data-testid={`rail-${key}`}
-      data-active={active === key}
-      onClick={() => selectSection(key)}
-      className={`relative w-9 h-9 flex items-center justify-center rounded shrink-0 ${
-        active === key ? "bg-neutral-800 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
-      }`}
-    >
-      <Icon className="w-5 h-5" />
-      {count ? (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-1 rounded-full bg-neutral-200 text-neutral-700 text-[10px] leading-4 text-center">
-          {count}
-        </span>
-      ) : null}
-    </button>
+    <Tooltip key={key} content={label} placement="right" delayShow={150} wrapperClassName="block">
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={active === key}
+        data-testid={`rail-${key}`}
+        data-active={active === key}
+        onClick={() => selectSection(key)}
+        className={`relative w-9 h-9 flex items-center justify-center rounded shrink-0 ${
+          active === key ? "bg-neutral-800 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+        {count ? (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-1 rounded-full bg-neutral-200 text-neutral-700 text-[10px] leading-4 text-center">
+            {count}
+          </span>
+        ) : null}
+      </button>
+    </Tooltip>
   );
 
   const sectionHeader = (label: string, right?: ReactNode) => (
@@ -359,15 +379,21 @@ export function EditorSidebar({
         {active === "storyboards" && (
           <section data-testid="storyboards-navigation">
             {sectionHeader("Storyboards")}
-            {host.model.scenes().map((scene, index) => (
-              <MasterListItem
-                key={String(scene.id)}
-                label={`${index + 1}. ${scene.headingText || "Untitled scene"}`}
-                isSelected={selectedStoryboardSceneId === String(scene.id)}
-                onClick={() => onSelectStoryboard(String(scene.id))}
-                className="pl-4"
-              />
-            ))}
+            {storyboards.length === 0 ? (
+              <p className="px-4 py-2 text-xs text-neutral-500">
+                No storyboards yet. Generate one from a scene with the AI “Generate storyboard” action or the script toolbar.
+              </p>
+            ) : (
+              storyboards.map(({ sceneId, storyboard }) => (
+                <MasterListItem
+                  key={sceneId}
+                  label={storyboard.shortTitle}
+                  isSelected={selectedStoryboardSceneId === sceneId}
+                  onClick={() => onSelectStoryboard(sceneId)}
+                  className="pl-4"
+                />
+              ))
+            )}
           </section>
         )}
 

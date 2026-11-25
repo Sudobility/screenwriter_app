@@ -14,6 +14,7 @@ import { AgentActSection } from "../AgentActSection";
 import { ToneSection } from "../ToneSection";
 import { AlternatesSection } from "../AlternatesSection";
 import { PolishSceneSection } from "../PolishSceneSection";
+import { StoryboardSection } from "../StoryboardSection";
 import { primary, Progress, ReportView, SuggestionReview, type AiWizardCtx } from "./shared";
 
 export type AiGroup = "generate" | "review" | "polish" | "analyze" | "assistant";
@@ -233,6 +234,14 @@ export const AI_ACTIONS: AiAction[] = [
     blurb: "Write a draft script from a story you describe.",
     keywords: ["write", "draft", "create", "story"],
     Options: ({ ctx }) => <GenerateScriptSection host={ctx.host} onInserted={ctx.onJumpTo} />,
+  },
+  {
+    id: "storyboard",
+    group: "generate",
+    title: "Generate storyboard",
+    blurb: "Turn the current scene into line-art storyboard frames.",
+    keywords: ["storyboard", "frames", "shots", "line art", "images", "visual", "scene"],
+    Options: ({ ctx }) => <StoryboardSection host={ctx.host} documentId={ctx.documentId} scene={ctx.scene} />,
   },
   {
     id: "smart-paste",

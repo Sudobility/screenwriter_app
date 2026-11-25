@@ -49,6 +49,7 @@ import { KeysPage } from "./KeysPage";
 import { useCreditStore } from "../features/credits/useCreditStore";
 import { CreditBadge } from "../features/credits/CreditBadge";
 import { useSetBreadcrumbs } from "../hooks/useBreadcrumbs";
+import { dashboardCrumb, homeCrumb } from "../util/breadcrumbs";
 import { useSetPageConfig } from "../hooks/usePageConfig";
 import { useLang } from "../hooks/useLang";
 import { getServices } from "../services";
@@ -258,7 +259,8 @@ export function UserDashboardPage({ projectId }: { projectId?: string }) {
   );
 
   useSetBreadcrumbs([
-    { label: t("dashboard.title", "Dashboard"), href: `/${lang}/projects` },
+    homeCrumb(lang, t("nav.home", "Home")),
+    dashboardCrumb(lang, t("dashboard.title", "Dashboard")),
     { label: selected.label, current: true },
   ]);
   return (

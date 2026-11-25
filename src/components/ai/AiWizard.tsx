@@ -1,4 +1,6 @@
 import { useMemo, useRef, useSyncExternalStore } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Tooltip } from "@sudobility/components";
 import { createNavStore, SlidingPanel, type NavStore, type ScreenEntry } from "@sudobility/building_blocks";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useAi } from "@sudobility/screenwriter_lib";
@@ -151,9 +153,17 @@ export function AiWizardBody({ documentId, host, onJumpTo, onClose }: Props) {
         store={store}
         screens={screens}
         renderActions={() => (
-          <button type="button" className={btn} data-testid="ai-close" onClick={onClose}>
-            Close
-          </button>
+          <Tooltip content="Close" placement="bottom" delayShow={150}>
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+              data-testid="ai-close"
+              aria-label="Close"
+              onClick={onClose}
+            >
+              <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </Tooltip>
         )}
       />
     </div>

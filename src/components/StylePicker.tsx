@@ -94,12 +94,10 @@ export function StylePicker({
       disabled={disabled}
     >
       <SelectTrigger
-        // Compact + content-sized for the toolbar (the DS default is `h-9 w-full`), and otherwise
-        // the DS defaults (rounded-md, border, padding) so it matches the adjacent TechniqueMenu
-        // Select. Only width/height/background are overridden.
-        className={["h-8 w-auto min-w-0 max-w-56 bg-white text-sm", className]
-          .filter(Boolean)
-          .join(" ")}
+        // Fixed width so the toolbar doesn't reflow as the caret moves between elements of different style
+        // names. `rounded` matches the toolbar buttons' 4px radius (overriding the DS trigger's rounded-md);
+        // height (h-9) comes from the DS default.
+        className={["w-44 rounded bg-white text-sm", className].filter(Boolean).join(" ")}
         aria-label="Element style"
         data-testid="style-picker"
       >

@@ -11,6 +11,7 @@ import { AppShell } from "@sudobility/building_blocks";
 import type { BreadcrumbItem } from "@sudobility/building_blocks";
 import { BreadcrumbContext } from "../../context/breadcrumbContextDef";
 import { useBreadcrumbItems } from "../../hooks/useBreadcrumbs";
+import { routeBreadcrumbs } from "../../util/breadcrumbs";
 import { useFooterConfig } from "../../hooks/useFooterConfig";
 import { useTopBarConfig } from "../../hooks/useTopBarConfig";
 import { LinkWrapper } from "../layout/LinkWrapper";
@@ -21,7 +22,10 @@ function ScreenContainerInner({ children }: { children: ReactNode }) {
 
   const topBar = useTopBarConfig();
   const footer = useFooterConfig(isHomePage ? "full" : "compact");
-  const breadcrumbItems = useBreadcrumbItems();
+  // A page's own trail wins; otherwise fall back to a trail derived from the route, so every page in the
+  // app shows breadcrumbs (home + the static content pages all get one here).
+  const lang = location.pathname.split("/").filter(Boolean)[0] ?? "en";
+  const breadcrumbItems = useBreadcrumbItems() ?? routeBreadcrumbs(location.pathname, lang);
 
   return (
     <AppShell

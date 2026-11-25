@@ -114,8 +114,11 @@ test("dev login to snapshots, end to end", async ({ page, browser }: { page: Pag
   await page.screenshot({ path: `${SHOTS}/frontend-f4-rebased.png` });
 
   // 8. fork the snapshot: new document opens with the snapshot content
-  await page.getByRole("button", { name: "Snapshots" }).click().catch(() => {});
+  // Ensure the Snapshots panel is open (it stays open through the rebase). Don't blindly toggle: a blind
+  // click would CLOSE an already-open panel, and the slide-out animation makes an immediate isVisible() read
+  // unreliable. Open it only if it isn't already, then wait for it.
   if (!(await page.getByTestId("snapshots-panel").isVisible())) await page.getByRole("button", { name: "Snapshots" }).click();
+  await expect(page.getByTestId("snapshots-panel")).toBeVisible();
   const row2 = page.locator('[data-testid="snapshot-row"][data-snapshot-name="First draft"]');
   await row2.getByRole("button", { name: "Fork" }).click();
   await page.getByLabel("Fork title").fill("Night Train - alt ending");

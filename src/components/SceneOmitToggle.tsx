@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
+import { IconButton } from "./shell/IconButton";
 
 /** The scene containing the caret, and whether it is omitted. */
 export function currentScene(host: ScriptEditorHost, elementId: string | undefined): { id: string; omitted: boolean } | null {
@@ -32,17 +34,15 @@ export function SceneOmitToggle({ host }: { host: ScriptEditorHost }) {
   });
 
   return (
-    <button
-      type="button"
-      data-testid="omit-toggle"
-      aria-pressed={scene?.omitted === true}
+    <IconButton
+      icon={EyeSlashIcon}
+      label={scene?.omitted ? "Restore scene" : "Omit scene"}
+      active={scene?.omitted === true}
+      activeClassName="bg-amber-600 text-white"
       disabled={!scene}
-      title={scene ? `${scene.omitted ? "Restore" : "Omit"} the current scene (Ctrl/Cmd+Alt+O)` : "Put the caret in a scene"}
+      testId="omit-toggle"
       onMouseDown={e => e.preventDefault()}
       onClick={toggle}
-      className={`border border-neutral-300 rounded px-3 py-1 text-sm whitespace-nowrap ${scene?.omitted ? "bg-amber-600 text-white" : "hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-transparent"}`}
-    >
-      {scene?.omitted ? "Restore scene" : "Omit scene"}
-    </button>
+    />
   );
 }

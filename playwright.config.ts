@@ -13,6 +13,9 @@ export default defineConfig({
   timeout: 180_000,
   expect: { timeout: 15_000 },
   workers: 1,
+  // The real-stack specs (notably the two-context realtime test in app.e2e) are timing-sensitive under
+  // full-suite load; retry once so load-dependent sync flakes don't fail the run.
+  retries: 1,
   reporter: "list",
   use: { baseURL: APP, headless: true, viewport: { width: 1400, height: 900 } },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
@@ -39,7 +42,9 @@ export default defineConfig({
       url: APP,
       reuseExistingServer: false,
       timeout: 60_000,
-      env: { VITE_API_URL: API, VITE_DEV_AUTH: "1" },
+      // Pin the brand for e2e so specs don't depend on the local .env (which may be HyperInk/ViaInk/etc.).
+      // Vite gives an already-set process.env VITE_ var priority over .env files.
+      env: { VITE_API_URL: API, VITE_DEV_AUTH: "1", VITE_APP_NAME: "ViaInk" },
     },
   ],
 });

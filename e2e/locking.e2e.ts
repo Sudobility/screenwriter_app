@@ -93,7 +93,7 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
   const omitToggle = page.getByTestId("omit-toggle");
   await expect(omitToggle).toBeDisabled();
   await page.locator(".wui-el[data-omitted-heading]").click();
-  await expect(omitToggle).toHaveText("Restore scene");
+  await expect(omitToggle).toHaveAttribute("aria-label", "Restore scene"); // icon button; state is in the label
   await omitToggle.click();
   await expect(page.locator(".wui-el[data-omitted-heading]")).toHaveCount(0);
   await expect(rows.nth(1).locator(".wui-nav-omitted")).toHaveCount(0);

@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { MasterDetailLayout } from "@sudobility/components";
+import { CameraIcon, ChatBubbleLeftRightIcon, ChevronLeftIcon, ClockIcon, Cog6ToothIcon, DocumentTextIcon, MagnifyingGlassIcon, PrinterIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { MasterDetailLayout, Tooltip } from "@sudobility/components";
 import { useLang } from "../hooks/useLang";
 import { getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { StylePicker } from "../components/StylePicker";
 import { SlidePanel } from "@sudobility/building_blocks";
 import { PanelFrame } from "../components/shell/PanelFrame";
+import { IconButton } from "../components/shell/IconButton";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { useMembers } from "@sudobility/screenwriter_client";
 import { DEV_AUTH } from "../config";
@@ -19,6 +20,7 @@ import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { FixFormattingButton } from "../components/FixFormattingButton";
 import { TechniqueMenu } from "../components/TechniqueMenu";
 import { SceneOmitToggle } from "../components/SceneOmitToggle";
+import { GenerateStoryboardButton } from "../components/GenerateStoryboardButton";
 import { PageSetupPanel } from "../components/PageSetupPanel";
 import { FindReplaceBar } from "../components/FindReplaceBar";
 import { createProviders } from "../util/search/providers";
@@ -31,6 +33,36 @@ import { EntityDetailView } from "../components/EntityDetailView";
 
 type View = "edit" | "pages" | "cards";
 const VIEW_LABEL: Record<View, string> = { edit: "Edit", pages: "Pages", cards: "Cards" };
+
+/** A top-bar button that opens a right-hand panel, shown as an icon with an accessible label + tooltip. */
+function PanelIconButton({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+  testId,
+}: {
+  icon: typeof SparklesIcon;
+  label: string;
+  active: boolean;
+  onClick(): void;
+  testId?: string;
+}) {
+  return (
+    <Tooltip content={label} placement="bottom" delayShow={150}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={active}
+        aria-label={label}
+        data-testid={testId}
+        className={`inline-flex h-9 w-9 items-center justify-center rounded border border-neutral-300 ${active ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
+      >
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </button>
+    </Tooltip>
+  );
+}
 
 /** Remount per document so a fork (route param change) starts from clean state. */
 export function EditorPage() {
@@ -227,38 +259,53 @@ function Editor({ documentId }: { documentId: string }) {
   // right (page count, Title page, Page setup). It stays visible while the sidebar's Catalog selection replaces
   // the content area with `EntityDetailView`: the script-only tools grey out (none of them act on an entity),
   // choosing a view returns to the script, and the panel buttons keep working (their panels sit beside the content).
-  const scriptActive = !selectedEntityId && !selectedStoryboardSceneId;
 
   const closePanel = () => setPanel(null);
 
-  // One right-hand drawer, animated sequentially: `panel` is the target (from the toolbar); `shownPanel`
-  // is what's actually rendered in the drawer and `panelOpen` drives the slide. Switching to a different
-  // panel first slides the current one OUT (panelOpen=false); once it has slid away (onHidden) we swap to
-  // the target and slide it IN. So there's never two panels on screen, and the old one always leaves first.
+  // One right-hand drawer, animated sequentially. `panel` is the target (from the toolbar); `displayedPanel`
+  // is what's mounted in the drawer. `panelOpen` is DERIVED (shown only when the mounted panel is the target),
+  // so switching panels first slides the current one OUT (open=false while they differ), then — once it has
+  // slid away (the timeout below, matching SlidePanel's 300ms) — swaps `displayedPanel` to the target and
+  // slides it IN. Deriving `open` makes a rapid re-select of the same panel self-correct: the pending swap is
+  // cancelled and `open` returns true, so the drawer never desyncs from the button.
+  const PANEL_SLIDE_MS = 300;
   type PanelId = typeof panel;
-  const [shownPanel, setShownPanel] = useState<PanelId>(panel);
-  const [panelOpen, setPanelOpen] = useState(panel !== null);
-  const panelTarget = useRef<PanelId>(panel);
-  panelTarget.current = panel;
+  const [displayedPanel, setDisplayedPanel] = useState<PanelId>(panel);
+  const panelOpen = panel !== null && panel === displayedPanel;
   useEffect(() => {
-    if (panel === shownPanel) {
-      if (panel !== null && !panelOpen) setPanelOpen(true);
+    if (panel === displayedPanel) return;
+    if (displayedPanel === null) {
+      setDisplayedPanel(panel); // nothing shown → mount the target (it slides in)
       return;
     }
-    if (shownPanel === null) {
-      // Nothing showing: show the target straight away (it slides in).
-      setShownPanel(panel);
-      setPanelOpen(panel !== null);
-    } else {
-      // Something is showing and the target differs: slide it out; onPanelHidden swaps + reopens.
-      setPanelOpen(false);
-    }
-  }, [panel, shownPanel, panelOpen]);
-  const onPanelHidden = () => {
-    const target = panelTarget.current;
-    setShownPanel(target);
-    setPanelOpen(target !== null);
-  };
+    // A different panel is shown → let it slide out, then swap. Re-selecting cancels this.
+    const t = window.setTimeout(() => setDisplayedPanel(panel), PANEL_SLIDE_MS);
+    return () => window.clearTimeout(t);
+  }, [panel, displayedPanel]);
+
+  // Off the script (a Catalog entity or a storyboard is in the detail), only AI is reachable — the other
+  // panels are document/script-level and their openers live in the script toolbar. Close any of those if it
+  // was open on the script when the writer moves off it, so the drawer never lingers with no way to close it.
+  const offScript = selectedEntityId !== null || selectedStoryboardSceneId !== null;
+  useEffect(() => {
+    if (offScript && panel !== null && panel !== "ai") setPanel(null);
+  }, [offScript, panel]);
+
+  // The entity / storyboard detail, wrapped with a minimal toolbar that carries the AI opener and the same AI
+  // wizard drawer over the detail — so AI assists (e.g. smart-paste into a character) work off the script too.
+  const renderOffScript = (children: ReactNode) => (
+    <div className="relative h-full min-h-0 flex flex-col">
+      <div data-testid="detail-bar" className="shrink-0 bg-white border-b border-neutral-200 px-4 py-2 flex items-center justify-end print:hidden">
+        <PanelIconButton icon={SparklesIcon} label="AI" active={panel === "ai"} onClick={() => togglePanel("ai")} testId="ai-button" />
+      </div>
+      <div className="relative flex-1 min-h-0 overflow-hidden">
+        {children}
+        <SlidePanel open={panelOpen} slideFrom="right" slideMs={PANEL_SLIDE_MS} className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20">
+          {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
+        </SlidePanel>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-full flex flex-col print-flow">
@@ -302,37 +349,6 @@ function Editor({ documentId }: { documentId: string }) {
           <span className={`inline-block w-2.5 h-2.5 rounded-full ${st.tone}`} />
           {st.label}
         </span>
-        <button
-          onClick={() => togglePanel("revisions")}
-          aria-pressed={panel === "revisions"}
-          data-testid="revisions-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "revisions" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Revisions
-        </button>
-        <button
-          onClick={() => togglePanel("ai")}
-          aria-pressed={panel === "ai"}
-          data-testid="ai-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "ai" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          AI
-        </button>
-        <button
-          onClick={() => togglePanel("comments")}
-          aria-pressed={panel === "comments"}
-          data-testid="comments-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "comments" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Comments
-        </button>
-        <button
-          onClick={() => togglePanel("snapshots")}
-          aria-pressed={panel === "snapshots"}
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "snapshots" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Snapshots
-        </button>
       </header>
 
       {rebased && (
@@ -348,71 +364,6 @@ function Editor({ documentId }: { documentId: string }) {
           </button>
         </div>
       )}
-
-      <div
-        data-testid="editing-bar"
-        data-script-active={scriptActive}
-        className="bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-3 flex-wrap print:hidden"
-      >
-        <div role="tablist" aria-label="View" className="inline-flex rounded border border-neutral-300 overflow-hidden text-sm">
-          {(["edit", "pages", "cards"] as const).map(v => (
-            <button
-              key={v}
-              role="tab"
-              aria-selected={scriptActive && view === v}
-              data-testid={`view-${v}`}
-              onClick={() => setView(v)}
-              className={`px-3 py-1 ${scriptActive && view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
-            >
-              {VIEW_LABEL[v]}
-            </button>
-          ))}
-        </div>
-        {/* The script-only tools grey out (and stop taking input) while a Catalog item replaces the script in the content area. */}
-        <div className={`flex items-center gap-3 flex-wrap ${scriptActive ? "" : "opacity-40 pointer-events-none"}`} inert={!scriptActive}>
-          {host && view === "edit" && <StylePicker host={host} />}
-          {host && view === "edit" && <DualDialogueToggle host={host} />}
-          {host && view === "edit" && <SceneOmitToggle host={host} />}
-          {host && view === "edit" && <FixFormattingButton host={host} />}
-          {host && view === "edit" && <TechniqueMenu host={host} onInserted={jumpTo} />}
-          {host && view === "edit" && (
-            <button
-              onClick={() => setFindOpen(o => !o)}
-              aria-pressed={findOpen}
-              data-testid="find-button"
-              title="Find & replace (⌘F)"
-              className={`border border-neutral-300 rounded px-3 py-1 text-sm ${findOpen ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-            >
-              Find
-            </button>
-          )}
-          {view === "pages" && (
-            <button onClick={() => setPrintPending(true)} data-testid="print-button" className="border border-neutral-300 rounded px-3 py-1 text-sm hover:bg-neutral-100">
-              Print / Save as PDF
-            </button>
-          )}
-        </div>
-        <span className="ml-auto" />
-        <span className="text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
-          {pageLabel}
-        </span>
-        <button
-          onClick={() => togglePanel("title")}
-          aria-pressed={panel === "title"}
-          data-testid="title-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "title" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Title page
-        </button>
-        <button
-          onClick={() => togglePanel("setup")}
-          aria-pressed={panel === "setup"}
-          data-testid="setup-button"
-          className={`border border-neutral-300 rounded px-3 py-1 text-sm ${panel === "setup" ? "bg-neutral-800 text-white" : "hover:bg-neutral-100"}`}
-        >
-          Page setup
-        </button>
-      </div>
 
       <div className="relative flex-1 min-h-0 flex overflow-hidden print-flow" data-testid="editor-split">
         {host && (
@@ -434,36 +385,132 @@ function Editor({ documentId }: { documentId: string }) {
             detailMaxWidth={0}
             detailContent={
               selectedStoryboardSceneId && projectId ? (
-                <StoryboardDetail host={host} documentId={documentId} projectId={projectId} sceneId={selectedStoryboardSceneId} />
+                renderOffScript(<StoryboardDetail host={host} documentId={documentId} projectId={projectId} sceneId={selectedStoryboardSceneId} onDeleted={() => setSelectedStoryboardSceneId(null)} />)
               ) : selectedEntityId ? (
-                <EntityDetailView
-                  host={host}
-                  documentId={documentId}
-                  projectId={projectId ?? ""}
-                  entityId={selectedEntityId}
-                  stageId={selectedStageId}
-                  onJumpTo={jumpTo}
-                  onSelectStage={stageId => setSelectedStageId(stageId)}
-                  onDeleted={() => selectEntity(null)}
-                  scriptTitle={title}
-                />
+                renderOffScript(
+                  <EntityDetailView
+                    host={host}
+                    documentId={documentId}
+                    projectId={projectId ?? ""}
+                    entityId={selectedEntityId}
+                    stageId={selectedStageId}
+                    onJumpTo={jumpTo}
+                    onSelectStage={stageId => setSelectedStageId(stageId)}
+                    onDeleted={() => selectEntity(null)}
+                    scriptTitle={title}
+                  />,
+                )
               ) : (
-                <>
-                  {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
-                  {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
-                  {view === "edit" && <ScriptEditor host={host} initialCaret={caret} onOpenComments={() => setPanel("comments")} />}
-                  {view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
-                  {view === "pages" && (
-                    <PageView
-                      host={host}
-                      layout={layout}
-                      onRequestEdit={(elementId, offset) => {
-                        setCaret({ elementId, offset });
-                        setViewRaw("edit");
-                      }}
-                    />
-                  )}
-                </>
+                // The script editor and its OWN toolbar: the view tabs + editing tools live above the editor,
+                // inside the content area, because they act only on the script (not on a Catalog item).
+                <div className="flex h-full min-h-0 flex-col">
+                  <div data-testid="editing-bar" data-script-active="true" className="shrink-0 bg-white border-b border-neutral-200 px-4 py-2 flex items-center gap-2 flex-wrap print:hidden">
+                    <div role="tablist" aria-label="View" className="inline-flex h-9 rounded border border-neutral-300 overflow-hidden text-sm">
+                      {(["edit", "pages", "cards"] as const).map(v => (
+                        <button
+                          key={v}
+                          role="tab"
+                          aria-selected={view === v}
+                          data-testid={`view-${v}`}
+                          onClick={() => setView(v)}
+                          className={`inline-flex items-center px-3 ${view === v ? "bg-neutral-800 text-white" : "bg-white hover:bg-neutral-100"}`}
+                        >
+                          {VIEW_LABEL[v]}
+                        </button>
+                      ))}
+                    </div>
+                    {view === "edit" && <StylePicker host={host} />}
+                    {view === "edit" && <DualDialogueToggle host={host} />}
+                    {view === "edit" && <SceneOmitToggle host={host} />}
+                    {view === "edit" && <GenerateStoryboardButton host={host} documentId={documentId} onGenerated={id => setSelectedStoryboardSceneId(id)} />}
+                    {view === "edit" && <FixFormattingButton host={host} iconOnly />}
+                    {view === "edit" && <TechniqueMenu host={host} onInserted={jumpTo} />}
+                    {view === "edit" && (
+                      <IconButton
+                        icon={MagnifyingGlassIcon}
+                        label="Find & replace (⌘F)"
+                        active={findOpen}
+                        onClick={() => setFindOpen(o => !o)}
+                        testId="find-button"
+                      />
+                    )}
+                    {view === "pages" && (
+                      <IconButton icon={PrinterIcon} label="Print / Save as PDF" onClick={() => setPrintPending(true)} testId="print-button" />
+                    )}
+                    {/* Script/document panel openers (open side panels over the editor view below this toolbar). */}
+                    <span className="mx-1 h-6 w-px bg-neutral-200" aria-hidden />
+                    <PanelIconButton icon={ClockIcon} label="Revisions" active={panel === "revisions"} onClick={() => togglePanel("revisions")} testId="revisions-button" />
+                    <PanelIconButton icon={SparklesIcon} label="AI" active={panel === "ai"} onClick={() => togglePanel("ai")} testId="ai-button" />
+                    <PanelIconButton icon={ChatBubbleLeftRightIcon} label="Comments" active={panel === "comments"} onClick={() => togglePanel("comments")} testId="comments-button" />
+                    <PanelIconButton icon={CameraIcon} label="Snapshots" active={panel === "snapshots"} onClick={() => togglePanel("snapshots")} />
+                    <PanelIconButton icon={DocumentTextIcon} label="Title page" active={panel === "title"} onClick={() => togglePanel("title")} testId="title-button" />
+                    <PanelIconButton icon={Cog6ToothIcon} label="Page setup" active={panel === "setup"} onClick={() => togglePanel("setup")} testId="setup-button" />
+                    {/* Page count — always the last item. */}
+                    <span className="text-sm text-neutral-600" data-testid="page-count" data-pages={layout.pageCount} data-status={layout.status}>
+                      {pageLabel}
+                    </span>
+                  </div>
+                  <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden print-flow">
+                    {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
+                    {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
+                    {view === "edit" && <ScriptEditor host={host} initialCaret={caret} onOpenComments={() => setPanel("comments")} />}
+                    {view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
+                    {view === "pages" && (
+                      <PageView
+                        host={host}
+                        layout={layout}
+                        onRequestEdit={(elementId, offset) => {
+                          setCaret({ elementId, offset });
+                          setViewRaw("edit");
+                        }}
+                      />
+                    )}
+                    {/* The ONE right-hand drawer — overlays only the editor VIEW (below the toolbar), so the
+                        toolbar's panel buttons above it stay visible to toggle it. Full-screen on mobile, side
+                        panel on desktop. `displayedPanel`/`panelOpen` sequence the slide (old out, then new in). */}
+                    <SlidePanel
+                      open={panelOpen}
+                      slideFrom="right"
+                      slideMs={PANEL_SLIDE_MS}
+                      className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20"
+                    >
+                      {displayedPanel === "snapshots" && session && (
+                        <PanelFrame title="Snapshots" testId="snapshots-panel" onClose={closePanel}>
+                          <SnapshotsPanel session={session} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
+                        </PanelFrame>
+                      )}
+                      {displayedPanel === "title" && host && (
+                        <PanelFrame title="Title page" testId="title-panel" bodyClassName="p-3 space-y-3" onClose={closePanel}>
+                          <TitlePagePanel host={host} />
+                        </PanelFrame>
+                      )}
+                      {displayedPanel === "setup" && host && (
+                        <PanelFrame title="Page setup" testId="setup-panel" onClose={closePanel}>
+                          <PageSetupPanel host={host} />
+                        </PanelFrame>
+                      )}
+                      {displayedPanel === "revisions" && host && (
+                        <PanelFrame title="Revisions" testId="revisions-panel" onClose={closePanel}>
+                          <RevisionsPanel
+                            host={host}
+                            layout={layout.layout}
+                            onGoToPage={index => {
+                              setCaret(null);
+                              setViewRaw("pages");
+                              setGoPage({ index });
+                            }}
+                          />
+                        </PanelFrame>
+                      )}
+                      {displayedPanel === "comments" && host && (
+                        <PanelFrame title="Comments" testId="comments-panel" bodyClassName="p-3 space-y-3 text-sm" onClose={closePanel}>
+                          <CommentsPanel host={host} onJumpTo={jumpTo} canTriage={canTriageComments} authorName={commentAuthorName} />
+                        </PanelFrame>
+                      )}
+                      {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
+                    </SlidePanel>
+                  </div>
+                </div>
               )
             }
           />
@@ -474,50 +521,6 @@ function Editor({ documentId }: { documentId: string }) {
             {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
           </main>
         )}
-        {/* The ONE right-hand drawer. Only one panel is active at a time; `shownPanel`/`panelOpen` sequence
-            the animation so switching panels slides the current one fully OUT to the right before the next
-            slides IN (see the effect above). Full-screen on mobile, side panel on desktop. */}
-        <SlidePanel
-          open={panelOpen}
-          slideFrom="right"
-          onHidden={onPanelHidden}
-          className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20"
-        >
-          {shownPanel === "snapshots" && session && (
-            <PanelFrame title="Snapshots" testId="snapshots-panel" onClose={closePanel}>
-              <SnapshotsPanel session={session} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
-            </PanelFrame>
-          )}
-          {shownPanel === "title" && host && (
-            <PanelFrame title="Title page" testId="title-panel" bodyClassName="p-3 space-y-3" onClose={closePanel}>
-              <TitlePagePanel host={host} />
-            </PanelFrame>
-          )}
-          {shownPanel === "setup" && host && (
-            <PanelFrame title="Page setup" testId="setup-panel" onClose={closePanel}>
-              <PageSetupPanel host={host} />
-            </PanelFrame>
-          )}
-          {shownPanel === "revisions" && host && (
-            <PanelFrame title="Revisions" testId="revisions-panel" onClose={closePanel}>
-              <RevisionsPanel
-                host={host}
-                layout={layout.layout}
-                onGoToPage={index => {
-                  setCaret(null);
-                  setViewRaw("pages");
-                  setGoPage({ index });
-                }}
-              />
-            </PanelFrame>
-          )}
-          {shownPanel === "comments" && host && (
-            <PanelFrame title="Comments" testId="comments-panel" bodyClassName="p-3 space-y-3 text-sm" onClose={closePanel}>
-              <CommentsPanel host={host} onJumpTo={jumpTo} canTriage={canTriageComments} authorName={commentAuthorName} />
-            </PanelFrame>
-          )}
-          {shownPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
-        </SlidePanel>
         {host && findOpen && (
           <FindReplaceBar
             host={host}

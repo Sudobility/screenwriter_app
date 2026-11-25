@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { CheckCircleIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Tooltip } from "@sudobility/components";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import type { NavStore } from "@sudobility/building_blocks";
 import type { useAi } from "@sudobility/screenwriter_lib";
@@ -232,15 +234,39 @@ export function SuggestionReview({ ctx, onRerun, canRerun }: { ctx: AiWizardCtx;
         </p>
       )}
       <div className={`flex flex-wrap gap-2 ${pending.length === 0 ? "hidden" : ""}`}>
-        <button className={primary} disabled={ai.deciding || chosen.length === 0} onClick={() => void acceptSome(chosen)} data-testid="ai-accept-selected">
-          Accept selected ({chosen.length})
-        </button>
-        <button className={btn} disabled={ai.deciding || pending.length === 0} onClick={() => void acceptAll()} data-testid="ai-accept-all">
-          Accept all
-        </button>
-        <button className={btn} disabled={ai.deciding || pending.length === 0} onClick={() => void ai.reject()} data-testid="ai-reject">
-          Reject
-        </button>
+        <Tooltip content="Accept selected" placement="top" delayShow={150}>
+          <button
+            className={`${primary} inline-flex items-center gap-1`}
+            aria-label="Accept selected"
+            disabled={ai.deciding || chosen.length === 0}
+            onClick={() => void acceptSome(chosen)}
+            data-testid="ai-accept-selected"
+          >
+            <CheckIcon className="h-4 w-4" aria-hidden="true" /> {chosen.length}
+          </button>
+        </Tooltip>
+        <Tooltip content="Accept all" placement="top" delayShow={150}>
+          <button
+            className={`${btn} inline-flex items-center justify-center`}
+            aria-label="Accept all"
+            disabled={ai.deciding || pending.length === 0}
+            onClick={() => void acceptAll()}
+            data-testid="ai-accept-all"
+          >
+            <CheckCircleIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </Tooltip>
+        <Tooltip content="Reject" placement="top" delayShow={150}>
+          <button
+            className={`${btn} inline-flex items-center justify-center`}
+            aria-label="Reject"
+            disabled={ai.deciding || pending.length === 0}
+            onClick={() => void ai.reject()}
+            data-testid="ai-reject"
+          >
+            <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </Tooltip>
       </div>
       {decidedList.length > 0 && (
         <details data-testid="ai-decided" className="text-xs">

@@ -25,7 +25,7 @@ export function TechniqueMenu({ host, onInserted }: { host: ScriptEditorHost; on
     <span className="inline-flex items-center gap-2">
       {/* Always shows its placeholder: choosing is an action, not a setting. */}
       <Select value="" onValueChange={insert}>
-        <SelectTrigger aria-label="Insert technique" data-testid="technique-menu" className="h-8 w-44 bg-white text-sm">
+        <SelectTrigger aria-label="Insert technique" data-testid="technique-menu" className="w-44 rounded bg-white text-sm">
           <SelectValue placeholder="Insert technique" />
         </SelectTrigger>
         {/* The menu hands the keyboard back to the script, not to its own button: the writer goes on typing. */}

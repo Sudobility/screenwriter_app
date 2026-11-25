@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
+import { ViewColumnsIcon } from "@heroicons/react/24/outline";
 import { useModelTick } from "../util/use-model-tick";
+import { IconButton } from "./shell/IconButton";
 
 const SPEECH_ROLES = new Set(["character", "parenthetical", "dialogue", "lyrics"]);
 
@@ -51,18 +53,16 @@ export function DualDialogueToggle({ host }: { host: ScriptEditorHost }) {
   });
 
   return (
-    <button
-      type="button"
-      data-testid="dual-toggle"
-      aria-pressed={state.kind === "on"}
+    <IconButton
+      icon={ViewColumnsIcon}
+      label={state.kind === "unavailable" ? state.why : "Dual dialogue (Ctrl/Cmd+Alt+D)"}
+      active={state.kind === "on"}
+      activeClassName="bg-violet-700 text-white"
       disabled={state.kind === "unavailable"}
-      title={state.kind === "unavailable" ? state.why : "Dual dialogue: speak this block at the same time as the one before it (Ctrl/Cmd+Alt+D)"}
+      testId="dual-toggle"
       // Keep the caret in the editor: a click on the button must not move the selection.
       onMouseDown={e => e.preventDefault()}
       onClick={toggle}
-      className={`border border-neutral-300 rounded px-3 py-1 text-sm ${state.kind === "on" ? "bg-violet-700 text-white" : "hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-transparent"}`}
-    >
-      Dual dialogue
-    </button>
+    />
   );
 }

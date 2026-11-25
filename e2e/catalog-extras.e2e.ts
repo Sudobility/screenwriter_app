@@ -151,7 +151,9 @@ test("paragraphs elsewhere in the Catalog print too: a description, a synopsis; 
   await open(page, "Printing");
   await page.evaluate(() => {
     (window as any).__printed = [];
-    window.print = () => void (window as any).__printed.push(document.querySelector(".print-doc")?.textContent ?? null);
+    // Capture the most-recently-mounted print doc: printDetached clears the node on `afterprint`, which a
+    // mocked `window.print` never fires, so stale nodes can linger — the last one is the current print.
+    window.print = () => void (window as any).__printed.push([...document.querySelectorAll(".print-doc")].at(-1)?.textContent ?? null);
   });
   await page.getByTestId("rail-story").click();
   await page.getByText("Theme", { exact: true }).click();

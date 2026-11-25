@@ -60,8 +60,10 @@ test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to s
   await page.getByTestId("rail-location").click();
   await expect(locationGroup.getByText("1", { exact: true })).toBeVisible();
 
-  // The editing bar (style picker etc.) only makes sense with the script editor on screen.
-  await expect(page.getByTestId("editing-bar")).toHaveAttribute("data-script-active", "true");
+  // Switching to a section with items opens that section's first item, so the detail reflects the new
+  // navigation instead of lingering on the script — and the script's editing bar is gone with it.
+  await expect(page.getByTestId("entity-detail")).toBeVisible();
+  await expect(page.getByTestId("editing-bar")).toHaveCount(0);
 
   // Selecting an entity is a real master/detail selection: the sidebar stays visible, and the script
   // editor is replaced by that entity's detail.
@@ -70,8 +72,10 @@ test("editor sidebar: hierarchical Catalog, entity master/detail, jump back to s
   await expect(page.getByTestId("entity-detail")).toBeVisible();
   await expect(page.getByTestId("entity-name")).toHaveValue("QUINN");
   await expect(page.getByText("Character · 1 scene")).toBeVisible();
-  await expect(page.getByTestId("editing-bar")).toHaveAttribute("data-script-active", "false"); // script tools grey out: no script editor to act on
-  await expect(page.getByTestId("title-button")).toBeEnabled(); // panel buttons keep working
+  // The editing toolbar (incl. the panel buttons like Title page) lives inside the script editor, so it's gone
+  // while a Catalog item replaces it; the sidebar + top bar remain.
+  await expect(page.getByTestId("editing-bar")).toHaveCount(0);
+  await expect(page.getByTestId("title-button")).toHaveCount(0);
 
   // "Appears in" jumps back into the script and clears the selection, snapping the detail pane back
   // to the editor — the sidebar itself never left.

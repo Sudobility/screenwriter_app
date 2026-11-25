@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Tooltip } from "@sudobility/components";
 import { NavBar } from "@sudobility/building_blocks";
 
-const closeBtn = "border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100";
+const closeBtn = "inline-flex h-8 w-8 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900";
 
 /**
  * The chrome for a single-screen right-hand panel: a {@link NavBar} (title + Close) over an
@@ -32,9 +34,11 @@ export function PanelFrame({
       <NavBar
         spec={{ title, subtitle }}
         renderActions={() => (
-          <button type="button" className={closeBtn} data-testid="panel-close" onClick={onClose}>
-            Close
-          </button>
+          <Tooltip content="Close" placement="bottom" delayShow={150}>
+            <button type="button" className={closeBtn} data-testid="panel-close" aria-label="Close" onClick={onClose}>
+              <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </Tooltip>
         )}
       />
       <div className="min-h-0 flex-1 overflow-auto">

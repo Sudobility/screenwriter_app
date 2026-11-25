@@ -110,7 +110,7 @@ test("page view: layout engine pages, count, click-to-edit, print", async ({ pag
   for (const p of structure) for (const l of p.lines) engine[l.id] = (engine[l.id] ?? 0) + 1;
   const mismatches = Object.keys(engine).filter(id => speed[id] !== undefined && speed[id] !== engine[id]).map(id => ({ id, speed: speed[id], engine: engine[id] }));
   console.log(`wrapping agreement: ${Object.keys(engine).length} elements compared, ${mismatches.length} mismatches`, JSON.stringify(mismatches.slice(0, 5)));
-  writeFileSync("/private/tmp/claude-501/-Users-johnhuang-projects/a2a0a0c2-70be-4d96-acd1-5938b30dc7cf/scratchpad/f5-wrap.json", JSON.stringify({ compared: Object.keys(engine).length, mismatches }));
+  writeFileSync(`${SHOTS}/f5-wrap.json`, JSON.stringify({ compared: Object.keys(engine).length, mismatches }));
   expect(mismatches).toEqual([]);
 
   await page.setViewportSize({ width: 1400, height: 1250 }); // a whole 11 in sheet fits: the scroller clips element shots
