@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import type { NoteFixSuggestion } from "@sudobility/screenwriter_types";
 import { useAiActions } from "../hooks/useAiActions";
@@ -52,11 +53,16 @@ export function ToneSection({ host, sceneId, onJumpTo }: { host: ScriptEditorHos
       <h3 className="text-xs font-semibold uppercase text-neutral-500">Tonal pass</h3>
       <p className="text-xs text-neutral-600">Rewrite the current scene toward a tone, keeping the plot. Review each change before applying.</p>
       <div className="flex gap-1">
-        <select className="flex-1 rounded border border-neutral-300 px-2 py-1 text-xs" data-testid="ai-tone-select" value={tone} onChange={e => setTone(e.target.value)} disabled={ai.busy}>
-          {TONES.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+        <Select value={tone} onValueChange={setTone} disabled={ai.busy}>
+          <SelectTrigger data-testid="ai-tone-select" aria-label="Tone" className="flex-1 bg-white text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TONES.map(t => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <button className={primary} data-testid="ai-tone-button" disabled={ai.busy || !ai.available} onClick={() => void run()}>
           {ai.busy ? "…" : "Shift tone"}
         </button>

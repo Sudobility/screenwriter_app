@@ -6,7 +6,6 @@ const btn = "border border-neutral-300 rounded px-2 py-0.5 text-xs hover:bg-neut
 
 interface Props {
   session: DocumentSession;
-  onClose(): void;
   onForked(documentId: string): void;
   /** Changes when the document was replaced; the lists are reloaded. */
   rebasedTick: RebasedEvent | null;
@@ -15,7 +14,7 @@ interface Props {
 const isVersionPoint = (v: VersionListItem): v is VersionPoint => !("marker" in v);
 const fmt = (iso: string) => new Date(iso).toLocaleString();
 
-export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Props) {
+export function SnapshotsPanel({ session, onForked, rebasedTick }: Props) {
   const [list, setList] = useState<SnapshotListResponse | null>(null);
   const [versions, setVersions] = useState<VersionPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -158,13 +157,7 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
   );
 
   return (
-    <aside className="print:hidden w-96 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-4" aria-label="Snapshots" data-testid="snapshots-panel">
-      <div className="flex items-center">
-        <h2 className="font-semibold">Snapshots</h2>
-        <button className={`${btn} ml-auto`} onClick={onClose}>
-          Close
-        </button>
-      </div>
+    <>
       <p className="text-xs text-neutral-600">
         A snapshot freezes the script as it is now. Open one to go back to it, or fork one to try a different branch in a new document.
       </p>
@@ -217,6 +210,6 @@ export function SnapshotsPanel({ session, onClose, onForked, rebasedTick }: Prop
           </ul>
         )}
       </section>
-    </aside>
+    </>
   );
 }

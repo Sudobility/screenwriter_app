@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { createNavStore, SlidePanel, SlidingPanel, type NavStore, type ScreenEntry } from "@sudobility/building_blocks";
+import { useMemo, useRef, useSyncExternalStore } from "react";
+import { createNavStore, SlidingPanel, type NavStore, type ScreenEntry } from "@sudobility/building_blocks";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { useAi } from "@sudobility/screenwriter_lib";
 import { useAcceptAiConsent, useAiConsent } from "@sudobility/screenwriter_client";
@@ -12,8 +12,6 @@ interface Props {
   documentId: string;
   host: ScriptEditorHost;
   onJumpTo(sceneId: string): void;
-  /** Whether the wizard drawer is open. Kept mounted when closed so the stack survives. */
-  open: boolean;
   onClose(): void;
 }
 
@@ -25,9 +23,9 @@ function Pad({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * The panel-global banners: the test-mode notice and the shared AI error / consent prompt. Rendered
- * ONCE, above the screen stack — not per screen — because SlidingPanel keeps lower screens mounted,
- * so a per-screen copy would duplicate these (and their test ids).
+ * The panel-global banners: the test-mode notice and the shared AI error / consent prompt. Shown at the
+ * top of the content area (below the nav bar), and only on the current top screen — SlidingPanel keeps
+ * lower screens mounted, so an unconditional copy would duplicate these (and their test ids).
  */
 function AiBanners({ ctx }: { ctx: AiWizardCtx }) {
   const { ai } = ctx;
@@ -38,7 +36,7 @@ function AiBanners({ ctx }: { ctx: AiWizardCtx }) {
   const otherError = ai.error && ai.error.code !== "AI_CONSENT_REQUIRED";
   if (mode !== "fixture" && !consentNeeded && !otherError) return null;
   return (
-    <div className="p-3 pb-0 space-y-3">
+    <div className="space-y-3">
       {mode === "fixture" && (
         <div role="note" data-testid="ai-test-banner" className="bg-amber-100 border border-amber-400 rounded p-2 text-sm font-medium text-amber-900">
           Test mode — these results are canned samples, not real AI output
@@ -84,9 +82,10 @@ function AiBanners({ ctx }: { ctx: AiWizardCtx }) {
 /**
  * The AI panel as a wizard: screen 1 is a searchable, grouped list of actions; selecting one pushes
  * its screen, which holds that action's options, the execute button, and its results/suggestions.
- * Rendered as a drawer — a right-hand side panel on desktop, full-screen on mobile.
+ * This is the panel BODY (nav-bar stack + banners); the editor renders it inside the one shared
+ * sliding drawer. It mounts fresh each time the AI panel is shown, so the stack starts at the list.
  */
-export function AiWizard({ documentId, host, onJumpTo, open, onClose }: Props) {
+export function AiWizardBody({ documentId, host, onJumpTo, onClose }: Props) {
   const ai = useAi(documentId);
   useModelTick(host);
   const selection = useEditorSelection(host);
@@ -100,22 +99,27 @@ export function AiWizard({ documentId, host, onJumpTo, open, onClose }: Props) {
   if (!storeRef.current) storeRef.current = createNavStore(ROOT);
   const store = storeRef.current;
 
-  // Opening the panel returns to the action list.
-  const prevOpen = useRef(open);
-  useEffect(() => {
-    if (open && !prevOpen.current) store.getState().reset(ROOT);
-    prevOpen.current = open;
-  }, [open, store]);
-
   const ctx: AiWizardCtx = { documentId, host, ai, scene, onJumpTo, store };
 
   const usable = ai.status?.available === true;
 
+  // The banners (test-mode / consent / error) go at the top of the CONTENT area, but render only on the
+  // current top screen — SlidingPanel keeps lower screens mounted, so an unconditional copy would duplicate.
+  const topId = useSyncExternalStore(
+    store.subscribe,
+    () => {
+      const s = store.getState().stack;
+      return s[s.length - 1]?.id;
+    },
+    () => undefined as string | undefined
+  );
+
   const openAction = (a: AiAction) => store.getState().push({ key: "options", nav: { title: a.title }, params: { actionId: a.id } });
 
   const screens = {
-    list: () => (
+    list: (entry: ScreenEntry) => (
       <Pad>
+        {entry.id === topId && <AiBanners ctx={ctx} />}
         {!ai.loaded ? (
           <p className="text-xs text-neutral-500">Checking whether AI is available...</p>
         ) : !usable ? (
@@ -131,30 +135,27 @@ export function AiWizard({ documentId, host, onJumpTo, open, onClose }: Props) {
     options: (entry: ScreenEntry) => {
       const { actionId } = (entry.params ?? {}) as { actionId?: string };
       const action = actionId ? actionById(actionId) : undefined;
-      return <Pad>{action ? <action.Options ctx={ctx} /> : <p className="text-xs text-neutral-500">Unknown action.</p>}</Pad>;
+      return (
+        <Pad>
+          {entry.id === topId && <AiBanners ctx={ctx} />}
+          {action ? <action.Options ctx={ctx} /> : <p className="text-xs text-neutral-500">Unknown action.</p>}
+        </Pad>
+      );
     },
   };
 
-  // The drawer: full-screen on phones, a right-hand side panel on `sm`+ (the "full screen on mobile"
-  // behaviour, the web counterpart of building_blocks_rn's ResponsivePanel). SlidePanel owns the
-  // slide + mount/unmount so the panel leaves the DOM when closed (one right-hand panel at a time);
-  // the SlidingPanel inside is the wizard's screen stack + nav bar.
+  // The panel body: the wizard's screen stack + nav bar. The editor's one shared drawer owns the slide.
   return (
-    <SlidePanel open={open} slideFrom="right" className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20">
-      <div data-testid="ai-panel" aria-label="AI" className="h-full w-full flex flex-col overflow-hidden bg-neutral-50">
-        <AiBanners ctx={ctx} />
-        <div className="min-h-0 flex-1">
-          <SlidingPanel
-            store={store}
-            screens={screens}
-            renderActions={() => (
-              <button type="button" className={btn} data-testid="ai-close" onClick={onClose}>
-                Close
-              </button>
-            )}
-          />
-        </div>
-      </div>
-    </SlidePanel>
+    <div data-testid="ai-panel" aria-label="AI" className="h-full w-full overflow-hidden bg-neutral-50">
+      <SlidingPanel
+        store={store}
+        screens={screens}
+        renderActions={() => (
+          <button type="button" className={btn} data-testid="ai-close" onClick={onClose}>
+            Close
+          </button>
+        )}
+      />
+    </div>
   );
 }

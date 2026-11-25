@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { resolveStyle } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
@@ -10,7 +11,6 @@ const SLOTS: Slot[] = ["left", "center", "right"];
 const PAGE_RE = /\{page\}\.?/g;
 
 const input = "w-full border border-neutral-300 rounded px-2 py-1 text-sm bg-white font-normal";
-const select = "border border-neutral-300 rounded px-2 py-1 text-sm bg-white font-normal";
 
 interface Spec {
   enabled: boolean;
@@ -31,7 +31,7 @@ const TOKENS: [string, string][] = [
 ];
 
 /** Header, footer, page-number position and scene numbering; edits go through template commands. */
-export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onClose(): void }) {
+export function PageSetupPanel({ host }: { host: ScriptEditorHost }) {
   useModelTick(host);
   const template = host.model.template();
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -72,24 +72,22 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
   const sceneMode = !numbering?.enabled ? "none" : numbering.position === "inline" ? "both" : numbering.position;
 
   return (
-    <aside className="print:hidden w-80 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-4" aria-label="Page setup" data-testid="setup-panel">
-      <div className="flex items-center">
-        <h3 className="font-semibold">Page setup</h3>
-        <button className="ml-auto border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100" onClick={onClose}>
-          Close
-        </button>
-      </div>
-
+    <>
       <section className="space-y-2">
         <h4 className="text-xs font-semibold uppercase text-neutral-500">Page numbers</h4>
         <label className="flex items-center gap-2 text-sm">
           Position
-          <select data-testid="page-number-position" className={select} value={pagePos()} onChange={e => setPagePos(e.target.value as Slot | "none")}>
-            <option value="right">Top right</option>
-            <option value="center">Top center</option>
-            <option value="left">Top left</option>
-            <option value="none">None</option>
-          </select>
+          <Select value={pagePos()} onValueChange={v => setPagePos(v as Slot | "none")}>
+            <SelectTrigger data-testid="page-number-position" aria-label="Page number position" className="bg-white text-sm font-normal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="right">Top right</SelectItem>
+              <SelectItem value="center">Top center</SelectItem>
+              <SelectItem value="left">Top left</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -144,17 +142,17 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
         <h4 className="text-xs font-semibold uppercase text-neutral-500">Scene numbers</h4>
         <label className="flex items-center gap-2 text-sm">
           Show
-          <select
-            data-testid="scene-number-mode"
-            className={select}
-            value={sceneMode}
-            onChange={e => host.execute([{ id: "template.setSceneNumbering", params: { mode: e.target.value } }])}
-          >
-            <option value="none">Off</option>
-            <option value="left">Left margin</option>
-            <option value="right">Right margin</option>
-            <option value="both">Both margins</option>
-          </select>
+          <Select value={sceneMode} onValueChange={mode => host.execute([{ id: "template.setSceneNumbering", params: { mode } }])}>
+            <SelectTrigger data-testid="scene-number-mode" aria-label="Scene number mode" className="bg-white text-sm font-normal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Off</SelectItem>
+              <SelectItem value="left">Left margin</SelectItem>
+              <SelectItem value="right">Right margin</SelectItem>
+              <SelectItem value="both">Both margins</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <p className="text-xs text-neutral-600">Scenes are numbered automatically and renumber as you edit until you lock them; omitted scenes keep their number.</p>
       </section>
@@ -191,6 +189,6 @@ export function PageSetupPanel({ host, onClose }: { host: ScriptEditorHost; onCl
           Number them from the second page (CONTINUED: (2))
         </label>
       </section>
-    </aside>
+    </>
   );
 }

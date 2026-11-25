@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { formatRevisionDate, revisionReport, revisionShortName } from "@sudobility/writing_core";
 import type { DocLayout } from "@sudobility/writing_core";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
@@ -43,12 +44,10 @@ export function RevisionIndicator({ host, onClick }: { host: ScriptEditorHost; o
 export function RevisionsPanel({
   host,
   layout,
-  onClose,
   onGoToPage,
 }: {
   host: ScriptEditorHost;
   layout: DocLayout | null;
-  onClose(): void;
   /** Zero-based page index; the app switches to the Pages tab and scrolls there. */
   onGoToPage(index: number): void;
 }) {
@@ -79,14 +78,7 @@ export function RevisionsPanel({
   const withPages = report.filter(r => r.pages.length > 0);
 
   return (
-    <aside className="print:hidden w-80 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-4" aria-label="Revisions" data-testid="revisions-panel">
-      <div className="flex items-center">
-        <h3 className="font-semibold">Revisions</h3>
-        <button className="ml-auto border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100" onClick={onClose}>
-          Close
-        </button>
-      </div>
-
+    <>
       <section className="space-y-2">
         <h4 className="text-xs font-semibold uppercase text-neutral-500">Revision mode</h4>
         <button
@@ -115,19 +107,18 @@ export function RevisionsPanel({
       <section className="space-y-2">
         <h4 className="text-xs font-semibold uppercase text-neutral-500">Start new revision</h4>
         <div className="flex items-center gap-2 flex-wrap">
-          <select
-            data-testid="rev-set-select"
-            aria-label="Revision colour"
-            className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white"
-            value={chosen?.id ?? ""}
-            onChange={e => setPicked(e.target.value)}
-          >
-            {rs.sets.map(s => (
-              <option key={s.id} value={s.id}>
-                {revisionShortName(s)}
-              </option>
-            ))}
-          </select>
+          <Select value={chosen?.id ?? undefined} onValueChange={setPicked}>
+            <SelectTrigger data-testid="rev-set-select" aria-label="Revision colour" className="bg-white text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {rs.sets.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  {revisionShortName(s)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <input type="date" aria-label="Revision date" data-testid="rev-date" className="border border-neutral-300 rounded px-2 py-1 text-sm bg-white min-w-0 w-40" value={date} onChange={e => setDate(e.target.value)} />
         </div>
         <button className={btn} data-testid="rev-start" disabled={!chosen} onClick={start}>
@@ -180,6 +171,6 @@ export function RevisionsPanel({
         ))}
       </section>
       {error && <p className="text-xs text-red-600">{error}</p>}
-    </aside>
+    </>
   );
 }

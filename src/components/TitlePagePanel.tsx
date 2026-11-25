@@ -17,7 +17,7 @@ const FIELDS: { field: Field; label: string; multiline?: boolean; hint?: string 
 const input = "w-full border border-neutral-300 rounded px-2 py-1 text-sm bg-white";
 
 /** Title page fields; each edit goes through the `title.setField` command, so it syncs like any other edit. */
-export function TitlePagePanel({ host, onClose }: { host: ScriptEditorHost; onClose(): void }) {
+export function TitlePagePanel({ host }: { host: ScriptEditorHost }) {
   useModelTick(host);
   const stored = (f: Field) => host.model.titlePage().fields[f]?.text ?? "";
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -38,13 +38,7 @@ export function TitlePagePanel({ host, onClose }: { host: ScriptEditorHost; onCl
   };
 
   return (
-    <aside className="print:hidden w-80 shrink-0 border-l border-neutral-200 bg-neutral-50 overflow-y-auto p-3 space-y-3" aria-label="Title page" data-testid="title-panel">
-      <div className="flex items-center">
-        <h3 className="font-semibold">Title page</h3>
-        <button className="ml-auto border border-neutral-300 rounded px-2 py-1 text-xs hover:bg-neutral-100" onClick={onClose}>
-          Close
-        </button>
-      </div>
+    <>
       <p className="text-xs text-neutral-600">Shown as the first, unnumbered page in the Pages view. Leave everything empty for no title page.</p>
       {FIELDS.map(({ field, label, multiline, hint }) => (
         <label key={field} className="block text-xs font-medium text-neutral-700">
@@ -77,6 +71,6 @@ export function TitlePagePanel({ host, onClose }: { host: ScriptEditorHost; onCl
           )}
         </label>
       ))}
-    </aside>
+    </>
   );
 }

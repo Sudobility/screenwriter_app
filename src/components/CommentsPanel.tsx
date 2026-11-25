@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useEditorSelection, type ScriptEditorHost } from "@sudobility/writing_ui";
 import { REVIEW_CATEGORIES, type AiNote, type ReviewCategory, type Severity } from "@sudobility/screenwriter_types";
 import { useModelTick } from "../util/use-model-tick";
@@ -37,13 +38,11 @@ function when(ms: number | null | undefined): string {
 export function CommentsPanel({
   host,
   onJumpTo,
-  onClose,
   canTriage = true,
   authorName,
 }: {
   host: ScriptEditorHost;
   onJumpTo(sceneId: string): void;
-  onClose(): void;
   /** Whether the viewer may triage comments (owner/manager). Members add/reply only. */
   canTriage?: boolean;
   /** Resolve a uid to a display name; falls back to the uid. */
@@ -241,17 +240,21 @@ export function CommentsPanel({
   );
 
   return (
-    <aside data-testid="comments-panel" className="w-80 shrink-0 border-l border-neutral-200 bg-white p-3 overflow-y-auto space-y-3 text-sm">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Comments <span className="text-xs font-normal text-neutral-500">({activeCount} open{todoCount ? `, ${todoCount} TODO` : ""})</span></h2>
-        <button type="button" className={btn} onClick={onClose}>Close</button>
-      </div>
+    <>
+      <p className="text-xs text-neutral-500" data-testid="comments-count">{activeCount} open{todoCount ? `, ${todoCount} TODO` : ""}</p>
 
       <div className="space-y-1 rounded border border-neutral-200 p-2">
         <p className="text-[11px] text-neutral-500">{target ? `On: ${target.label}` : "Place your cursor in the script, or select text, to comment."}</p>
-        <select className="w-full rounded border border-neutral-300 px-2 py-1 text-xs" data-testid="comment-category" value={draftCategory} onChange={e => setDraftCategory(e.target.value as ReviewCategory)} disabled={!target}>
-          {REVIEW_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <Select value={draftCategory} onValueChange={v => setDraftCategory(v as ReviewCategory)} disabled={!target}>
+          <SelectTrigger data-testid="comment-category" aria-label="Comment category" className="w-full bg-white text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {REVIEW_CATEGORIES.map(c => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <textarea data-testid="comment-draft" className="w-full rounded border border-neutral-300 p-2 text-xs" rows={2} value={draft} onChange={e => setDraft(e.target.value)} placeholder="Comment…" disabled={!target} />
         <textarea data-testid="comment-suggestion" className="w-full rounded border border-neutral-300 p-2 text-xs" rows={2} value={draftSuggestion} onChange={e => setDraftSuggestion(e.target.value)} placeholder="Suggestion (optional, concrete action)…" disabled={!target} />
         <button type="button" className={primary} data-testid="comment-add" disabled={!target || !draft.trim()} onClick={add}>Add comment</button>
@@ -290,6 +293,6 @@ export function CommentsPanel({
           <ul className="space-y-2">{groups.other.map(n => card(n, null))}</ul>
         </section>
       )}
-    </aside>
+    </>
   );
 }

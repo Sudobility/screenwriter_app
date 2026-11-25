@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
 const editor = (page: Page) => page.getByTestId("script-editor");

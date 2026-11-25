@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import { useSnapshots } from "@sudobility/screenwriter_client";
@@ -73,13 +74,18 @@ export function RevisionSummarySection({ documentId, host }: { documentId: strin
         <p className="text-xs text-neutral-500">Take a snapshot first (Snapshots panel), then come back to compare.</p>
       ) : (
         <>
-          <select className="w-full rounded border border-neutral-300 px-2 py-1 text-xs" data-testid="ai-revision-snapshot" value={chosen} onChange={e => setSid(e.target.value)} disabled={ai.busy}>
-            {snapshots.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name || "Snapshot"} — {new Date(s.createdAt).toLocaleString()}
-              </option>
-            ))}
-          </select>
+          <Select value={chosen} onValueChange={setSid} disabled={ai.busy}>
+            <SelectTrigger data-testid="ai-revision-snapshot" aria-label="Snapshot to compare" className="w-full bg-white text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {snapshots.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name || "Snapshot"} — {new Date(s.createdAt).toLocaleString()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button className={primary} data-testid="ai-revision-button" disabled={ai.busy || !ai.available} onClick={() => void run()}>
             {ai.busy ? "Comparing…" : "Summarize changes"}
           </button>

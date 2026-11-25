@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const email = `e2e-titlepage-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
 const synced = (page: Page) => expect(page.getByTestId("sync-status")).toHaveAttribute("data-state", "synced");
@@ -153,9 +153,11 @@ test("title page, headers/footers and scene numbers, end to end", async ({ page 
     expect(i.footer).toBe(`The Night Train - ${i.page}`);
   }
   // Page number position select moves the number; first-page toggle shows the header on page 1.
-  await page.getByTestId("page-number-position").selectOption("center");
+  await page.getByTestId("page-number-position").click();
+  await page.getByRole("option", { name: "Top center", exact: true }).click();
   await expect.poll(async () => (await sheetInfo(page))[2]!.headerSlot).toBe("center");
-  await page.getByTestId("page-number-position").selectOption("right");
+  await page.getByTestId("page-number-position").click();
+  await page.getByRole("option", { name: "Top right", exact: true }).click();
   await expect.poll(async () => (await sheetInfo(page))[2]!.headerSlot).toBe("right");
   await page.getByTestId("header-first-page").uncheck();
   await expect.poll(async () => (await sheetInfo(page))[1]!.header).toBe("1.");
@@ -164,7 +166,8 @@ test("title page, headers/footers and scene numbers, end to end", async ({ page 
 
   // 3. Scene numbers: both margins.
   expect((await sheetInfo(page)).every(s => s.left.length === 0 && s.right.length === 0)).toBe(true);
-  await page.getByTestId("scene-number-mode").selectOption("both");
+  await page.getByTestId("scene-number-mode").click();
+  await page.getByRole("option", { name: "Both margins", exact: true }).click();
   await expect.poll(async () => (await sheetInfo(page))[1]!.left.length).toBeGreaterThan(0);
   const numbered = await sheetInfo(page);
   const lefts = numbered.flatMap(s => s.left);
@@ -224,7 +227,8 @@ test("title page, headers/footers and scene numbers, end to end", async ({ page 
 
   // Turning scene numbers off removes them everywhere.
   await page.getByTestId("setup-button").click();
-  await page.getByTestId("scene-number-mode").selectOption("none");
+  await page.getByTestId("scene-number-mode").click();
+  await page.getByRole("option", { name: "Off", exact: true }).click();
   await expect.poll(async () => (await sheetInfo(page)).flatMap(s => s.left).length).toBe(0);
   await synced(page);
 });

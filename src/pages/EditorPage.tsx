@@ -7,12 +7,13 @@ import { useLang } from "../hooks/useLang";
 import { getSelectionStore, IndexCards, PageView, ScriptEditor, useLayout, type PlainPos } from "@sudobility/writing_ui";
 import { StylePicker } from "../components/StylePicker";
 import { SlidePanel } from "@sudobility/building_blocks";
+import { PanelFrame } from "../components/shell/PanelFrame";
 import { useDocumentSession, useScreenwriter, type RebasedEvent, type SessionSyncStatus } from "@sudobility/screenwriter_lib";
 import { useMembers } from "@sudobility/screenwriter_client";
 import { DEV_AUTH } from "../config";
 import { sessionToHost } from "../adapter/session-host";
 import { RevisionIndicator, RevisionsPanel } from "../components/RevisionsPanel";
-import { AiWizard } from "../components/ai/AiWizard";
+import { AiWizardBody } from "../components/ai/AiWizard";
 import { CommentsPanel } from "../components/CommentsPanel";
 import { DualDialogueToggle } from "../components/DualDialogueToggle";
 import { FixFormattingButton } from "../components/FixFormattingButton";
@@ -228,29 +229,36 @@ function Editor({ documentId }: { documentId: string }) {
   // choosing a view returns to the script, and the panel buttons keep working (their panels sit beside the content).
   const scriptActive = !selectedEntityId && !selectedStoryboardSceneId;
 
-  // The one active right-hand panel (snapshots / title / setup / revisions / AI / comments), or
-  // null when none is open. Rendered inside a sliding drawer so showing/hiding it animates.
-  const panelNode =
-    panel === "snapshots" && session ? (
-      <SnapshotsPanel session={session} onClose={() => setPanel(null)} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
-    ) : panel === "title" && host ? (
-      <TitlePagePanel host={host} onClose={() => setPanel(null)} />
-    ) : panel === "setup" && host ? (
-      <PageSetupPanel host={host} onClose={() => setPanel(null)} />
-    ) : panel === "revisions" && host ? (
-      <RevisionsPanel
-        host={host}
-        layout={layout.layout}
-        onClose={() => setPanel(null)}
-        onGoToPage={index => {
-          setCaret(null);
-          setViewRaw("pages");
-          setGoPage({ index });
-        }}
-      />
-    ) : panel === "comments" && host ? (
-      <CommentsPanel host={host} onJumpTo={jumpTo} onClose={() => setPanel(null)} canTriage={canTriageComments} authorName={commentAuthorName} />
-    ) : null;
+  const closePanel = () => setPanel(null);
+
+  // One right-hand drawer, animated sequentially: `panel` is the target (from the toolbar); `shownPanel`
+  // is what's actually rendered in the drawer and `panelOpen` drives the slide. Switching to a different
+  // panel first slides the current one OUT (panelOpen=false); once it has slid away (onHidden) we swap to
+  // the target and slide it IN. So there's never two panels on screen, and the old one always leaves first.
+  type PanelId = typeof panel;
+  const [shownPanel, setShownPanel] = useState<PanelId>(panel);
+  const [panelOpen, setPanelOpen] = useState(panel !== null);
+  const panelTarget = useRef<PanelId>(panel);
+  panelTarget.current = panel;
+  useEffect(() => {
+    if (panel === shownPanel) {
+      if (panel !== null && !panelOpen) setPanelOpen(true);
+      return;
+    }
+    if (shownPanel === null) {
+      // Nothing showing: show the target straight away (it slides in).
+      setShownPanel(panel);
+      setPanelOpen(panel !== null);
+    } else {
+      // Something is showing and the target differs: slide it out; onPanelHidden swaps + reopens.
+      setPanelOpen(false);
+    }
+  }, [panel, shownPanel, panelOpen]);
+  const onPanelHidden = () => {
+    const target = panelTarget.current;
+    setShownPanel(target);
+    setPanelOpen(target !== null);
+  };
 
   return (
     <div className="h-full flex flex-col print-flow">
@@ -466,12 +474,50 @@ function Editor({ documentId }: { documentId: string }) {
             {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
           </main>
         )}
-        {/* The active right-hand panel, in a drawer that slides it in/out from the right edge. */}
-        <SlidePanel open={panelNode !== null} slideFrom="right" className="absolute inset-y-0 right-0 z-20">
-          {panelNode}
+        {/* The ONE right-hand drawer. Only one panel is active at a time; `shownPanel`/`panelOpen` sequence
+            the animation so switching panels slides the current one fully OUT to the right before the next
+            slides IN (see the effect above). Full-screen on mobile, side panel on desktop. */}
+        <SlidePanel
+          open={panelOpen}
+          slideFrom="right"
+          onHidden={onPanelHidden}
+          className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20"
+        >
+          {shownPanel === "snapshots" && session && (
+            <PanelFrame title="Snapshots" testId="snapshots-panel" onClose={closePanel}>
+              <SnapshotsPanel session={session} onForked={id => navigate(`/${lang}/d/${id}`)} rebasedTick={rebased} />
+            </PanelFrame>
+          )}
+          {shownPanel === "title" && host && (
+            <PanelFrame title="Title page" testId="title-panel" bodyClassName="p-3 space-y-3" onClose={closePanel}>
+              <TitlePagePanel host={host} />
+            </PanelFrame>
+          )}
+          {shownPanel === "setup" && host && (
+            <PanelFrame title="Page setup" testId="setup-panel" onClose={closePanel}>
+              <PageSetupPanel host={host} />
+            </PanelFrame>
+          )}
+          {shownPanel === "revisions" && host && (
+            <PanelFrame title="Revisions" testId="revisions-panel" onClose={closePanel}>
+              <RevisionsPanel
+                host={host}
+                layout={layout.layout}
+                onGoToPage={index => {
+                  setCaret(null);
+                  setViewRaw("pages");
+                  setGoPage({ index });
+                }}
+              />
+            </PanelFrame>
+          )}
+          {shownPanel === "comments" && host && (
+            <PanelFrame title="Comments" testId="comments-panel" bodyClassName="p-3 space-y-3 text-sm" onClose={closePanel}>
+              <CommentsPanel host={host} onJumpTo={jumpTo} canTriage={canTriageComments} authorName={commentAuthorName} />
+            </PanelFrame>
+          )}
+          {shownPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
         </SlidePanel>
-        {/* The AI panel is a wizard (its own responsive drawer: full-screen on mobile, side panel on desktop). */}
-        {host && <AiWizard documentId={documentId} host={host} onJumpTo={jumpTo} open={panel === "ai"} onClose={() => setPanel(null)} />}
         {host && findOpen && (
           <FindReplaceBar
             host={host}

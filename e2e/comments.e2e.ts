@@ -53,7 +53,8 @@ test("writer adds a structured comment and triages it pending → todo → compl
   // Place the caret in a scene so "Add a comment" has a target.
   await page.getByTestId("script-editor").getByText("INT. KITCHEN - DAY").click();
 
-  await panel.getByTestId("comment-category").selectOption("motive");
+  await panel.getByTestId("comment-category").click();
+  await page.getByRole("option", { name: "motive", exact: true }).click();
   await panel.getByTestId("comment-draft").fill("Why does Maya give up here?");
   await panel.getByTestId("comment-suggestion").fill("Plant her exhaustion in the prior scene.");
   await panel.getByTestId("comment-add").click();
@@ -124,7 +125,8 @@ test("the writer fixes a comment with AI, which applies an edit and completes th
   const panel = page.getByTestId("comments-panel");
   await expect(panel).toBeVisible();
   await page.getByTestId("script-editor").getByText("INT. KITCHEN - DAY").click();
-  await panel.getByTestId("comment-category").selectOption("dialogue");
+  await panel.getByTestId("comment-category").click();
+  await page.getByRole("option", { name: "dialogue", exact: true }).click();
   await panel.getByTestId("comment-draft").fill("Maya's line is on the nose.");
   await panel.getByTestId("comment-add").click();
 
@@ -156,7 +158,8 @@ test("the writer fixes all TODOs at once with AI", async ({ page }) => {
   // Two comments on two scenes, each confirmed to TODO.
   for (const heading of ["INT. KITCHEN - DAY", "EXT. ROOFTOP - DAWN"]) {
     await page.getByTestId("script-editor").getByText(heading).click();
-    await panel.getByTestId("comment-category").selectOption("dialogue");
+    await panel.getByTestId("comment-category").click();
+    await page.getByRole("option", { name: "dialogue", exact: true }).click();
     await panel.getByTestId("comment-draft").fill(`Tighten the dialogue in ${heading}.`);
     await panel.getByTestId("comment-add").click();
   }

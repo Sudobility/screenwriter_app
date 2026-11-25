@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { devUidForEmail } from "../../screenwriter_lib/src/auth/dev-auth";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const API = `http://localhost:${Number(process.env.E2E_API_PORT ?? 18042)}`;
 const email = `e2e-structure-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 const AUTH = { Authorization: `Bearer dev:${devUidForEmail(email)}:${email}` };

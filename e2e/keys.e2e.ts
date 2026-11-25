@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const API = `http://localhost:${Number(process.env.E2E_API_PORT ?? 18042)}`;
 const email = `e2e-keys-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
@@ -20,7 +20,8 @@ test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke",
 
   // ---- create
   await page.getByLabel("Key name").fill("e2e assistant");
-  await page.getByLabel("Key access").selectOption("read");
+  await page.getByLabel("Key access").click();
+  await page.getByRole("option", { name: "Read only", exact: true }).click();
   await page.getByRole("button", { name: "Create key" }).click();
 
   const reveal = page.getByTestId("key-reveal");
@@ -63,6 +64,9 @@ test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke",
   // the list response never carries the secret
   const listRes = page.waitForResponse(r => r.url().endsWith("/api/v1/api-keys") && r.request().method() === "GET");
   await page.reload();
+  // The "API keys" view is dashboard-local state, not a URL, so a reload returns to the default section;
+  // re-open it to mount the list (and fire the GET we're capturing).
+  await page.getByText("API keys", { exact: true }).click();
   const listBody = await (await listRes).text();
   expect(listBody).toContain(prefix);
   expect(listBody).not.toContain(key);
@@ -75,7 +79,7 @@ test("API keys page: create, one-time reveal, MCP snippet, use the key, revoke",
   // action buttons, so this asserts by visible text/role instead.
   await page.getByRole("button", { name: "Revoke" }).click();
   await expect(page.getByText("Revoke this key?")).toBeVisible();
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).filter({ hasText: "Cancel" }).click();
   expect((await page.request.get(`${API}/api/v1/me`, { headers })).status()).toBe(200);
   await page.getByRole("button", { name: "Revoke" }).click();
   await page.getByRole("button", { name: "Revoke key" }).click();

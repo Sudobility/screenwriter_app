@@ -38,7 +38,8 @@ test("tonal pass previews and applies a scene rewrite", async ({ page }) => {
   await page.getByTestId("ai-action-tone").click();
   const section = page.getByTestId("ai-tone-section");
   await expect(section).toBeVisible();
-  await section.getByTestId("ai-tone-select").selectOption("darker");
+  await section.getByTestId("ai-tone-select").click();
+  await page.getByRole("option", { name: "darker", exact: true }).click();
   await section.getByTestId("ai-tone-button").click();
 
   await expect(section.getByTestId("ai-tone-result")).toBeVisible({ timeout: 30_000 });

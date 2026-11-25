@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useProject } from "@sudobility/screenwriter_client";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
 import type { ProductionImageKind, ProductionImageRecord } from "@sudobility/screenwriter_types";
@@ -73,10 +74,14 @@ export function ProductionImagesSection({ documentId, projectId, kind, subjectId
     <h3 className="font-semibold">{titles[kind]}</h3>
     {!styleId && <p className="text-sm text-amber-700">Choose a project image style before generating images.</p>}
     {needsCharacter && <label className="block text-sm">Character
-      <select className="mt-1 block w-full rounded border border-neutral-300 p-2" value={characterId} onChange={event => setCharacterId(event.target.value)}>
-        <option value="">Choose a character</option>
-        {characters.map(character => <option key={character.id} value={character.id}>{character.name}</option>)}
-      </select>
+      <Select value={characterId || undefined} onValueChange={setCharacterId}>
+        <SelectTrigger aria-label="Character" className="mt-1 block w-full bg-white">
+          <SelectValue placeholder="Choose a character" />
+        </SelectTrigger>
+        <SelectContent>
+          {characters.map(character => <SelectItem key={character.id} value={character.id}>{character.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
     </label>}
     <label className="block text-sm">Describe the image
       <textarea className="mt-1 block w-full rounded border border-neutral-300 p-2" rows={3} value={description} onChange={event => setDescription(event.target.value)} placeholder="Appearance, colors, materials, mood, and details" />

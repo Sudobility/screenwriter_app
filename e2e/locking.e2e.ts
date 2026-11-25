@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const email = `e2e-locking-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
 const synced = (page: Page) => expect(page.getByTestId("sync-status")).toHaveAttribute("data-state", "synced");
@@ -70,7 +70,8 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
 
   // Scene numbers on (both margins).
   await page.getByTestId("setup-button").click();
-  await page.getByTestId("scene-number-mode").selectOption("both");
+  await page.getByTestId("scene-number-mode").click();
+  await page.getByRole("option", { name: "Both margins", exact: true }).click();
   await expect(page.getByTestId("lock-scenes")).toBeEnabled();
   await page.getByTestId("setup-button").click(); // close
   expect(await navNumbers(page)).toEqual(["1", "2", "3", "4", "5", "6"]);
@@ -136,7 +137,7 @@ test("omit, scene locking, page locking and A pages, end to end", async ({ page 
   // the dialog to disambiguate.
   await page.getByTestId("setup-button").click();
   await page.getByTestId("lock-pages").click();
-  await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).filter({ hasText: "Cancel" }).click();
   await expect(page.getByTestId("page-lock-status")).toContainText("not locked");
   await page.getByTestId("lock-pages").click();
   await page.getByRole("dialog").getByRole("button", { name: "Lock pages" }).click();

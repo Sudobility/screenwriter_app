@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const fx = (n: string) => join(HERE, "fixtures", n);
 const email = `e2e-formats-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;

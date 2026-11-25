@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SHOTS = "/Users/johnhuang/projects/screenwriter_plans/.superpowers/sdd";
+const SHOTS = "../screenwriter_plans/.superpowers/sdd";
 const email = `e2e-revisions-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
 const synced = (page: Page) => expect(page.getByTestId("sync-status")).toHaveAttribute("data-state", "synced");

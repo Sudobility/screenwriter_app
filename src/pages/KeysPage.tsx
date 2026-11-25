@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { ApiKeySummary } from "@sudobility/screenwriter_types";
 import { useApiKeys } from "@sudobility/screenwriter_lib";
-import { FormModal } from "@sudobility/components";
+import { FormModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { API_URL } from "../config";
 import { mcpAddCommand, mcpJsonConfig } from "../util/mcp-config";
 
@@ -131,19 +131,29 @@ export function KeysPage() {
         </label>
         <label className="text-sm">
           <span className="block text-neutral-600 mb-1">Access</span>
-          <select aria-label="Key access" value={scope} onChange={e => setScope(e.target.value as "read" | "read_write")} className="border border-neutral-300 rounded px-2 py-1.5">
-            <option value="read_write">Read and write</option>
-            <option value="read">Read only</option>
-          </select>
+          <Select value={scope} onValueChange={v => setScope(v as "read" | "read_write")}>
+            <SelectTrigger aria-label="Key access" className="bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="read_write">Read and write</SelectItem>
+              <SelectItem value="read">Read only</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <label className="text-sm">
           <span className="block text-neutral-600 mb-1">Expires</span>
-          <select aria-label="Key expiry" value={expiry} onChange={e => setExpiry(e.target.value)} className="border border-neutral-300 rounded px-2 py-1.5">
-            <option value="">Never</option>
-            <option value="30">In 30 days</option>
-            <option value="90">In 90 days</option>
-            <option value="365">In 1 year</option>
-          </select>
+          <Select value={expiry || "never"} onValueChange={v => setExpiry(v === "never" ? "" : v)}>
+            <SelectTrigger aria-label="Key expiry" className="bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="never">Never</SelectItem>
+              <SelectItem value="30">In 30 days</SelectItem>
+              <SelectItem value="90">In 90 days</SelectItem>
+              <SelectItem value="365">In 1 year</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <label className="text-sm flex items-center gap-1.5 pb-2">
           <input type="checkbox" checked={ai} onChange={e => setAi(e.target.checked)} />
