@@ -18,9 +18,9 @@
         "@sudobility/entity_client": "^0.0.63",
         "@sudobility/printing": "^0.1.2",
         "@sudobility/printing_core": "^0.1.1",
-        "@sudobility/screenwriter_client": "^0.1.31",
-        "@sudobility/screenwriter_lib": "^0.1.29",
-        "@sudobility/screenwriter_types": "^0.1.27",
+        "@sudobility/screenwriter_client": "^0.1.32",
+        "@sudobility/screenwriter_lib": "^0.1.31",
+        "@sudobility/screenwriter_types": "^0.1.28",
         "@sudobility/seo_lib": "^0.0.53",
         "@sudobility/types": "^1.11.2",
         "@sudobility/writing_core": "^0.1.10",
@@ -513,11 +513,11 @@
 
     "@sudobility/printing_core": ["@sudobility/printing_core@0.1.1", "https://npm.pkg.github.com/download/@sudobility/printing_core/0.1.1/07325cb431c32a730503240a82e90171eff4c5a9", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0" } }, "sha512-DdaVXnOOETxjjFdr87KAcsN48dpjp9dbBOLqJHrC26JQJC9cKhiGCSl+6bjTubiVLScqlTIISTAj2qr6MpBPog=="],
 
-    "@sudobility/screenwriter_client": ["@sudobility/screenwriter_client@0.1.31", "https://npm.pkg.github.com/download/@sudobility/screenwriter_client/0.1.31/446bcf76901875e0360aa2ca051e0d298be395d4", { "dependencies": { "@sudobility/screenwriter_types": "^0.1.27", "@sudobility/writing_core": "^0.1.10", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-MCqHV2zbXJWSdwatI1EQIYLB0JEKDIyoKIaO5xI3XmhpstwogbqrisirYdBk/iNbvJWQ2fVEY2/I1N3MnGg3xg=="],
+    "@sudobility/screenwriter_client": ["@sudobility/screenwriter_client@0.1.32", "https://npm.pkg.github.com/download/@sudobility/screenwriter_client/0.1.32/ca4356f5fcb49468c143336ed4d975f39ce84f41", { "dependencies": { "@sudobility/screenwriter_types": "^0.1.28", "@sudobility/writing_core": "^0.1.10", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-lR9WV3AFajNNb0ATtbqiN1efrewVyUVWkqVbDBvwgbKK3DpwNzhUHzhveyEBr6+ouEIZotFG1alLPLDvCgGz+w=="],
 
-    "@sudobility/screenwriter_lib": ["@sudobility/screenwriter_lib@0.1.30", "https://npm.pkg.github.com/download/@sudobility/screenwriter_lib/0.1.30/d5fe09674e180eabb6c54482d6f1141d2fabf88d", { "dependencies": { "@sudobility/screenwriter_client": "^0.1.30", "@sudobility/screenwriter_types": "^0.1.27", "@sudobility/writing_core": "^0.1.10", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0", "zustand": ">=5.0.0" } }, "sha512-KIy3Q7rHN4dcJU8uecU0OJb5EFAS9hIF+yhiayNy5RA+RjWK4LwbfBLsuOiMmxRPhZ6rOq5PDPV892w4MIBfMQ=="],
+    "@sudobility/screenwriter_lib": ["@sudobility/screenwriter_lib@0.1.31", "https://npm.pkg.github.com/download/@sudobility/screenwriter_lib/0.1.31/bf4ecbef97ebdc91ac40f2a43a370348a6006765", { "dependencies": { "@sudobility/screenwriter_client": "^0.1.32", "@sudobility/screenwriter_types": "^0.1.28", "@sudobility/writing_core": "^0.1.10", "yjs": "~13.6.33" }, "peerDependencies": { "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0", "zustand": ">=5.0.0" } }, "sha512-JLKcOnmhjPZ3whTQjl8AmqNnIxve2lApcl6VMcOgO8WcmCygh+3rVEy+gbd9piR/6Ue2/WaOkDq7ujpBzJrLqQ=="],
 
-    "@sudobility/screenwriter_types": ["@sudobility/screenwriter_types@0.1.27", "https://npm.pkg.github.com/download/@sudobility/screenwriter_types/0.1.27/c565328c0e9eda8b414fa25dbe6760fad2e4c370", { "dependencies": { "@sudobility/types": "^1.11.2", "@sudobility/writing_core": "^0.1.10", "lib0": "0.2.117", "zod": "~4.6.5" } }, "sha512-aW+22bs8RwlYMDkdjNKch5dvlvenC7oaC/zAcoHwbAQVQQMlB2HGcIb7ZFx9m6oB2p6oCrGvG6VpKnTlPh4AHA=="],
+    "@sudobility/screenwriter_types": ["@sudobility/screenwriter_types@0.1.28", "https://npm.pkg.github.com/download/@sudobility/screenwriter_types/0.1.28/086c3d2cad7d76d0a0b492c29e9236ce6995565a", { "dependencies": { "@sudobility/types": "^1.11.2", "@sudobility/writing_core": "^0.1.10", "lib0": "0.2.117", "zod": "~4.6.5" } }, "sha512-HlVQVRti9eSSCq+Rr7EXTaTZ4iuyeuiD9Er8hc9i6ew5jl6HzJUjeSgSkNd8Gv4s+JjQKmG/XvGpTPAB4wcQFA=="],
 
     "@sudobility/seo_lib": ["@sudobility/seo_lib@0.0.53", "https://npm.pkg.github.com/download/@sudobility/seo_lib/0.0.53/6999c5a7a032f1f6418493ee260348df8bc809b5", { "peerDependencies": { "i18next": ">=23.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-helmet-async": ">=2.0.0", "react-i18next": ">=14.0.0", "react-router-dom": ">=6.0.0" } }, "sha512-XmZNallu40DybfyW7RgbXrZxIpnBAIlRVekYX18/NYRaxOKFU3n4j/1PMGQv4FplrlD8PPalKDZY55tp1owsoQ=="],
 

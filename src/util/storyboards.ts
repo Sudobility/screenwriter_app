@@ -99,10 +99,14 @@ export async function generateStoryboardFrame(
   host: ScriptEditorHost,
   documentId: string,
   sceneId: string,
-  opts: { meta: StoryboardMeta; description: string; lines?: number[]; scene: StoryboardScene },
+  opts: { meta: StoryboardMeta; description: string; lines?: number[]; scene: StoryboardScene; referenceImage?: string },
 ): Promise<ProductionImageRecord> {
   const flow = sw.createProductionImages(documentId, "storyboard", sceneId);
-  const made = await flow.generate({ description: opts.description, context: frameContext(opts.scene, opts.lines) });
+  const made = await flow.generate({
+    description: opts.description,
+    context: frameContext(opts.scene, opts.lines),
+    ...(opts.referenceImage ? { referenceImage: opts.referenceImage } : {}),
+  });
   const record: ProductionImageRecord = { id: made.id, description: opts.description, styleId: made.styleId };
   const existing = getSceneStoryboard(host, sceneId);
   const storyboard: SceneStoryboard = existing
@@ -115,6 +119,16 @@ export async function generateStoryboardFrame(
       };
   setSceneStoryboard(host, sceneId, storyboard);
   return record;
+}
+
+/** Read a storyboard frame's PNG from storage as a `data:image/png;base64,…` URL, for use as a reference image. */
+export async function storyboardFrameDataUrl(sw: Screenwriter, documentId: string, sceneId: string, imageId: string): Promise<string | null> {
+  const bytes = await sw.createProductionImages(documentId, "storyboard", sceneId).image(imageId).catch(() => null);
+  if (!bytes) return null;
+  const arr = new Uint8Array(bytes);
+  let binary = "";
+  for (let i = 0; i < arr.length; i += 8192) binary += String.fromCharCode(...arr.subarray(i, i + 8192));
+  return `data:image/png;base64,${btoa(binary)}`;
 }
 
 /** Delete one frame's PNG and drop its record; if it was the last frame, remove the scene's storyboard entirely. */

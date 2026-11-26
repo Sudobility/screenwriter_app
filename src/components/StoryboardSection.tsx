@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@sudobility/components";
 import { useScreenwriter } from "@sudobility/screenwriter_lib";
+import type { StoryboardFromSceneResult } from "@sudobility/screenwriter_types";
 import type { ScriptEditorHost } from "@sudobility/writing_ui";
 import { useModelTick } from "../util/use-model-tick";
 import { useAiActions } from "../hooks/useAiActions";
@@ -8,6 +10,7 @@ import {
   generateStoryboardFrame,
   getSceneStoryboard,
   removeStoryboard,
+  storyboardFrameDataUrl,
   type StoryboardMeta,
   type StoryboardScene,
 } from "../util/storyboards";
@@ -20,7 +23,11 @@ interface PlanShot {
   key: string;
   description: string;
   lines?: number[];
+  /** The key of an earlier frame whose image seeds this one (same framing), or undefined for a new setup. */
+  referenceKey?: string;
   status: ShotStatus;
+  /** The id of this frame's generated image (set once drawn) — used so a later frame can reference it. */
+  imageId?: string;
 }
 
 let shotKeySeq = 0;
@@ -78,8 +85,20 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
       client.storyboardFromScene({ scene: { heading: read.heading || undefined, elements: read.elements }, ...(trimmed ? { instructions: trimmed } : {}) }),
     );
     if (!res) return; // consent needed, or an error surfaced by AiNotices
-    setPlan({ shortTitle: res.result.shortTitle, detailedDescription: res.result.detailedDescription, instructions: trimmed });
-    setShots(res.result.shots.map(s => ({ key: nextKey(), description: s.description, lines: s.lines, status: "idle" as const })));
+    // Type via screenwriter_types (the client dist inlines an older result shape without `referenceShot`).
+    const result: StoryboardFromSceneResult = res.result;
+    setPlan({ shortTitle: result.shortTitle, detailedDescription: result.detailedDescription, instructions: trimmed });
+    // Keys first, then resolve each shot's 1-based `referenceShot` to the earlier shot's key (robust to later edits).
+    const keyed = result.shots.map(s => ({ key: nextKey(), shot: s }));
+    setShots(
+      keyed.map(({ key, shot }, i) => ({
+        key,
+        description: shot.description,
+        lines: shot.lines,
+        referenceKey: shot.referenceShot && shot.referenceShot >= 1 && shot.referenceShot <= i ? keyed[shot.referenceShot - 1]!.key : undefined,
+        status: "idle" as const,
+      })),
+    );
     setSceneRead({ heading: read.heading || undefined, elements: read.elements });
     setRemoveExisting(false);
     removedRef.current = false;
@@ -93,22 +112,26 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
     removedRef.current = true;
   };
 
-  const drawFrame = async (shot: PlanShot) => {
-    if (!scene || !sceneRead || !plan) return;
+  // Draw one frame, seeding with `refImageId`'s PNG when given. Returns the new frame's image id (for later references).
+  const drawFrame = async (shot: PlanShot, refImageId?: string): Promise<string | null> => {
+    if (!scene || !sceneRead || !plan) return null;
     setShots(cur => cur.map(s => (s.key === shot.key ? { ...s, status: "busy" } : s)));
     try {
       await ensureRemoved();
-      await generateStoryboardFrame(sw, host, documentId, scene.id, {
+      const referenceImage = refImageId ? (await storyboardFrameDataUrl(sw, documentId, scene.id, refImageId)) ?? undefined : undefined;
+      const record = await generateStoryboardFrame(sw, host, documentId, scene.id, {
         meta: plan,
         description: shot.description.trim(),
         lines: shot.lines,
         scene: sceneRead,
+        referenceImage,
       });
-      setShots(cur => cur.map(s => (s.key === shot.key ? { ...s, status: "done" } : s)));
+      setShots(cur => cur.map(s => (s.key === shot.key ? { ...s, status: "done", imageId: record.id } : s)));
+      return record.id;
     } catch (e) {
       setShots(cur => cur.map(s => (s.key === shot.key ? { ...s, status: "error" } : s)));
       setError(e instanceof Error ? e.message : "Could not generate that frame.");
-      throw e;
+      return null;
     }
   };
 
@@ -116,7 +139,8 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
     const shot = shots.find(s => s.key === key);
     if (!shot || shot.description.trim().length < 3) return;
     setError(null);
-    await drawFrame(shot).catch(() => undefined);
+    const ref = shot.referenceKey ? shots.find(s => s.key === shot.referenceKey) : undefined;
+    await drawFrame(shot, ref?.imageId);
   };
 
   const generateAll = async () => {
@@ -124,9 +148,14 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
     setError(null);
     setGeneratingAll(true);
     try {
+      // Thread image ids locally (React state wouldn't update mid-loop), so a later frame can seed from an earlier one.
+      const ids = new Map<string, string>();
+      for (const s of shots) if (s.imageId) ids.set(s.key, s.imageId);
       for (const shot of shots) {
         if (shot.status === "done" || shot.description.trim().length < 3) continue;
-        await drawFrame(shot).catch(() => undefined); // keep going; the error is surfaced per frame
+        const refId = shot.referenceKey ? ids.get(shot.referenceKey) : undefined;
+        const id = await drawFrame(shot, refId);
+        if (id) ids.set(shot.key, id);
       }
     } finally {
       setGeneratingAll(false);
@@ -135,6 +164,8 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
 
   const setDesc = (key: string, value: string) =>
     setShots(cur => cur.map(s => (s.key === key ? { ...s, description: value } : s)));
+  const setRef = (key: string, referenceKey: string | undefined) =>
+    setShots(cur => cur.map(s => (s.key === key ? { ...s, referenceKey } : s)));
   const addShot = () => setShots(cur => [...cur, { key: nextKey(), description: "", status: "idle" }]);
   const removeShot = (key: string) => setShots(cur => cur.filter(s => s.key !== key));
 
@@ -218,6 +249,28 @@ export function StoryboardSection({ host, documentId, scene, onView }: {
                   disabled={anyBusy}
                   data-testid="ai-storyboard-shot-description"
                 />
+                {i > 0 && (
+                  <label className="flex items-center gap-2 text-[11px] text-neutral-500" data-testid="ai-storyboard-shot-reference">
+                    <span className="shrink-0">Reuse framing of</span>
+                    <Select
+                      value={s.referenceKey ?? "none"}
+                      onValueChange={v => setRef(s.key, v === "none" ? undefined : v)}
+                      disabled={anyBusy}
+                    >
+                      <SelectTrigger aria-label="Reference frame" className="h-7 flex-1 bg-white text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No reference (new framing)</SelectItem>
+                        {shots.slice(0, i).map((earlier, j) => (
+                          <SelectItem key={earlier.key} value={earlier.key}>
+                            Frame {j + 1}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                )}
               </li>
             ))}
           </ul>
