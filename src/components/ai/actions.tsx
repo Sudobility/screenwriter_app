@@ -241,7 +241,7 @@ export const AI_ACTIONS: AiAction[] = [
     title: "Generate storyboard",
     blurb: "Turn the current scene into line-art storyboard frames.",
     keywords: ["storyboard", "frames", "shots", "line art", "images", "visual", "scene"],
-    Options: ({ ctx }) => <StoryboardSection host={ctx.host} documentId={ctx.documentId} scene={ctx.scene} />,
+    Options: ({ ctx }) => <StoryboardSection host={ctx.host} documentId={ctx.documentId} scene={ctx.scene} onView={ctx.onViewStoryboard} />,
   },
   {
     id: "smart-paste",

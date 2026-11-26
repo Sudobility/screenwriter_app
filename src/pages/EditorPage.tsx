@@ -28,6 +28,7 @@ import { TitlePagePanel } from "../components/TitlePagePanel";
 import { SnapshotsPanel } from "../components/SnapshotsPanel";
 import { ExportMenu } from "../components/ExportMenu";
 import { EditorSidebar } from "../components/EditorSidebar";
+import { useStoryboardThumbnails } from "../util/use-storyboard-thumbnails";
 import { StoryboardDetail } from "../components/StoryboardDetail";
 import { EntityDetailView } from "../components/EntityDetailView";
 
@@ -138,6 +139,8 @@ function Editor({ documentId }: { documentId: string }) {
   };
   // One layout, shared by the page counter (always on) and the Pages view. The engine loads lazily after first paint.
   const layout = useLayout(host);
+  // Right-margin storyboard thumbnails in the script editor: one per scene that has a storyboard, linking to it.
+  const storyboardThumbs = useStoryboardThumbnails(host, documentId);
 
   // Project-wide Find & Replace: each surface (title page, script, Catalog entities) is one provider that knows
   // how to navigate to, highlight and replace its own matches.
@@ -157,6 +160,11 @@ function Editor({ documentId }: { documentId: string }) {
     setSelectedStageId(null);
     setSelectedStoryboardSceneId(sceneId);
   }, []);
+  // From the AI panel's "View storyboard" link: show the storyboard and close the AI drawer so it's in view.
+  const viewStoryboard = useCallback((sceneId: string) => {
+    showStoryboard(sceneId);
+    setPanel(null);
+  }, [showStoryboard]);
   const openTitlePanel = useCallback(() => setPanel("title"), []);
   const findNav = useMemo(() => ({ showScript, showEntity, showStoryboard, openTitlePanel }), [showScript, showEntity, showStoryboard, openTitlePanel]);
   const searchProviders = useMemo(() => (host ? createProviders(host, findNav) : []), [host, findNav]);
@@ -301,7 +309,7 @@ function Editor({ documentId }: { documentId: string }) {
       <div className="relative flex-1 min-h-0 overflow-hidden">
         {children}
         <SlidePanel open={panelOpen} slideFrom="right" slideMs={PANEL_SLIDE_MS} className="absolute inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-96 z-20">
-          {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
+          {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onViewStoryboard={viewStoryboard} onClose={closePanel} />}
         </SlidePanel>
       </div>
     </div>
@@ -385,7 +393,7 @@ function Editor({ documentId }: { documentId: string }) {
             detailMaxWidth={0}
             detailContent={
               selectedStoryboardSceneId && projectId ? (
-                renderOffScript(<StoryboardDetail host={host} documentId={documentId} projectId={projectId} sceneId={selectedStoryboardSceneId} onDeleted={() => setSelectedStoryboardSceneId(null)} />)
+                renderOffScript(<StoryboardDetail host={host} documentId={documentId} projectId={projectId} sceneId={selectedStoryboardSceneId} onDeleted={() => setSelectedStoryboardSceneId(null)} onJumpTo={jumpTo} />)
               ) : selectedEntityId ? (
                 renderOffScript(
                   <EntityDetailView
@@ -453,7 +461,15 @@ function Editor({ documentId }: { documentId: string }) {
                   <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden print-flow">
                     {error && <p className="p-6 text-red-600">Could not open the document: {error.message}</p>}
                     {!error && !ready && <p className="p-6 text-neutral-500">Opening document...</p>}
-                    {view === "edit" && <ScriptEditor host={host} initialCaret={caret} onOpenComments={() => setPanel("comments")} />}
+                    {view === "edit" && (
+                      <ScriptEditor
+                        host={host}
+                        initialCaret={caret}
+                        onOpenComments={() => setPanel("comments")}
+                        sceneThumbnails={storyboardThumbs}
+                        onOpenSceneThumbnail={showStoryboard}
+                      />
+                    )}
                     {view === "cards" && <IndexCards host={host} onOpenScene={jumpTo} />}
                     {view === "pages" && (
                       <PageView
@@ -507,7 +523,7 @@ function Editor({ documentId }: { documentId: string }) {
                           <CommentsPanel host={host} onJumpTo={jumpTo} canTriage={canTriageComments} authorName={commentAuthorName} />
                         </PanelFrame>
                       )}
-                      {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onClose={closePanel} />}
+                      {displayedPanel === "ai" && host && <AiWizardBody documentId={documentId} host={host} onJumpTo={jumpTo} onViewStoryboard={viewStoryboard} onClose={closePanel} />}
                     </SlidePanel>
                   </div>
                 </div>

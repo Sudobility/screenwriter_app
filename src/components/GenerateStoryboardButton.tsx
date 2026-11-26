@@ -41,7 +41,7 @@ export function GenerateStoryboardButton({ host, documentId, onGenerated }: {
         client.storyboardFromScene({ scene: { heading: read.heading || undefined, elements: read.elements }, ...(trimmed ? { instructions: trimmed } : {}) }),
       );
       if (!res) return; // consent needed, or an error surfaced by AiNotices
-      await applyStoryboard(sw, host, documentId, sceneId, res.result, instructions);
+      await applyStoryboard(sw, host, documentId, sceneId, res.result, { heading: read.heading || undefined, elements: read.elements }, instructions);
       setOpen(false);
       setInstructions("");
       onGenerated?.(sceneId);

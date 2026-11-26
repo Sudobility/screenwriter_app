@@ -14,6 +14,7 @@ interface Props {
   documentId: string;
   host: ScriptEditorHost;
   onJumpTo(sceneId: string): void;
+  onViewStoryboard(sceneId: string): void;
   onClose(): void;
 }
 
@@ -87,7 +88,7 @@ function AiBanners({ ctx }: { ctx: AiWizardCtx }) {
  * This is the panel BODY (nav-bar stack + banners); the editor renders it inside the one shared
  * sliding drawer. It mounts fresh each time the AI panel is shown, so the stack starts at the list.
  */
-export function AiWizardBody({ documentId, host, onJumpTo, onClose }: Props) {
+export function AiWizardBody({ documentId, host, onJumpTo, onViewStoryboard, onClose }: Props) {
   const ai = useAi(documentId);
   useModelTick(host);
   const selection = useEditorSelection(host);
@@ -101,7 +102,7 @@ export function AiWizardBody({ documentId, host, onJumpTo, onClose }: Props) {
   if (!storeRef.current) storeRef.current = createNavStore(ROOT);
   const store = storeRef.current;
 
-  const ctx: AiWizardCtx = { documentId, host, ai, scene, onJumpTo, store };
+  const ctx: AiWizardCtx = { documentId, host, ai, scene, onJumpTo, onViewStoryboard, store };
 
   const usable = ai.status?.available === true;
 

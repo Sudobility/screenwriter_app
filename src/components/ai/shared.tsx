@@ -20,6 +20,8 @@ export interface AiWizardCtx {
   ai: AiHook;
   scene: { id: string; heading: string } | null;
   onJumpTo(sceneId: string): void;
+  /** Open a scene's storyboard in the detail pane (used by the Generate storyboard result link). */
+  onViewStoryboard(sceneId: string): void;
   /** The navigation stack store — push a results screen / pop back. */
   store: NavStore;
 }
